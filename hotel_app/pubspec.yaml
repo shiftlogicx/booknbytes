@@ -1,0 +1,33 @@
+name: hotel_app
+description: Book & Bite - Restaurant Management App with MyGate-style booking alerts.
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.2.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  firebase_core: ^3.12.1
+  firebase_auth: ^5.6.1
+  cloud_firestore: ^5.6.5
+  firebase_messaging: ^15.2.4
+  provider: ^6.1.2
+  audioplayers: ^6.1.0
+  flutter_local_notifications: ^18.0.1
+  google_fonts: ^6.2.1
+  intl: ^0.20.2
+  fl_chart: ^0.70.2
+  cached_network_image: ^3.4.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/sounds/

@@ -1,0 +1,104 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===== HELPER FUNCTIONS =====
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+        get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    function isRestaurantOwner(restaurantId) {
+      return isAuthenticated() && 
+        get(/databases/$(database)/documents/restaurants/$(restaurantId)).data.owner_uid == request.auth.uid;
+    }
+
+    // ===== USERS COLLECTION =====
+    match /users/{userId} {
+      // Users can read their own profile
+      // Admins can read any user
+      allow read: if isOwner(userId) || isAdmin();
+      
+      // Users can create their own profile
+      allow create: if isOwner(userId);
+      
+      // Users can update their own profile
+      allow update: if isOwner(userId);
+      
+      // Only admins can delete users
+      allow delete: if isAdmin();
+    }
+
+    // ===== RESTAURANTS COLLECTION =====
+    match /restaurants/{restaurantId} {
+      // Anyone authenticated can read restaurants (for discovery)
+      allow read: if isAuthenticated();
+      
+      // Only admins can create restaurants
+      allow create: if isAdmin();
+      
+      // Admins or restaurant owners can update
+      allow update: if isAdmin() || isRestaurantOwner(restaurantId);
+      
+      // Only admins can delete restaurants
+      allow delete: if isAdmin();
+
+      // Device tokens subcollection (for FCM)
+      match /device_tokens/{tokenId} {
+        allow read, write: if isRestaurantOwner(restaurantId) || isAdmin();
+      }
+    }
+
+    // ===== BOOKINGS COLLECTION =====
+    match /bookings/{bookingId} {
+      // Users can read their own bookings
+      // Restaurant owners can read bookings for their restaurant
+      // Admins can read all bookings
+      allow read: if isAuthenticated() && (
+        resource.data.user_id == request.auth.uid ||
+        isRestaurantOwner(resource.data.restaurant_id) ||
+        isAdmin()
+      );
+      
+      // Any authenticated user can create a booking
+      allow create: if isAuthenticated() && 
+        request.resource.data.user_id == request.auth.uid;
+      
+      // Users can update their own bookings (e.g., cancel)
+      // Restaurant owners can update booking status (accept/reject)
+      // Admins can update any booking
+      allow update: if isAuthenticated() && (
+        resource.data.user_id == request.auth.uid ||
+        isRestaurantOwner(resource.data.restaurant_id) ||
+        isAdmin()
+      );
+      
+      // Only admins can delete bookings
+      allow delete: if isAdmin();
+    }
+
+    // ===== ADMINS COLLECTION =====
+    match /admins/{adminId} {
+      // Only admins can read admin records
+      allow read: if isAdmin() || isOwner(adminId);
+      
+      // Only existing admins can create new admins
+      allow create: if isAdmin();
+      
+      // Only admins can update
+      allow update: if isAdmin();
+      
+      // Only admins can delete
+      allow delete: if isAdmin();
+    }
+  }
+}
