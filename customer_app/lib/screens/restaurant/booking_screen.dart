@@ -12,14 +12,7 @@ import '../bookings/my_bookings_screen.dart';
 class BookingScreen extends StatefulWidget {
   final RestaurantModel restaurant;
 
-  const BookingScreen({super.key});
-
-  // Constructor with restaurant argument
-  const BookingScreen.withRestaurant({super.key, required this.restaurant});
-
-  factory BookingScreen({Key? key, required RestaurantModel restaurant}) {
-    return BookingScreen.withRestaurant(key: key, restaurant: restaurant);
-  }
+  const BookingScreen({super.key, required this.restaurant});
 
   @override
   State<BookingScreen> createState() => _BookingScreenState();
@@ -49,7 +42,6 @@ class _BookingScreenState extends State<BookingScreen> {
     if (widget.restaurant.dailySlots.containsKey(key)) {
       return widget.restaurant.dailySlots[key]!;
     }
-    // Fallback default slots for demo if date doesn't exist yet
     return {
       "19:00": 6,
       "19:30": 4,
@@ -74,13 +66,15 @@ class _BookingScreenState extends State<BookingScreen> {
 
     final userId = authProvider.currentUser?.userId ?? 'usr_demo_${DateTime.now().millisecondsSinceEpoch}';
 
+    bookingProvider.setPartySize(_partySize);
+    bookingProvider.setSelectedDate(_selectedDate);
+    bookingProvider.setSelectedTimeSlot(_selectedSlot);
+    bookingProvider.setSelectedOffer(_selectedOffer);
+
     final success = await bookingProvider.createBooking(
       userId: userId,
-      restaurant: widget.restaurant,
-      partySize: _partySize,
-      date: _formatDateKey(_selectedDate),
-      timeSlot: _selectedSlot!,
-      offer: _selectedOffer,
+      restaurantId: widget.restaurant.restaurantId,
+      restaurantName: widget.restaurant.name,
     );
 
     setState(() => _isBooking = false);
@@ -146,7 +140,7 @@ class _BookingScreenState extends State<BookingScreen> {
                 width: double.infinity,
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.pop(ctx); // Close dialog
+                    Navigator.pop(ctx);
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(builder: (_) => const MyBookingsScreen()),
@@ -194,14 +188,12 @@ class _BookingScreenState extends State<BookingScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Party Size
               PartySizeSelector(
                 selectedSize: _partySize,
                 onSelected: (size) => setState(() => _partySize = size),
               ),
               const Divider(height: 32),
 
-              // Date Picker Horizontal
               const Text(
                 'Select Date',
                 style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
@@ -259,7 +251,6 @@ class _BookingScreenState extends State<BookingScreen> {
               ),
               const Divider(height: 32),
 
-              // Time Slots Grid
               SlotPicker(
                 slots: availableSlots,
                 selectedSlot: _selectedSlot,
@@ -267,7 +258,6 @@ class _BookingScreenState extends State<BookingScreen> {
               ),
               const Divider(height: 32),
 
-              // Offers applied
               if (widget.restaurant.activeOffers.isNotEmpty) ...[
                 const Text(
                   'Apply Dining Offer',

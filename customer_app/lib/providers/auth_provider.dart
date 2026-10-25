@@ -22,9 +22,29 @@ class AuthProvider extends ChangeNotifier {
 
   AuthState get state => _state;
   UserModel? get user => _user;
+  UserModel? get currentUser => _user;
   String? get errorMessage => _errorMessage;
   bool get isAuthenticated => _state == AuthState.authenticated;
   String? get verificationId => _verificationId;
+
+  /// Quick mock sign-in for demonstration and testing
+  Future<void> signInWithMock({required String name, required String phone}) async {
+    _state = AuthState.loading;
+    notifyListeners();
+    await Future.delayed(const Duration(milliseconds: 300));
+    _user = UserModel(
+      userId: 'usr_${DateTime.now().millisecondsSinceEpoch}',
+      name: name,
+      phoneNumber: phone,
+      email: '${name.toLowerCase().replaceAll(' ', '')}@gmail.com',
+      authProvider: 'phone',
+      preferences: ['Veg', 'North Indian'],
+      totalBookings: 1,
+      createdAt: DateTime.now(),
+    );
+    _state = AuthState.authenticated;
+    notifyListeners();
+  }
 
   AuthProvider() {
     _checkAuthState();

@@ -21,7 +21,6 @@ class AuthProvider extends ChangeNotifier {
   }
 
   void _initDemoOwner() {
-    // Pre-fill demo restaurant owner for immediate testing
     _currentOwner = {
       'uid': 'owner_123',
       'email': 'mahesh@lunchhome.com',
@@ -36,10 +35,10 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final success = await _authService.login(email, password);
-      if (success) {
+      final user = await _authService.signInWithEmail(email, password);
+      if (user != null) {
         _currentOwner = {
-          'uid': 'owner_123',
+          'uid': user.uid,
           'email': email,
           'restaurant_id': 'res_12345xyz',
           'name': 'Mahesh Lunch Home',
@@ -58,6 +57,7 @@ class AuthProvider extends ChangeNotifier {
   }
 
   void logout() {
+    _authService.signOut();
     _currentOwner = null;
     notifyListeners();
   }

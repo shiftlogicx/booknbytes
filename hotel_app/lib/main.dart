@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'config/theme.dart';
 import 'config/firebase_config.dart';
 import 'providers/auth_provider.dart';
 import 'providers/booking_provider.dart';
@@ -14,15 +12,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
-    await Firebase.initializeApp(
-      options: const FirebaseOptions(
-        apiKey: FirebaseConfig.apiKey,
-        appId: FirebaseConfig.appId,
-        messagingSenderId: FirebaseConfig.messagingSenderId,
-        projectId: FirebaseConfig.projectId,
-        storageBucket: FirebaseConfig.storageBucket,
-      ),
-    );
+    await FirebaseConfig.initialize();
   } catch (e) {
     debugPrint('Firebase initialization notice: $e (running with local test fallback)');
   }

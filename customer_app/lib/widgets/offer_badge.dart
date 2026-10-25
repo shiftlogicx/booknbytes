@@ -21,7 +21,7 @@ class OfferBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFFFFF4EB),
         borderRadius: BorderRadius.circular(6),
-        border: Border.parse('1px solid #FFD8BE'),
+        border: Border.all(color: const Color(0xFFFFD8BE)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

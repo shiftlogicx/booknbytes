@@ -164,7 +164,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
-                            color: Colors.emerald.shade50,
+                            color: Colors.green.shade50,
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: const Text(

@@ -44,7 +44,7 @@ class _IncomingBookingAlertScreenState extends State<IncomingBookingAlertScreen>
     final notifProvider = Provider.of<NotificationProvider>(context, listen: false);
     final bookingProvider = Provider.of<BookingProvider>(context, listen: false);
 
-    await bookingProvider.updateStatus(widget.booking.bookingId, 'CONFIRMED');
+    await bookingProvider.updateStatus(widget.booking.bookingId, BookingStatus.confirmed);
     notifProvider.acceptBooking();
 
     if (mounted) {

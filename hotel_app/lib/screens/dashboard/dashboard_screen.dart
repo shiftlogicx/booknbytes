@@ -42,9 +42,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       partySize: 4,
       date: DateTime.now().toIso8601String().split('T')[0],
       timeSlot: '20:00',
-      status: 'PENDING',
+      status: BookingStatus.pending,
       appliedOffer: 'flat_10',
-      createdAt: DateTime.now().toIso8601String(),
+      createdAt: DateTime.now(),
     );
 
     bookingProvider.addNewIncomingBooking(mockBooking);
@@ -269,8 +269,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 final b = booking.bookings[idx];
                 return BookingCard(
                   booking: b,
-                  onAccept: () => booking.updateStatus(b.bookingId, 'CONFIRMED'),
-                  onReject: () => booking.updateStatus(b.bookingId, 'CANCELLED'),
+                  onAccept: () => booking.updateStatus(b.bookingId, BookingStatus.confirmed),
+                  onReject: () => booking.updateStatus(b.bookingId, BookingStatus.cancelled),
                 );
               },
             ),

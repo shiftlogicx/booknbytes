@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../models/booking_model.dart';
 import '../../providers/booking_provider.dart';
 import '../../widgets/booking_card.dart';
 
@@ -55,8 +56,8 @@ class BookingListScreen extends StatelessWidget {
                         final b = booking.bookings[idx];
                         return BookingCard(
                           booking: b,
-                          onAccept: () => booking.updateStatus(b.bookingId, 'CONFIRMED'),
-                          onReject: () => booking.updateStatus(b.bookingId, 'CANCELLED'),
+                          onAccept: () => booking.updateStatus(b.bookingId, BookingStatus.confirmed),
+                          onReject: () => booking.updateStatus(b.bookingId, BookingStatus.cancelled),
                         );
                       },
                     ),

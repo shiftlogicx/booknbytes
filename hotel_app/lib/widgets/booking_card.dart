@@ -15,8 +15,8 @@ class BookingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isPending = booking.status == 'PENDING';
-    final isConfirmed = booking.status == 'CONFIRMED';
+    final isPending = booking.isPending;
+    final isConfirmed = booking.isConfirmed;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
@@ -55,7 +55,7 @@ class BookingCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: Text(
-                  booking.status,
+                  booking.status.value,
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.bold,

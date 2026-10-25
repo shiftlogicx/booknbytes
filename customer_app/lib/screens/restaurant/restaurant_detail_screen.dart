@@ -152,7 +152,7 @@ class RestaurantDetailScreen extends StatelessWidget {
                                     const Icon(Icons.access_time_rounded, size: 16, color: Colors.grey),
                                     const SizedBox(width: 4),
                                     Text(
-                                      '${restaurant.timings.lunch.open} - ${restaurant.timings.dinner.close}',
+                                      '${restaurant.timings['lunch']?.open ?? '11:30'} - ${restaurant.timings['dinner']?.close ?? '23:30'}',
                                       style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
                                     ),
                                   ],

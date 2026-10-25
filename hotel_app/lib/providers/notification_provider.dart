@@ -20,29 +20,30 @@ class NotificationProvider extends ChangeNotifier {
   void triggerIncomingBookingAlert(BookingModel booking) {
     _activeAlertBooking = booking;
     _isAlertVisible = true;
-    _notificationService.playRingtone();
+    _notificationService.startRinging();
     notifyListeners();
   }
 
   void acceptBooking() {
-    _notificationService.stopRingtone();
+    _notificationService.stopRinging();
     _isAlertVisible = false;
     _activeAlertBooking = null;
     notifyListeners();
   }
 
   void snoozeAlert() {
-    _notificationService.stopRingtone();
-    _isAlertVisible = false;
     if (_activeAlertBooking != null) {
-      _notificationService.snoozeBooking(_activeAlertBooking!);
+      _notificationService.snooze(_activeAlertBooking!);
+    } else {
+      _notificationService.stopRinging();
     }
+    _isAlertVisible = false;
     _activeAlertBooking = null;
     notifyListeners();
   }
 
   void dismissAlert() {
-    _notificationService.stopRingtone();
+    _notificationService.stopRinging();
     _isAlertVisible = false;
     _activeAlertBooking = null;
     notifyListeners();
