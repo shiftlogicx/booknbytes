@@ -21,7 +21,12 @@ import { Restaurant } from '@/types';
 export default function NewRestaurantPage() {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<{
+    show: boolean;
+    savedToFirestore: boolean;
+    restaurantId: string;
+    error?: string;
+  }>({ show: false, savedToFirestore: false, restaurantId: '' });
 
   // Form State
   const [name, setName] = useState('');
@@ -112,12 +117,18 @@ export default function NewRestaurantPage() {
       created_at: new Date().toISOString()
     };
 
-    await saveRestaurant(newRestaurant);
+    const result = await saveRestaurant(newRestaurant);
     setSubmitting(false);
-    setSuccess(true);
+    setSaveStatus({
+      show: true,
+      savedToFirestore: result.savedToFirestore,
+      restaurantId: result.restaurantId,
+      error: result.error,
+    });
+
     setTimeout(() => {
       router.push('/restaurants');
-    }, 1200);
+    }, 2000);
   };
 
   return (
@@ -138,10 +149,25 @@ export default function NewRestaurantPage() {
         </div>
       </div>
 
-      {success && (
-        <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 flex items-center gap-3 animate-fade-in">
-          <CheckCircle2 className="w-5 h-5 text-emerald-600" />
-          <span className="text-sm font-semibold">Restaurant onboarded successfully! Redirecting...</span>
+      {saveStatus.show && (
+        <div className={`p-4 rounded-xl border flex flex-col gap-1.5 animate-fade-in ${
+          saveStatus.savedToFirestore
+            ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+            : 'bg-amber-50 border-amber-200 text-amber-900'
+        }`}>
+          <div className="flex items-center gap-2.5">
+            <CheckCircle2 className={`w-5 h-5 ${saveStatus.savedToFirestore ? 'text-emerald-600' : 'text-amber-600'}`} />
+            <span className="text-sm font-bold">
+              {saveStatus.savedToFirestore
+                ? `Saved to live Firebase Firestore! (Document ID: ${saveStatus.restaurantId})`
+                : `Saved to local memory! (Document ID: ${saveStatus.restaurantId})`}
+            </span>
+          </div>
+          {!saveStatus.savedToFirestore && (
+            <p className="text-xs text-amber-800 ml-7.5">
+              Notice: Portal is in local mock mode because live Firebase credentials are not in <code>.env.local</code>. To see data in Firebase Console, create <code>.env.local</code> with your project keys.
+            </p>
+          )}
         </div>
       )}
 

@@ -267,7 +267,14 @@ export async function getRestaurantById(id: string): Promise<Restaurant | null> 
   return localRestaurants.find(r => r.restaurant_id === id) || null;
 }
 
-export async function saveRestaurant(restaurant: Restaurant): Promise<void> {
+export interface SaveResult {
+  success: boolean;
+  savedToFirestore: boolean;
+  restaurantId: string;
+  error?: string;
+}
+
+export async function saveRestaurant(restaurant: Restaurant): Promise<SaveResult> {
   const id = restaurant.restaurant_id || `res_${Date.now()}`;
   const data = { ...restaurant, restaurant_id: id };
 
@@ -278,13 +285,25 @@ export async function saveRestaurant(restaurant: Restaurant): Promise<void> {
     localRestaurants.unshift(data);
   }
 
+  let savedToFirestore = false;
+  let errorMsg: string | undefined;
+
   if (db) {
     try {
       await setDoc(doc(db, "restaurants", id), data, { merge: true });
-    } catch (err) {
+      savedToFirestore = true;
+    } catch (err: any) {
       console.warn("Firestore save error:", err);
+      errorMsg = err?.message || String(err);
     }
   }
+
+  return {
+    success: true,
+    savedToFirestore,
+    restaurantId: id,
+    error: errorMsg,
+  };
 }
 
 export async function deleteRestaurant(id: string): Promise<void> {

@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { Menu, Bell, Shield, Search } from 'lucide-react';
+import { Menu, Bell, Search, Database, AlertCircle } from 'lucide-react';
+import { isLiveFirebase, activeProjectId } from '@/lib/firebase';
 
 interface HeaderProps {
   onToggleSidebar: () => void;
@@ -21,7 +22,23 @@ export default function Header({ onToggleSidebar, title = "Admin Portal" }: Head
           <Menu className="w-6 h-6" />
         </button>
         <div>
-          <h1 className="text-xl font-bold text-slate-800 tracking-tight">{title}</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-bold text-slate-800 tracking-tight">{title}</h1>
+            {isLiveFirebase ? (
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                Firestore: {activeProjectId}
+              </span>
+            ) : (
+              <span 
+                className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-amber-50 text-amber-800 border border-amber-200 cursor-help"
+                title="Running in local fallback mode. Add your Firebase keys to .env.local to sync directly to Firebase Console."
+              >
+                <AlertCircle className="w-3 h-3 text-amber-600" />
+                Local Demo Mode (No .env.local)
+              </span>
+            )}
+          </div>
           <p className="text-xs text-slate-500 hidden sm:block">Real-time dine-in reservations and merchant settlements</p>
         </div>
       </div>

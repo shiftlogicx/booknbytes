@@ -3,6 +3,11 @@ import { getFirestore, Firestore } from 'firebase/firestore';
 import { getAuth, Auth } from 'firebase/auth';
 import { getStorage, FirebaseStorage } from 'firebase/storage';
 
+export const isLiveFirebase = Boolean(
+  process.env.NEXT_PUBLIC_FIREBASE_API_KEY && 
+  process.env.NEXT_PUBLIC_FIREBASE_API_KEY !== "AIzaSyDummyKeyForDevelopment1234567890"
+);
+
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyDummyKeyForDevelopment1234567890",
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "book-and-bite-mvp.firebaseapp.com",
@@ -11,6 +16,8 @@ const firebaseConfig = {
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "100000000000",
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:100000000000:web:abcdef1234567890"
 };
+
+export const activeProjectId = firebaseConfig.projectId;
 
 let app: any;
 let db: Firestore | null = null;
