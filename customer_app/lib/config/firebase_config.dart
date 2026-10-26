@@ -8,6 +8,11 @@ class FirebaseConfig {
   static const String messagingSenderId = 'YOUR_SENDER_ID';
   static const String appId = 'YOUR_APP_ID';
 
+  static bool get isConfigured =>
+      apiKey != 'YOUR_API_KEY' &&
+      appId != 'YOUR_APP_ID' &&
+      !appId.startsWith('YOUR_');
+
   static FirebaseOptions get platformOptions {
     return const FirebaseOptions(
       apiKey: apiKey,

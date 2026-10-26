@@ -11,18 +11,16 @@ import 'screens/splash_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  try {
-    await Firebase.initializeApp(
-      options: const FirebaseOptions(
-        apiKey: FirebaseConfig.apiKey,
-        appId: FirebaseConfig.appId,
-        messagingSenderId: FirebaseConfig.messagingSenderId,
-        projectId: FirebaseConfig.projectId,
-        storageBucket: FirebaseConfig.storageBucket,
-      ),
-    );
-  } catch (e) {
-    debugPrint('Firebase initialization notice: $e (using local mock fallback)');
+  if (FirebaseConfig.isConfigured) {
+    try {
+      await Firebase.initializeApp(
+        options: FirebaseConfig.platformOptions,
+      );
+    } catch (e) {
+      debugPrint('Firebase initialization notice: $e (using local mock fallback)');
+    }
+  } else {
+    debugPrint('[FirebaseConfig] Placeholder Firebase credentials detected. App running in offline mock mode.');
   }
 
   runApp(const BookAndBiteCustomerApp());

@@ -19,7 +19,7 @@ class FCMService {
   factory FCMService() => _instance;
   FCMService._internal();
 
-  final FirebaseMessaging _messaging = FirebaseMessaging.instance;
+  FirebaseMessaging get _messaging => FirebaseMessaging.instance;
   final NotificationService _notificationService = NotificationService();
 
   /// Callback to trigger the full-screen booking alert in the app
@@ -27,27 +27,32 @@ class FCMService {
 
   /// Initialize FCM and set up message handlers
   Future<void> initialize() async {
-    // Request notification permissions
-    final settings = await _messaging.requestPermission(
-      alert: true,
-      announcement: true,
-      badge: true,
-      carPlay: false,
-      criticalAlert: true,
-      provisional: false,
-      sound: true,
-    );
+    // Only attempt to initialize FCM if Firebase is actively initialized
+    try {
+      // Request notification permissions
+      final settings = await _messaging.requestPermission(
+        alert: true,
+        announcement: true,
+        badge: true,
+        carPlay: false,
+        criticalAlert: true,
+        provisional: false,
+        sound: true,
+      );
 
-    print('FCM Permission status: ${settings.authorizationStatus}');
+      print('FCM Permission status: ${settings.authorizationStatus}');
 
-    // Register background handler
-    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+      // Register background handler
+      FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
-    // Handle foreground messages
-    FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
+      // Handle foreground messages
+      FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
 
-    // Handle when the app is opened from a notification
-    FirebaseMessaging.onMessageOpenedApp.listen(_handleMessageOpenedApp);
+      // Handle when the app is opened from a notification
+      FirebaseMessaging.onMessageOpenedApp.listen(_handleMessageOpenedApp);
+    } catch (e) {
+      debugPrint('[FCMService] FCM init bypassed: $e');
+    }
 
     // Check if app was opened from a terminated state via notification
     final initialMessage = await _messaging.getInitialMessage();
