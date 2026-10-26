@@ -50,5 +50,11 @@
 		<string>paytmmp</string>
 		<string>bhim</string>
 	</array>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Used for local debugging connection with Flutter tooling.</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_dartVmService._tcp</string>
+	</array>
 </dict>
 </plist>
