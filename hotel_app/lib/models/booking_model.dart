@@ -5,14 +5,16 @@ enum BookingStatus {
   confirmed('CONFIRMED'),
   rejected('REJECTED'),
   cancelled('CANCELLED'),
-  completed('COMPLETED');
+  completed('COMPLETED'),
+  noShow('NO_SHOW');
 
   final String value;
   const BookingStatus(this.value);
 
   static BookingStatus fromString(String status) {
+    final clean = status.toUpperCase().replaceAll('-', '_');
     return BookingStatus.values.firstWhere(
-      (e) => e.value == status.toUpperCase(),
+      (e) => e.value == clean,
       orElse: () => BookingStatus.pending,
     );
   }
@@ -54,6 +56,7 @@ class BookingModel {
   bool get isRejected => status == BookingStatus.rejected;
   bool get isCancelled => status == BookingStatus.cancelled;
   bool get isCompleted => status == BookingStatus.completed;
+  bool get isNoShow => status == BookingStatus.noShow;
 
   factory BookingModel.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;

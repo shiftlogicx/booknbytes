@@ -60,6 +60,7 @@ class BookingListScreen extends StatelessWidget {
                     _buildFilterPill(context, '⚡ ALL', booking.filterStatus == 'ALL', 'ALL'),
                     _buildFilterPill(context, '⏳ PENDING', booking.filterStatus == 'PENDING', 'PENDING'),
                     _buildFilterPill(context, '✅ CONFIRMED', booking.filterStatus == 'CONFIRMED', 'CONFIRMED'),
+                    _buildFilterPill(context, '🚫 NO-SHOW', booking.filterStatus == 'NO_SHOW', 'NO_SHOW'),
                     _buildFilterPill(context, '🍽️ COMPLETED', booking.filterStatus == 'COMPLETED', 'COMPLETED'),
                     _buildFilterPill(context, '🕊️ CANCELLED', booking.filterStatus == 'CANCELLED', 'CANCELLED'),
                   ],

@@ -7,6 +7,7 @@ import '../../services/notification_service.dart';
 import '../../widgets/brand_logo.dart';
 import '../../widgets/location_picker_sheet.dart';
 import '../../widgets/partner_walkthrough_modal.dart';
+import '../profile/booking_ledger_doc_screen.dart';
 import '../profile/restaurant_profile_screen.dart';
 import '../support/support_screen.dart';
 
@@ -469,6 +470,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
               title: 'FSSAI License Number',
               subtitle: '${profile.fssaiNumber} · Verified & Compliant',
               onTap: _openProfile,
+            ),
+            _buildActionTile(
+              icon: Icons.receipt_long_rounded,
+              title: 'Booking Audit Ledger & Doc',
+              subtitle: 'Statement of platform arrivals, no-shows & discounts applied',
+              onTap: () {
+                HapticFeedback.lightImpact();
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const BookingLedgerDocScreen()),
+                );
+              },
+              accentColor: const Color(0xFF38BDF8),
             ),
             _buildActionTile(
               icon: Icons.currency_rupee_rounded,

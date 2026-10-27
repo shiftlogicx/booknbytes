@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/booking_provider.dart';
 import '../../widgets/brand_logo.dart';
+import 'booking_ledger_doc_screen.dart';
 
 class RestaurantProfileScreen extends StatefulWidget {
   const RestaurantProfileScreen({super.key});
@@ -200,6 +202,7 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthProvider>(context);
+    final booking = Provider.of<BookingProvider>(context);
 
     return Scaffold(
       backgroundColor: const Color(0xFF07090E),
@@ -299,7 +302,94 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
                 ),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 16),
+
+              // Merchant Booking Ledger & Audit Doc Banner
+              InkWell(
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const BookingLedgerDocScreen()),
+                  );
+                },
+                borderRadius: BorderRadius.circular(18),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF1A2338), Color(0xFF0F172A)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: const Color(0xFF38BDF8).withValues(alpha: 0.4), width: 1.2),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF38BDF8).withValues(alpha: 0.1),
+                        blurRadius: 14,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF38BDF8).withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: const Icon(Icons.receipt_long_rounded, color: Color(0xFF38BDF8), size: 24),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                const Text(
+                                  'Booking Ledger & Audit Doc',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w800,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF00E599).withValues(alpha: 0.15),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: const Text(
+                                    'LIVE AUDIT',
+                                    style: TextStyle(fontSize: 8, fontWeight: FontWeight.w900, color: Color(0xFF00E599)),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              '${booking.totalCount} Platform Bookings · ${booking.completedCount} Came · ${booking.noShowCount} No-Shows',
+                              style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8), fontWeight: FontWeight.w600),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              '₹${booking.totalDiscountGiven} Total Discounts Applied · Tap to View',
+                              style: const TextStyle(fontSize: 10, color: Color(0xFF38BDF8), fontWeight: FontWeight.w700),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(Icons.arrow_forward_ios_rounded, color: Color(0xFF64748B), size: 14),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 22),
 
               // Section 1: Mandatory Legal & Contact Info
               _buildSectionHeader('MANDATORY MERCHANT IDENTIFIERS'),
