@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'config/firebase_config.dart';
 import 'providers/auth_provider.dart';
 import 'providers/booking_provider.dart';
+import 'providers/location_provider.dart';
 import 'providers/notification_provider.dart';
 import 'services/fcm_service.dart';
 import 'services/notification_service.dart';
@@ -38,9 +39,10 @@ class BookAndBiteHotelApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => BookingProvider()),
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
+        ChangeNotifierProvider(create: (_) => LocationProvider()),
       ],
       child: MaterialApp(
-        title: 'Book & Bite Hotel Terminal',
+        title: 'Book & Bite Partner',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
           brightness: Brightness.dark,

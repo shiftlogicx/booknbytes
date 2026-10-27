@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../models/booking_model.dart';
 import '../../providers/booking_provider.dart';
@@ -20,17 +21,22 @@ class _IncomingBookingAlertScreenState extends State<IncomingBookingAlertScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
+  late Animation<double> _ringAnimation;
 
   @override
   void initState() {
     super.initState();
     _pulseController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1000),
+      duration: const Duration(milliseconds: 1100),
     )..repeat(reverse: true);
 
-    _pulseAnimation = Tween<double>(begin: 0.95, end: 1.08).animate(
+    _pulseAnimation = Tween<double>(begin: 0.94, end: 1.06).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+
+    _ringAnimation = Tween<double>(begin: 0.8, end: 1.25).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeOut),
     );
   }
 
@@ -41,6 +47,7 @@ class _IncomingBookingAlertScreenState extends State<IncomingBookingAlertScreen>
   }
 
   void _onAccept() async {
+    HapticFeedback.heavyImpact();
     final notifProvider = Provider.of<NotificationProvider>(context, listen: false);
     final bookingProvider = Provider.of<BookingProvider>(context, listen: false);
 
@@ -51,23 +58,49 @@ class _IncomingBookingAlertScreenState extends State<IncomingBookingAlertScreen>
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Reservation ${widget.booking.bookingId} CONFIRMED!'),
-          backgroundColor: Colors.green.shade700,
+          content: Text('✓ Table Confirmed for ${widget.booking.customerName ?? 'Guest'} (${widget.booking.partySize} guests)'),
+          backgroundColor: const Color(0xFF10B981),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
     }
   }
 
   void _onSnooze() {
+    HapticFeedback.mediumImpact();
     final notifProvider = Provider.of<NotificationProvider>(context, listen: false);
     notifProvider.snoozeAlert();
 
     if (mounted) {
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Alert snoozed for 2 minutes'),
-          backgroundColor: Colors.amber,
+        SnackBar(
+          content: const Text('⏰ Alert snoozed for 2 minutes'),
+          backgroundColor: const Color(0xFFF59E0B),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
+    }
+  }
+
+  void _onReject() async {
+    HapticFeedback.heavyImpact();
+    final notifProvider = Provider.of<NotificationProvider>(context, listen: false);
+    final bookingProvider = Provider.of<BookingProvider>(context, listen: false);
+
+    await bookingProvider.updateStatus(widget.booking.bookingId, BookingStatus.cancelled);
+    notifProvider.dismissAlert();
+
+    if (mounted) {
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Reservation #${widget.booking.bookingId} Declined'),
+          backgroundColor: const Color(0xFFEF4444),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
     }
@@ -75,19 +108,21 @@ class _IncomingBookingAlertScreenState extends State<IncomingBookingAlertScreen>
 
   @override
   Widget build(BuildContext context) {
+    final isDinner = widget.booking.timeSlot.compareTo('17:00') >= 0;
+
     return WillPopScope(
-      onWillPop: () async => false, // Prevent accidental dismissal without choice
+      onWillPop: () async => false, // Require explicit accept/snooze/decline
       child: Scaffold(
-        backgroundColor: const Color(0xFF0F172A),
+        backgroundColor: const Color(0xFF070B14),
         body: Container(
           decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
+            gradient: RadialGradient(
+              center: Alignment(0, -0.4),
+              radius: 1.2,
               colors: [
-                Color(0xFF881337), // Crimson red alert glow
-                Color(0xFF0F172A),
-                Color(0xFF020617),
+                Color(0xFF7F1D1D), // Rich crimson ambient core
+                Color(0xFF1E101D),
+                Color(0xFF070B14),
               ],
             ),
           ),
@@ -97,130 +132,186 @@ class _IncomingBookingAlertScreenState extends State<IncomingBookingAlertScreen>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  // Top Alert Header
+                  // Top Pill
                   Column(
                     children: [
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                         decoration: BoxDecoration(
-                          color: Colors.red.withOpacity(0.2),
+                          color: const Color(0xFFEF4444).withOpacity(0.18),
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Colors.redAccent.withOpacity(0.5)),
+                          border: Border.all(color: const Color(0xFFEF4444).withOpacity(0.5)),
                         ),
                         child: const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.notifications_active_rounded, color: Colors.redAccent, size: 16),
+                            Icon(Icons.volume_up_rounded, color: Color(0xFFF87171), size: 16),
                             SizedBox(width: 8),
                             Text(
-                              'NEW TABLE RESERVATION',
+                              'PRIORITY TABLE ALARM',
                               style: TextStyle(
                                 color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12,
-                                letterSpacing: 1.2,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 11,
+                                letterSpacing: 1.4,
                               ),
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(height: 14),
+                      const SizedBox(height: 12),
                       const Text(
-                        'Incoming Diner Request',
+                        'Incoming Reservation',
                         style: TextStyle(
                           fontSize: 26,
-                          fontWeight: FontWeight.w900,
+                          fontWeight: FontWeight.w800,
                           color: Colors.white,
                           letterSpacing: -0.5,
                         ),
                       ),
+                      const SizedBox(height: 2),
+                      const Text(
+                        'Swiggy Dineout Instant Alert',
+                        style: TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
+                      ),
                     ],
                   ),
 
-                  // Center Pulsing Bell & Booking Info Card
+                  // Center Animated Cloche & Glass Card
                   Column(
                     children: [
-                      // Pulsing Alarm Icon
-                      ScaleTransition(
-                        scale: _pulseAnimation,
-                        child: Container(
-                          width: 110,
-                          height: 110,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Colors.red.shade600,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.red.withOpacity(0.6),
-                                blurRadius: 40,
-                                spreadRadius: 10,
+                      // Pulsing radar rings
+                      Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          ScaleTransition(
+                            scale: _ringAnimation,
+                            child: Container(
+                              width: 140,
+                              height: 140,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: const Color(0xFFEF4444).withOpacity(0.3),
+                                  width: 2,
+                                ),
                               ),
-                            ],
+                            ),
                           ),
-                          child: const Icon(
-                            Icons.restaurant_rounded,
-                            size: 56,
-                            color: Colors.white,
+                          ScaleTransition(
+                            scale: _pulseAnimation,
+                            child: Container(
+                              width: 104,
+                              height: 104,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: const LinearGradient(
+                                  colors: [Color(0xFFDC2626), Color(0xFF991B1B)],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFFDC2626).withOpacity(0.6),
+                                    blurRadius: 36,
+                                    spreadRadius: 8,
+                                  ),
+                                ],
+                              ),
+                              child: const Icon(
+                                Icons.notifications_active_rounded,
+                                size: 52,
+                                color: Colors.white,
+                              ),
+                            ),
                           ),
-                        ),
+                        ],
                       ),
-                      const SizedBox(height: 32),
 
-                      // Card with Guest & Slot Info
+                      const SizedBox(height: 28),
+
+                      // High-end Reservation Info Card
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.all(22),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF1E293B),
+                          color: const Color(0xFF131B2E),
                           borderRadius: BorderRadius.circular(24),
-                          border: Border.all(color: const Color(0xFF334155)),
+                          border: Border.all(color: const Color(0xFF2A3752)),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.3),
-                              blurRadius: 20,
+                              color: Colors.black.withOpacity(0.4),
+                              blurRadius: 24,
                               offset: const Offset(0, 10),
                             ),
                           ],
                         ),
                         child: Column(
                           children: [
+                            // Diner Name & Party Size
                             Text(
-                              'Party of ${widget.booking.partySize} Guests',
+                              widget.booking.customerName ?? 'Guest Diner',
                               style: const TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
+                                fontSize: 22,
+                                fontWeight: FontWeight.w800,
                                 color: Colors.white,
                               ),
                             ),
                             const SizedBox(height: 6),
-                            Text(
-                              'ID: ${widget.booking.bookingId}',
-                              style: TextStyle(fontSize: 12, color: Colors.grey.shade400, fontFamily: 'monospace'),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF59E0B).withOpacity(0.18),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: const Color(0xFFF59E0B).withOpacity(0.4)),
+                              ),
+                              child: Text(
+                                '${widget.booking.partySize} Guests · ${isDinner ? 'Dinner' : 'Lunch'}',
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFFFBBF24),
+                                ),
+                              ),
                             ),
-                            const Divider(height: 28, color: Color(0xFF334155)),
 
+                            const Divider(height: 28, color: Color(0xFF222F49)),
+
+                            // Date & Time Details
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceAround,
                               children: [
-                                _buildDetailItem(Icons.calendar_month, 'Date', widget.booking.date),
-                                _buildDetailItem(Icons.access_time_filled, 'Time Slot', widget.booking.timeSlot),
+                                _buildDetailItem(Icons.access_time_filled_rounded, 'TIME SLOT', widget.booking.timeSlot),
+                                Container(width: 1, height: 32, color: const Color(0xFF222F49)),
+                                _buildDetailItem(Icons.calendar_month_rounded, 'DATE', widget.booking.date),
                               ],
                             ),
 
                             if (widget.booking.appliedOffer != null &&
                                 widget.booking.appliedOffer!.isNotEmpty) ...[
-                              const SizedBox(height: 16),
+                              const SizedBox(height: 14),
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                                 decoration: BoxDecoration(
-                                  color: Colors.amber.shade900.withOpacity(0.3),
-                                  borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: Colors.amber.shade700.withOpacity(0.4)),
+                                  color: const Color(0xFF047857).withOpacity(0.2),
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(color: const Color(0xFF10B981).withOpacity(0.4)),
                                 ),
-                                child: Text(
-                                  'Offer: ${widget.booking.appliedOffer}',
-                                  style: const TextStyle(fontSize: 12, color: Colors.amber, fontWeight: FontWeight.w600),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.local_offer_rounded, size: 14, color: Color(0xFF34D399)),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      'Offer: ${widget.booking.appliedOffer!.toUpperCase()}',
+                                      style: const TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w700,
+                                        color: Color(0xFF34D399),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ],
@@ -230,55 +321,79 @@ class _IncomingBookingAlertScreenState extends State<IncomingBookingAlertScreen>
                     ],
                   ),
 
-                  // Bottom Action Buttons: [ACCEPT] & [SNOOZE]
+                  // Bottom Action Buttons
                   Column(
                     children: [
                       // Accept Button
                       SizedBox(
                         width: double.infinity,
-                        height: 58,
+                        height: 56,
                         child: ElevatedButton.icon(
                           onPressed: _onAccept,
-                          icon: const Icon(Icons.check_circle_rounded, color: Colors.white, size: 24),
+                          icon: const Icon(Icons.check_circle_rounded, color: Colors.white, size: 22),
                           label: const Text(
-                            'ACCEPT RESERVATION',
+                            'ACCEPT TABLE',
                             style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.8,
                               color: Colors.white,
-                              letterSpacing: 0.5,
                             ),
                           ),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF16A34A), // Emerald green
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                            backgroundColor: const Color(0xFF10B981),
                             elevation: 8,
-                            shadowColor: const Color(0xFF16A34A).withOpacity(0.5),
+                            shadowColor: const Color(0xFF10B981).withOpacity(0.5),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                           ),
                         ),
                       ),
                       const SizedBox(height: 12),
 
-                      // Snooze Button
-                      SizedBox(
-                        width: double.infinity,
-                        height: 48,
-                        child: OutlinedButton.icon(
-                          onPressed: _onSnooze,
-                          icon: const Icon(Icons.snooze_rounded, color: Colors.amberAccent, size: 20),
-                          label: const Text(
-                            'Snooze (2 min)',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white70,
+                      Row(
+                        children: [
+                          // Snooze Button
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: _onSnooze,
+                              icon: const Icon(Icons.snooze_rounded, color: Color(0xFFFBBF24), size: 18),
+                              label: const Text(
+                                'Snooze (2m)',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white70,
+                                ),
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(color: Color(0xFF334155)),
+                                padding: const EdgeInsets.symmetric(vertical: 13),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                              ),
                             ),
                           ),
-                          style: OutlinedButton.styleFrom(
-                            side: BorderSide(color: Colors.grey.shade700),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          const SizedBox(width: 12),
+                          // Decline Button
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              onPressed: _onReject,
+                              icon: const Icon(Icons.close_rounded, color: Color(0xFFEF4444), size: 18),
+                              label: const Text(
+                                'Decline',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFFEF4444),
+                                ),
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                side: BorderSide(color: const Color(0xFFEF4444).withOpacity(0.5)),
+                                padding: const EdgeInsets.symmetric(vertical: 13),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                              ),
+                            ),
                           ),
-                        ),
+                        ],
                       ),
                     ],
                   ),
@@ -294,13 +409,25 @@ class _IncomingBookingAlertScreenState extends State<IncomingBookingAlertScreen>
   Widget _buildDetailItem(IconData icon, String label, String value) {
     return Column(
       children: [
-        Icon(icon, color: Colors.orangeAccent, size: 20),
+        Icon(icon, color: const Color(0xFFF59E0B), size: 20),
         const SizedBox(height: 4),
-        Text(label, style: TextStyle(fontSize: 11, color: Colors.grey.shade400)),
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w600,
+            letterSpacing: 0.8,
+            color: Color(0xFF64748B),
+          ),
+        ),
         const SizedBox(height: 2),
         Text(
           value,
-          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
+          style: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w800,
+            color: Colors.white,
+          ),
         ),
       ],
     );

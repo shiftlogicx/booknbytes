@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../models/booking_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/booking_provider.dart';
+import '../../providers/location_provider.dart';
 import '../../providers/notification_provider.dart';
-import '../../widgets/stats_card.dart';
 import '../../widgets/booking_card.dart';
+import '../../widgets/location_picker_sheet.dart';
+import '../../widgets/stats_card.dart';
 import '../alerts/incoming_booking_alert.dart';
 import '../bookings/booking_list_screen.dart';
 import '../settings/settings_screen.dart';
@@ -19,6 +22,8 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   int _currentNavIndex = 0;
+  bool _isAcceptingReservations = true;
+  String _activeFilter = 'ALL';
 
   @override
   void initState() {
@@ -31,19 +36,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   void _simulateIncomingAlert() {
+    HapticFeedback.heavyImpact();
     final notifProvider = Provider.of<NotificationProvider>(context, listen: false);
     final bookingProvider = Provider.of<BookingProvider>(context, listen: false);
 
     final mockBooking = BookingModel(
       bookingId: 'bk_${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}',
-      userId: 'usr_live_guest',
+      userId: 'usr_swiggy_vip',
       restaurantId: 'res_12345xyz',
       restaurantName: 'Mahesh Lunch Home',
+      customerName: 'Aditya & Ananya Roy',
+      customerPhone: '+91 98230 45678',
       partySize: 4,
       date: DateTime.now().toIso8601String().split('T')[0],
-      timeSlot: '20:00',
+      timeSlot: '20:30',
       status: BookingStatus.pending,
-      appliedOffer: 'flat_10',
+      appliedOffer: 'SWIGGY20',
       createdAt: DateTime.now(),
     );
 
@@ -61,77 +69,142 @@ class _DashboardScreenState extends State<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthProvider>(context);
-    final booking = Provider.of<BookingProvider>(context);
+    final locationProvider = Provider.of<LocationProvider>(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0F172A),
+      backgroundColor: const Color(0xFF090D16),
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: const Color(0xFF1E293B),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              auth.currentRestaurantName,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
-            ),
-            const Row(
+        backgroundColor: const Color(0xFF101726),
+        titleSpacing: 16,
+        title: InkWell(
+          onTap: () {
+            HapticFeedback.lightImpact();
+            LocationPickerBottomSheet.show(context);
+          },
+          borderRadius: BorderRadius.circular(10),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.circle, size: 8, color: Colors.greenAccent),
-                SizedBox(width: 4),
-                Text(
-                  'FCM Ringing Terminal Active',
-                  style: TextStyle(fontSize: 11, color: Colors.greenAccent, fontWeight: FontWeight.w500),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.location_on_rounded, size: 14, color: Color(0xFFF59E0B)),
+                    const SizedBox(width: 4),
+                    Text(
+                      locationProvider.currentLocation.shortLabel,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: Color(0xFFF59E0B)),
+                  ],
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF10B981),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      auth.currentRestaurantName,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: Color(0xFF94A3B8),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
+          ),
         ),
         actions: [
-          // Simulate MyGate Alert Test Button
+          // Audio Test Alert Chime Button
           IconButton(
+            tooltip: 'Test Booking Audio Alert',
             icon: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
-                color: Colors.red.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.redAccent.withOpacity(0.6)),
+                gradient: LinearGradient(
+                  colors: [
+                    const Color(0xFFDC2626).withOpacity(0.2),
+                    const Color(0xFF991B1B).withOpacity(0.1),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFEF4444).withOpacity(0.5)),
               ),
               child: const Row(
                 children: [
-                  Icon(Icons.ring_volume_rounded, color: Colors.redAccent, size: 14),
+                  Icon(Icons.notifications_active_rounded, color: Color(0xFFF87171), size: 14),
                   SizedBox(width: 4),
-                  Text('Test Alert', style: TextStyle(color: Colors.redAccent, fontSize: 11, fontWeight: FontWeight.bold)),
+                  Text(
+                    'Test Alarm',
+                    style: TextStyle(
+                      color: Color(0xFFF87171),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
                 ],
               ),
             ),
-            tooltip: 'Simulate MyGate Full-Screen Ringing Intent',
             onPressed: _simulateIncomingAlert,
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 10),
         ],
       ),
       body: _buildCurrentTab(),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentNavIndex,
-        onTap: (idx) => setState(() => _currentNavIndex = idx),
-        backgroundColor: const Color(0xFF1E293B),
-        selectedItemColor: Colors.orangeAccent,
-        unselectedItemColor: Colors.grey.shade400,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard_rounded),
-            label: 'Terminal',
+      bottomNavigationBar: Container(
+        decoration: const BoxDecoration(
+          border: Border(
+            top: BorderSide(color: Color(0xFF1E2638), width: 1),
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.table_restaurant_rounded),
-            label: 'Reservations',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings_rounded),
-            label: 'Settings',
-          ),
-        ],
+        ),
+        child: BottomNavigationBar(
+          currentIndex: _currentNavIndex,
+          onTap: (idx) {
+            HapticFeedback.selectionClick();
+            setState(() => _currentNavIndex = idx);
+          },
+          backgroundColor: const Color(0xFF101726),
+          selectedItemColor: const Color(0xFFF59E0B),
+          unselectedItemColor: const Color(0xFF64748B),
+          selectedFontSize: 11,
+          unselectedFontSize: 11,
+          type: BottomNavigationBarType.fixed,
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.dashboard_rounded),
+              activeIcon: Icon(Icons.dashboard_rounded, color: Color(0xFFF59E0B)),
+              label: 'Live Floor',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.calendar_month_rounded),
+              activeIcon: Icon(Icons.calendar_month_rounded, color: Color(0xFFF59E0B)),
+              label: 'Reservations',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.tune_rounded),
+              activeIcon: Icon(Icons.tune_rounded, color: Color(0xFFF59E0B)),
+              label: 'Settings',
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -143,65 +216,166 @@ class _DashboardScreenState extends State<DashboardScreen> {
       case 2:
         return const SettingsScreen();
       default:
-        return _buildTerminalView();
+        return _buildFloorView();
     }
   }
 
-  Widget _buildTerminalView() {
+  Widget _buildFloorView() {
     final booking = Provider.of<BookingProvider>(context);
+    final locationProvider = Provider.of<LocationProvider>(context);
+
+    final allList = booking.bookings;
+    final filteredList = _activeFilter == 'ALL'
+        ? allList
+        : allList.where((b) => b.status.value == _activeFilter).toList();
 
     return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Banner for MyGate alert verification
+          // Live Service Control Card
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [Color(0xFF881337), Color(0xFF4C0519)],
+                colors: [Color(0xFF131D30), Color(0xFF0F172A)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: const Color(0xFF222F49)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: _isAcceptingReservations
+                            ? const Color(0xFF10B981).withOpacity(0.15)
+                            : const Color(0xFF64748B).withOpacity(0.15),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: _isAcceptingReservations
+                              ? const Color(0xFF10B981)
+                              : const Color(0xFF64748B),
+                        ),
+                      ),
+                      child: Icon(
+                        _isAcceptingReservations
+                            ? Icons.table_restaurant_rounded
+                            : Icons.pause_circle_filled_rounded,
+                        size: 20,
+                        color: _isAcceptingReservations
+                            ? const Color(0xFF10B981)
+                            : const Color(0xFF94A3B8),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _isAcceptingReservations ? 'Accepting Reservations' : 'Floor Temporarily Paused',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 14,
+                            color: Colors.white,
+                          ),
+                        ),
+                        Text(
+                          '${locationProvider.currentLocation.locality} · Dinner Service',
+                          style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                Switch.adaptive(
+                  value: _isAcceptingReservations,
+                  activeColor: const Color(0xFF10B981),
+                  activeTrackColor: const Color(0xFF10B981).withOpacity(0.3),
+                  onChanged: (val) {
+                    HapticFeedback.selectionClick();
+                    setState(() => _isAcceptingReservations = val);
+                  },
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 14),
+
+          // Priority Alarm Active Banner
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  const Color(0xFFF59E0B).withOpacity(0.12),
+                  const Color(0xFF131B2E),
+                ],
               ),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: Colors.redAccent.withOpacity(0.3)),
+              border: Border.all(color: const Color(0xFFF59E0B).withOpacity(0.3)),
             ),
             child: Row(
               children: [
-                const Icon(Icons.vibration_rounded, color: Colors.white, size: 28),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF59E0B).withOpacity(0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.ring_volume_rounded, color: Color(0xFFFBBF24), size: 18),
+                ),
                 const SizedBox(width: 12),
                 const Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'MyGate-Style Full Screen Ringing',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.white),
+                        'Priority Table Ringing Active',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                          color: Color(0xFFFDE68A),
+                        ),
                       ),
                       Text(
-                        'Wakes locked screen on incoming Firestore bookings via FCM data payload.',
-                        style: TextStyle(fontSize: 11, color: Colors.white70),
+                        'Instant audible bell & full-screen alert for incoming reservations',
+                        style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
                       ),
                     ],
                   ),
                 ),
-                ElevatedButton(
+                TextButton(
                   onPressed: _simulateIncomingAlert,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  style: TextButton.styleFrom(
+                    backgroundColor: const Color(0xFFF59E0B),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                   ),
                   child: const Text(
-                    'Trigger Ring',
-                    style: TextStyle(color: Color(0xFF881337), fontSize: 11, fontWeight: FontWeight.bold),
+                    'Ring',
+                    style: TextStyle(
+                      color: Color(0xFF0F172A),
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 18),
 
-          // Stats Grid
+          const SizedBox(height: 16),
+
+          // Luxury Stats Grid
           GridView.count(
             crossAxisCount: 2,
             shrinkWrap: true,
@@ -214,59 +388,132 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 title: 'TODAY RESERVATIONS',
                 value: '${booking.todayCount}',
                 icon: Icons.calendar_today_rounded,
-                color: Colors.orangeAccent,
+                color: const Color(0xFFF59E0B),
+                trend: '+18% today',
               ),
               StatsCard(
                 title: 'CONFIRMED TABLES',
                 value: '${booking.confirmedCount}',
                 icon: Icons.check_circle_rounded,
-                color: Colors.greenAccent,
+                color: const Color(0xFF10B981),
+                subtitle: '85% occupancy',
               ),
               StatsCard(
                 title: 'PENDING ALERTS',
                 value: '${booking.pendingCount}',
                 icon: Icons.pending_actions_rounded,
-                color: Colors.amberAccent,
+                color: const Color(0xFFF97316),
+                subtitle: 'Requires action',
               ),
               StatsCard(
-                title: 'TOTAL COVERS',
+                title: 'EXPECTED COVERS',
                 value: '${booking.totalCount * 3}',
-                icon: Icons.people_alt_rounded,
-                color: Colors.blueAccent,
+                icon: Icons.groups_rounded,
+                color: const Color(0xFF6366F1),
+                subtitle: 'Evening peak',
               ),
             ],
           ),
-          const SizedBox(height: 24),
 
-          // Today's incoming reservations section
+          const SizedBox(height: 22),
+
+          // Live Reservations Section Header & Filter Chips
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                'Live Reservation Stream',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                'Live Floor Stream',
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
+                  letterSpacing: -0.3,
+                ),
               ),
-              Text(
-                '${booking.bookings.length} Bookings',
-                style: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1E293B),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '${filteredList.length} of ${allList.length}',
+                  style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8), fontWeight: FontWeight.w600),
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
 
-          if (booking.bookings.isEmpty)
+          const SizedBox(height: 10),
+
+          // Filter tabs
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: ['ALL', 'PENDING', 'CONFIRMED', 'CANCELLED'].map((filter) {
+                final isSelected = _activeFilter == filter;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: InkWell(
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      setState(() => _activeFilter = filter);
+                    },
+                    borderRadius: BorderRadius.circular(20),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: isSelected ? const Color(0xFFF59E0B) : const Color(0xFF131B2E),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: isSelected ? const Color(0xFFF59E0B) : const Color(0xFF222F49),
+                        ),
+                      ),
+                      child: Text(
+                        filter,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                          color: isSelected ? const Color(0xFF0F172A) : const Color(0xFF94A3B8),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+
+          const SizedBox(height: 14),
+
+          // Reservations List
+          if (filteredList.isEmpty)
             Container(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(32),
               alignment: Alignment.center,
-              child: const Text('No active reservations', style: TextStyle(color: Colors.grey)),
+              decoration: BoxDecoration(
+                color: const Color(0xFF131B2E),
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: const Color(0xFF222F49)),
+              ),
+              child: const Column(
+                children: [
+                  Icon(Icons.inbox_rounded, size: 40, color: Color(0xFF475569)),
+                  SizedBox(height: 8),
+                  Text(
+                    'No reservations in this view',
+                    style: TextStyle(color: Color(0xFF94A3B8), fontSize: 13, fontWeight: FontWeight.w600),
+                  ),
+                ],
+              ),
             )
           else
             ListView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: booking.bookings.length,
+              itemCount: filteredList.length,
               itemBuilder: (context, idx) {
-                final b = booking.bookings[idx];
+                final b = filteredList[idx];
                 return BookingCard(
                   booking: b,
                   onAccept: () => booking.updateStatus(b.bookingId, BookingStatus.confirmed),

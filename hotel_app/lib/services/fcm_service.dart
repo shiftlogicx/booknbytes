@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 
@@ -94,7 +92,7 @@ class FCMService {
     print('Unsubscribed from topic: restaurant_$restaurantId');
   }
 
-  /// Handle foreground messages — this is where the MyGate-style alert triggers
+  /// Handle foreground messages — triggers priority ringing alert
   void _handleForegroundMessage(RemoteMessage message) {
     print('Foreground FCM: ${message.messageId}');
     print('Data: ${message.data}');

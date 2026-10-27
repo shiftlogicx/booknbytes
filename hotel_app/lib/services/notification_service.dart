@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import '../models/booking_model.dart';
@@ -17,12 +18,37 @@ class NotificationService {
 
   bool _isRinging = false;
   Timer? _snoozeTimer;
+  Timer? _vibrateTimer;
 
   /// Callback when a booking alert should be shown
   Function(BookingModel booking)? onIncomingBooking;
 
-  /// Initialize local notifications
+  /// Initialize local notifications & audio session
   Future<void> initialize() async {
+    // Configure iOS / Android audio sessions to playback over mute/silent mode
+    try {
+      await AudioPlayer.global.setAudioContext(
+        AudioContext(
+          iOS: AudioContextIOS(
+            category: AVAudioSessionCategory.playback,
+            options: const {
+              AVAudioSessionOptions.duckOthers,
+              AVAudioSessionOptions.defaultToSpeaker,
+            },
+          ),
+          android: const AudioContextAndroid(
+            isSpeakerphoneOn: true,
+            stayAwake: true,
+            contentType: AndroidContentType.sonification,
+            usageType: AndroidUsageType.alarm,
+            audioFocus: AndroidAudioFocus.gainTransient,
+          ),
+        ),
+      );
+    } catch (e) {
+      debugPrint('[NotificationService] AudioContext configuration note: $e');
+    }
+
     const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: true,
@@ -85,30 +111,44 @@ class NotificationService {
     );
   }
 
-  /// Start playing alert sound in a loop
+  /// Start playing alert sound in a loop with synchronous haptic ringing
   Future<void> startRinging() async {
     if (_isRinging) return;
     _isRinging = true;
 
+    // Trigger immediate haptics & start continuous vibration pulses
+    HapticFeedback.heavyImpact();
+    _vibrateTimer?.cancel();
+    _vibrateTimer = Timer.periodic(const Duration(milliseconds: 900), (_) {
+      if (_isRinging) {
+        HapticFeedback.heavyImpact();
+      }
+    });
+
     try {
       await _audioPlayer.setReleaseMode(ReleaseMode.loop);
-      // Use a system-like alert tone. The asset can be replaced with a custom one.
-      await _audioPlayer.setSource(AssetSource('sounds/alert_tone.mp3'));
-      await _audioPlayer.resume();
+      await _audioPlayer.setVolume(1.0);
+      
+      // Try m4a high quality format first, fallback to wav
+      try {
+        await _audioPlayer.play(AssetSource('sounds/alert_tone.m4a'));
+      } catch (_) {
+        await _audioPlayer.play(AssetSource('sounds/alert_tone.wav'));
+      }
     } catch (e) {
-      // If custom sound fails, try to play using a URL-based fallback
-      print('Audio playback error: $e');
-      // The alert overlay visual will still work even without sound
+      debugPrint('[NotificationService] Audio playback notice: $e');
     }
   }
 
   /// Stop playing alert sound
   Future<void> stopRinging() async {
     _isRinging = false;
+    _vibrateTimer?.cancel();
+    _vibrateTimer = null;
     try {
       await _audioPlayer.stop();
     } catch (e) {
-      print('Error stopping audio: $e');
+      debugPrint('[NotificationService] Error stopping audio: $e');
     }
   }
 
