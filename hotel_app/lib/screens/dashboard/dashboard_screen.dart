@@ -13,8 +13,11 @@ import '../../widgets/location_picker_sheet.dart';
 import '../../widgets/stats_card.dart';
 import '../alerts/incoming_booking_alert.dart';
 import '../bookings/booking_list_screen.dart';
+import '../profile/restaurant_profile_screen.dart';
 import '../settings/settings_screen.dart';
 import '../slots/slot_management_screen.dart';
+import '../support/support_screen.dart';
+import '../../widgets/partner_walkthrough_modal.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -37,6 +40,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
           .fetchBookings(auth.currentRestaurantId);
       // Automatically detect real device GPS coordinates on launch
       Provider.of<LocationProvider>(context, listen: false).detectCurrentLocation();
+
+      // Show interactive first-time partner walkthrough if not yet seen
+      if (!auth.hasSeenTutorial) {
+        Future.delayed(const Duration(milliseconds: 600), () {
+          if (mounted) {
+            PartnerWalkthroughModal.show(context);
+          }
+        });
+      }
     });
   }
 
@@ -183,7 +195,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
             onPressed: _simulateIncomingAlert,
           ),
-          const SizedBox(width: 10),
+          // 24x7 Support Hotline & Desk
+          IconButton(
+            tooltip: 'Partner Helpdesk & FAQs',
+            icon: const Icon(Icons.headset_mic_rounded, color: Color(0xFF00E599), size: 20),
+            onPressed: () {
+              HapticFeedback.lightImpact();
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const SupportScreen()),
+              );
+            },
+          ),
+          // Edit Restaurant Profile
+          IconButton(
+            tooltip: 'Restaurant Profile & Timings',
+            icon: const Icon(Icons.storefront_rounded, color: Color(0xFF38BDF8), size: 20),
+            onPressed: () {
+              HapticFeedback.lightImpact();
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const RestaurantProfileScreen()),
+              );
+            },
+          ),
+          const SizedBox(width: 4),
         ],
       ),
       body: _buildCurrentTab(),
