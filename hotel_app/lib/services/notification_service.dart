@@ -131,12 +131,12 @@ class NotificationService {
       await _audioPlayer.setVolume(1.0);
       
       try {
-        await _audioPlayer.play(AssetSource('sounds/alert_tone.mp3'));
+        await _audioPlayer.play(AssetSource('sounds/alert_tone.wav'));
       } catch (_) {
         try {
           await _audioPlayer.play(AssetSource('sounds/alert_tone.m4a'));
         } catch (_) {
-          await _audioPlayer.play(AssetSource('sounds/alert_tone.wav'));
+          await _audioPlayer.play(AssetSource('sounds/alert_tone.mp3'));
         }
       }
     } catch (e) {

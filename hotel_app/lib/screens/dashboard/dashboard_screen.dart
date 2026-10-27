@@ -8,7 +8,7 @@ import '../../providers/location_provider.dart';
 import '../../providers/notification_provider.dart';
 import '../../widgets/booking_card.dart';
 import '../../widgets/glass_nav_dock.dart';
-import '../../widgets/interactive_floor_map.dart';
+import '../../widgets/live_dining_queue.dart';
 import '../../widgets/location_picker_sheet.dart';
 import '../../widgets/stats_card.dart';
 import '../alerts/incoming_booking_alert.dart';
@@ -466,8 +466,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
           const SizedBox(height: 18),
 
-          // Interactive 2D Live Dining Floor Plan
-          const InteractiveFloorMap(),
+          // Live Dining Queue & Capacity Surge Meter
+          const LiveDiningQueueTracker(),
 
           const SizedBox(height: 22),
 
