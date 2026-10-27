@@ -204,7 +204,7 @@ class BookingCard extends StatelessWidget {
                                 )
                               else
                                 const Text(
-                                  'Swiggy Dineout Guest',
+                                  'Book & Bite Verified Guest',
                                   style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
                                 ),
                             ],

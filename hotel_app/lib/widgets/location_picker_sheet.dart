@@ -86,8 +86,8 @@ class _LocationPickerBottomSheetState extends State<LocationPickerBottomSheet> {
                       ),
                     ),
                     SizedBox(height: 2),
-                    Text(
-                      'Swiggy Dineout Partner Network',
+                    const Text(
+                      'Book & Bite Dining Network',
                       style: TextStyle(
                         fontSize: 12,
                         color: Color(0xFF94A3B8),
@@ -142,13 +142,17 @@ class _LocationPickerBottomSheetState extends State<LocationPickerBottomSheet> {
             child: InkWell(
               onTap: () async {
                 HapticFeedback.lightImpact();
-                await locationProvider.detectCurrentLocation();
+                final success = await locationProvider.detectCurrentLocation();
                 if (context.mounted) {
                   Navigator.pop(context);
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('📍 Location updated to ${locationProvider.currentLocation.shortLabel}'),
-                      backgroundColor: const Color(0xFF10B981),
+                      content: Text(
+                        success
+                            ? '📍 GPS fixed: ${locationProvider.currentLocation.fullAddress}'
+                            : (locationProvider.locationStatusMessage ?? '📍 Location updated to ${locationProvider.currentLocation.shortLabel}'),
+                      ),
+                      backgroundColor: success ? const Color(0xFF10B981) : const Color(0xFFF59E0B),
                       behavior: SnackBarBehavior.floating,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                     ),

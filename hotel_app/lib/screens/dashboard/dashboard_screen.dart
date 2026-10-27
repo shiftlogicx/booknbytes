@@ -12,6 +12,7 @@ import '../../widgets/stats_card.dart';
 import '../alerts/incoming_booking_alert.dart';
 import '../bookings/booking_list_screen.dart';
 import '../settings/settings_screen.dart';
+import '../slots/slot_management_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -32,38 +33,53 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final auth = Provider.of<AuthProvider>(context, listen: false);
       Provider.of<BookingProvider>(context, listen: false)
           .fetchBookings(auth.currentRestaurantId);
+      // Automatically detect real device GPS coordinates on launch
+      Provider.of<LocationProvider>(context, listen: false).detectCurrentLocation();
     });
   }
 
-  void _simulateIncomingAlert() {
+  void _simulateIncomingAlert() async {
     HapticFeedback.heavyImpact();
     final notifProvider = Provider.of<NotificationProvider>(context, listen: false);
     final bookingProvider = Provider.of<BookingProvider>(context, listen: false);
 
     final mockBooking = BookingModel(
       bookingId: 'bk_${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}',
-      userId: 'usr_swiggy_vip',
+      userId: 'usr_vip_guest',
       restaurantId: 'res_12345xyz',
-      restaurantName: 'Mahesh Lunch Home',
+      restaurantName: 'The Royal Heritage',
       customerName: 'Aditya & Ananya Roy',
       customerPhone: '+91 98230 45678',
       partySize: 4,
       date: DateTime.now().toIso8601String().split('T')[0],
       timeSlot: '20:30',
       status: BookingStatus.pending,
-      appliedOffer: 'SWIGGY20',
+      appliedOffer: 'TASTE20',
       createdAt: DateTime.now(),
     );
 
     bookingProvider.addNewIncomingBooking(mockBooking);
     notifProvider.triggerIncomingBookingAlert(mockBooking);
 
-    Navigator.of(context).push(
+    final result = await Navigator.of(context).push<bool>(
       PageRouteBuilder(
         opaque: false,
         pageBuilder: (context, _, __) => IncomingBookingAlertScreen(booking: mockBooking),
       ),
     );
+
+    if (!mounted) return;
+
+    if (result == false) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Reservation #${mockBooking.bookingId} Declined'),
+          backgroundColor: const Color(0xFFEF4444),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
+      );
+    }
   }
 
   @override
@@ -199,6 +215,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
               label: 'Reservations',
             ),
             BottomNavigationBarItem(
+              icon: Icon(Icons.percent_rounded),
+              activeIcon: Icon(Icons.percent_rounded, color: Color(0xFFF59E0B)),
+              label: 'Slots & Deals',
+            ),
+            BottomNavigationBarItem(
               icon: Icon(Icons.tune_rounded),
               activeIcon: Icon(Icons.tune_rounded, color: Color(0xFFF59E0B)),
               label: 'Settings',
@@ -214,6 +235,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       case 1:
         return const BookingListScreen();
       case 2:
+        return const SlotManagementScreen(isTab: true);
+      case 3:
         return const SettingsScreen();
       default:
         return _buildFloorView();
@@ -370,6 +393,65 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   ),
                 ),
               ],
+            ),
+          ),
+
+          const SizedBox(height: 12),
+
+          // Dynamic Slots & Hourly Discounts Quick Banner
+          GestureDetector(
+            onTap: () {
+              HapticFeedback.lightImpact();
+              setState(() => _currentNavIndex = 2);
+            },
+            child: Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [
+                    Color(0xFF1E1B4B), // Indigo luxury tint
+                    Color(0xFF101726),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFF6366F1).withOpacity(0.4)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF6366F1).withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(Icons.percent_rounded, color: Color(0xFFA5B4FC), size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Manage Hourly Slots & Discounts',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 13,
+                            color: Colors.white,
+                          ),
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          'Configure 10%-40% OFF & table limits per slot',
+                          style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(Icons.arrow_forward_ios_rounded, color: Color(0xFFA5B4FC), size: 14),
+                ],
+              ),
             ),
           ),
 

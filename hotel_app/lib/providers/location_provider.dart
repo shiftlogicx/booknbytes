@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
 
 class DiningLocation {
   final String locality;
@@ -7,6 +9,7 @@ class DiningLocation {
   final double latitude;
   final double longitude;
   final bool isDefault;
+  final bool isRealGps;
 
   const DiningLocation({
     required this.locality,
@@ -15,6 +18,7 @@ class DiningLocation {
     required this.latitude,
     required this.longitude,
     this.isDefault = false,
+    this.isRealGps = false,
   });
 
   String get shortLabel => '$locality, $city';
@@ -46,9 +50,11 @@ class LocationProvider extends ChangeNotifier {
 
   late DiningLocation _currentLocation;
   bool _isLocating = false;
+  String? _locationStatusMessage;
 
   DiningLocation get currentLocation => _currentLocation;
   bool get isLocating => _isLocating;
+  String? get locationStatusMessage => _locationStatusMessage;
 
   LocationProvider() {
     _currentLocation = popularLocations.first;
@@ -56,16 +62,104 @@ class LocationProvider extends ChangeNotifier {
 
   void setLocation(DiningLocation location) {
     _currentLocation = location;
+    _locationStatusMessage = null;
     notifyListeners();
   }
 
-  Future<void> detectCurrentLocation() async {
+  /// Request actual device GPS fix and reverse-geocode to locality & city
+  Future<bool> detectCurrentLocation() async {
     _isLocating = true;
+    _locationStatusMessage = 'Acquiring GPS fix...';
     notifyListeners();
-    // Simulate high-precision GPS lock
-    await Future.delayed(const Duration(milliseconds: 600));
-    _currentLocation = popularLocations.first; // Locked to current locality
-    _isLocating = false;
-    notifyListeners();
+
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        _locationStatusMessage = 'Location services disabled on device';
+        _isLocating = false;
+        notifyListeners();
+        return false;
+      }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          _locationStatusMessage = 'Location permission denied by user';
+          _isLocating = false;
+          notifyListeners();
+          return false;
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        _locationStatusMessage = 'Location permission permanently denied';
+        _isLocating = false;
+        notifyListeners();
+        return false;
+      }
+
+      // Fetch actual GPS hardware position
+      final Position position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 8),
+        ),
+      );
+
+      // Reverse geocode to street, locality, and city
+      final List<Placemark> placemarks = await Geocoding().placemarkFromCoordinates(
+        position.latitude,
+        position.longitude,
+      );
+
+      if (placemarks.isNotEmpty) {
+        final Placemark place = placemarks.first;
+        final String locality = (place.subLocality?.isNotEmpty ?? false)
+            ? place.subLocality!
+            : (place.locality?.isNotEmpty ?? false)
+                ? place.locality!
+                : (place.name?.isNotEmpty ?? false)
+                    ? place.name!
+                    : 'Current Area';
+
+        final String city = (place.subAdministrativeArea?.isNotEmpty ?? false)
+            ? place.subAdministrativeArea!
+            : (place.locality?.isNotEmpty ?? false)
+                ? place.locality!
+                : 'Local';
+
+        final String state = place.administrativeArea ?? 'India';
+
+        _currentLocation = DiningLocation(
+          locality: locality,
+          city: city,
+          state: state,
+          latitude: position.latitude,
+          longitude: position.longitude,
+          isRealGps: true,
+        );
+        _locationStatusMessage = 'GPS fixed: $locality, $city';
+      } else {
+        _currentLocation = DiningLocation(
+          locality: 'GPS Coords',
+          city: '${position.latitude.toStringAsFixed(2)}, ${position.longitude.toStringAsFixed(2)}',
+          state: 'Detected',
+          latitude: position.latitude,
+          longitude: position.longitude,
+          isRealGps: true,
+        );
+      }
+
+      _isLocating = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      debugPrint('[LocationProvider] Real GPS fallback error: $e');
+      _locationStatusMessage = 'GPS note: $e (using nearest dining hub)';
+      _isLocating = false;
+      notifyListeners();
+      return false;
+    }
   }
 }

@@ -92,7 +92,7 @@ class BookingListScreen extends StatelessWidget {
                           ),
                           const SizedBox(height: 4),
                           const Text(
-                            'Reservations from Swiggy Dineout will appear here',
+                            'Reservations from guest bookings will appear here',
                             style: TextStyle(color: Color(0xFF64748B), fontSize: 12),
                           ),
                         ],

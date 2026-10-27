@@ -20,6 +20,8 @@ dependencies:
   intl: ^0.20.2
   fl_chart: ^0.70.2
   cached_network_image: ^3.4.1
+  geolocator: ^14.0.2
+  geocoding: ^5.0.0
 
 dev_dependencies:
   flutter_test:

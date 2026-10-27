@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 
 import '../config/firebase_config.dart';
@@ -45,6 +46,9 @@ class BookingService {
     String restaurantId,
     String date,
   ) async {
+    if (!FirebaseConfig.isConfigured) {
+      return [];
+    }
     final snapshot = await _bookingsRef
         .where('restaurant_id', isEqualTo: restaurantId)
         .where('date', isEqualTo: date)
@@ -62,6 +66,9 @@ class BookingService {
     BookingStatus status, {
     String? date,
   }) async {
+    if (!FirebaseConfig.isConfigured) {
+      return [];
+    }
     Query query = _bookingsRef
         .where('restaurant_id', isEqualTo: restaurantId)
         .where('status', isEqualTo: status.value);
@@ -79,6 +86,9 @@ class BookingService {
 
   /// Get a single booking by ID
   Future<BookingModel?> getBooking(String bookingId) async {
+    if (!FirebaseConfig.isConfigured) {
+      return null;
+    }
     final doc = await _bookingsRef.doc(bookingId).get();
     if (doc.exists) {
       return BookingModel.fromFirestore(doc);
@@ -91,10 +101,18 @@ class BookingService {
     String bookingId,
     BookingStatus newStatus,
   ) async {
-    await _bookingsRef.doc(bookingId).update({
-      'status': newStatus.value,
-      'updated_at': FieldValue.serverTimestamp(),
-    });
+    if (!FirebaseConfig.isConfigured) {
+      debugPrint('[BookingService] Mock mode: updated booking $bookingId status to ${newStatus.value}');
+      return;
+    }
+    try {
+      await _bookingsRef.doc(bookingId).update({
+        'status': newStatus.value,
+        'updated_at': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      debugPrint('[BookingService] Failed to update remote booking status: $e');
+    }
   }
 
   /// Accept a booking
@@ -145,6 +163,9 @@ class BookingService {
 
   /// Stream pending bookings count
   Stream<int> streamPendingCount(String restaurantId) {
+    if (!FirebaseConfig.isConfigured) {
+      return Stream.value(0);
+    }
     final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
     return _bookingsRef
         .where('restaurant_id', isEqualTo: restaurantId)

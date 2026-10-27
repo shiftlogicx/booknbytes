@@ -54,7 +54,7 @@ class BookingProvider extends ChangeNotifier {
         date: '2026-10-25',
         timeSlot: '20:30',
         status: BookingStatus.pending,
-        appliedOffer: 'dineout_20',
+        appliedOffer: 'taste_20',
         createdAt: DateTime.parse('2026-10-25T16:20:00Z'),
       ),
       BookingModel(
@@ -102,7 +102,11 @@ class BookingProvider extends ChangeNotifier {
       _bookings[idx] = _bookings[idx].copyWith(status: newStatus);
       notifyListeners();
     }
-    await _bookingService.updateBookingStatus(bookingId, newStatus);
+    try {
+      await _bookingService.updateBookingStatus(bookingId, newStatus);
+    } catch (e) {
+      debugPrint('[BookingProvider] updateStatus non-critical notice: $e');
+    }
   }
 
   void addNewIncomingBooking(BookingModel booking) {

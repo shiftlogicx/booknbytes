@@ -126,14 +126,18 @@ class NotificationService {
     });
 
     try {
+      SystemSound.play(SystemSoundType.alert);
       await _audioPlayer.setReleaseMode(ReleaseMode.loop);
       await _audioPlayer.setVolume(1.0);
       
-      // Try m4a high quality format first, fallback to wav
       try {
-        await _audioPlayer.play(AssetSource('sounds/alert_tone.m4a'));
+        await _audioPlayer.play(AssetSource('sounds/alert_tone.mp3'));
       } catch (_) {
-        await _audioPlayer.play(AssetSource('sounds/alert_tone.wav'));
+        try {
+          await _audioPlayer.play(AssetSource('sounds/alert_tone.m4a'));
+        } catch (_) {
+          await _audioPlayer.play(AssetSource('sounds/alert_tone.wav'));
+        }
       }
     } catch (e) {
       debugPrint('[NotificationService] Audio playback notice: $e');
