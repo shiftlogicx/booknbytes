@@ -100,7 +100,7 @@ class BookingListScreen extends StatelessWidget {
                     )
                   : ListView.builder(
                       physics: const BouncingScrollPhysics(),
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 95),
                       itemCount: booking.bookings.length,
                       itemBuilder: (context, idx) {
                         final b = booking.bookings[idx];

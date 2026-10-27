@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'config/firebase_config.dart';
+import 'config/theme.dart';
 import 'providers/auth_provider.dart';
 import 'providers/booking_provider.dart';
 import 'providers/location_provider.dart';
@@ -44,16 +45,7 @@ class BookAndBiteHotelApp extends StatelessWidget {
       child: MaterialApp(
         title: 'Book & Bite Partner',
         debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          brightness: Brightness.dark,
-          scaffoldBackgroundColor: const Color(0xFF0F172A),
-          colorScheme: const ColorScheme.dark(
-            primary: Color(0xFF1E293B),
-            secondary: Colors.orangeAccent,
-            surface: Color(0xFF1E293B),
-          ),
-          fontFamily: 'sans-serif',
-        ),
+        theme: AppTheme.darkTheme,
         home: const SplashScreen(),
       ),
     );

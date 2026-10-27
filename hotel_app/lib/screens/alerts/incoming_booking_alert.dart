@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../models/booking_model.dart';
 import '../../providers/booking_provider.dart';
 import '../../providers/notification_provider.dart';
+import '../../widgets/cred_swipe_slider.dart';
 
 /// Full-screen priority incoming booking alert with celebration on confirmation
 class IncomingBookingAlertScreen extends StatefulWidget {
@@ -341,29 +342,11 @@ class _IncomingBookingAlertScreenState extends State<IncomingBookingAlertScreen>
               // Bottom Action Buttons
               Column(
                 children: [
-                  // Accept Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 58,
-                    child: ElevatedButton.icon(
-                      onPressed: _onAccept,
-                      icon: const Icon(Icons.check_circle_rounded, color: Colors.white, size: 24),
-                      label: const Text(
-                        'ACCEPT TABLE RESERVATION',
-                        style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.8,
-                          color: Colors.white,
-                        ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF10B981),
-                        elevation: 8,
-                        shadowColor: const Color(0xFF10B981).withOpacity(0.5),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                      ),
-                    ),
+                  // CRED-Style Swipe to Confirm Slider
+                  CredSwipeSlider(
+                    label: 'SLIDE TO ACCEPT TABLE',
+                    activeColor: const Color(0xFF00E599),
+                    onConfirmed: _onAccept,
                   ),
                   const SizedBox(height: 12),
 

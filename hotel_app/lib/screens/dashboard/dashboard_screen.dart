@@ -7,6 +7,8 @@ import '../../providers/booking_provider.dart';
 import '../../providers/location_provider.dart';
 import '../../providers/notification_provider.dart';
 import '../../widgets/booking_card.dart';
+import '../../widgets/glass_nav_dock.dart';
+import '../../widgets/interactive_floor_map.dart';
 import '../../widgets/location_picker_sheet.dart';
 import '../../widgets/stats_card.dart';
 import '../alerts/incoming_booking_alert.dart';
@@ -185,47 +187,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ],
       ),
       body: _buildCurrentTab(),
-      bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          border: Border(
-            top: BorderSide(color: Color(0xFF1E2638), width: 1),
-          ),
-        ),
-        child: BottomNavigationBar(
-          currentIndex: _currentNavIndex,
-          onTap: (idx) {
-            HapticFeedback.selectionClick();
-            setState(() => _currentNavIndex = idx);
-          },
-          backgroundColor: const Color(0xFF101726),
-          selectedItemColor: const Color(0xFFF59E0B),
-          unselectedItemColor: const Color(0xFF64748B),
-          selectedFontSize: 11,
-          unselectedFontSize: 11,
-          type: BottomNavigationBarType.fixed,
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.dashboard_rounded),
-              activeIcon: Icon(Icons.dashboard_rounded, color: Color(0xFFF59E0B)),
-              label: 'Live Floor',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.calendar_month_rounded),
-              activeIcon: Icon(Icons.calendar_month_rounded, color: Color(0xFFF59E0B)),
-              label: 'Reservations',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.percent_rounded),
-              activeIcon: Icon(Icons.percent_rounded, color: Color(0xFFF59E0B)),
-              label: 'Slots & Deals',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.tune_rounded),
-              activeIcon: Icon(Icons.tune_rounded, color: Color(0xFFF59E0B)),
-              label: 'Settings',
-            ),
-          ],
-        ),
+      extendBody: true, // Allows content to float under the glass dock
+      bottomNavigationBar: GlassNavDock(
+        currentIndex: _currentNavIndex,
+        onTabSelected: (idx) {
+          setState(() => _currentNavIndex = idx);
+        },
       ),
     );
   }
@@ -254,7 +221,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -496,6 +463,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ],
           ),
+
+          const SizedBox(height: 18),
+
+          // Interactive 2D Live Dining Floor Plan
+          const InteractiveFloorMap(),
 
           const SizedBox(height: 22),
 

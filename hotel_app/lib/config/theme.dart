@@ -26,46 +26,47 @@ class AppTheme {
   static const Color cancelled = Color(0xFF9E9E9E);
 
   // Surface Colors
-  static const Color surfaceDark = Color(0xFF121212);
-  static const Color cardDark = Color(0xFF1E1E2C);
-  static const Color cardDarkElevated = Color(0xFF252540);
+  static const Color surfaceDark = Color(0xFF07090E);
+  static const Color cardDark = Color(0xFF101420);
+  static const Color cardDarkElevated = Color(0xFF161C2C);
 
   // Text Colors
   static const Color textPrimary = Color(0xFFFFFFFF);
-  static const Color textSecondary = Color(0xFFB0BEC5);
-  static const Color textHint = Color(0xFF78909C);
+  static const Color textSecondary = Color(0xFF94A3B8);
+  static const Color textHint = Color(0xFF64748B);
 
   static ThemeData get darkTheme {
     return ThemeData(
       brightness: Brightness.dark,
-      primaryColor: primaryDark,
+      primaryColor: const Color(0xFF00E599),
       scaffoldBackgroundColor: surfaceDark,
       colorScheme: const ColorScheme.dark(
-        primary: primaryDark,
+        primary: Color(0xFF00E599),
         secondary: accent,
         surface: cardDark,
         error: alertRed,
-        onPrimary: Colors.white,
+        onPrimary: Colors.black,
         onSecondary: Colors.black,
         onSurface: textPrimary,
         onError: Colors.white,
       ),
       appBarTheme: AppBarTheme(
-        backgroundColor: primaryDark,
+        backgroundColor: const Color(0xFF101420),
         elevation: 0,
-        centerTitle: true,
-        titleTextStyle: GoogleFonts.poppins(
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
+        centerTitle: false,
+        titleTextStyle: GoogleFonts.plusJakartaSans(
+          fontSize: 18,
+          fontWeight: FontWeight.w800,
           color: Colors.white,
         ),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       cardTheme: CardThemeData(
         color: cardDark,
-        elevation: 4,
+        elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: Color(0xFF222B3D), width: 1.2),
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -110,7 +111,7 @@ class AppTheme {
         labelStyle: GoogleFonts.poppins(color: textSecondary),
         hintStyle: GoogleFonts.poppins(color: textHint),
       ),
-      textTheme: GoogleFonts.poppinsTextTheme(
+      textTheme: GoogleFonts.plusJakartaSansTextTheme(
         const TextTheme(
           headlineLarge: TextStyle(
             fontSize: 28,

@@ -259,7 +259,7 @@ class _SlotManagementScreenState extends State<SlotManagementScreen> {
           Expanded(
             child: ListView.builder(
               physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 90),
+              padding: EdgeInsets.fromLTRB(16, 8, 16, widget.isTab ? 160 : 90),
               itemCount: filteredSlots.length,
               itemBuilder: (context, idx) {
                 return _buildSlotCard(filteredSlots[idx]);
@@ -271,7 +271,11 @@ class _SlotManagementScreenState extends State<SlotManagementScreen> {
 
       // Bottom Sticky Publish Bar
       bottomSheet: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+        padding: EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: widget.isTab ? 10 : 14,
+        ),
+        margin: EdgeInsets.only(bottom: widget.isTab ? 78 : 0),
         decoration: BoxDecoration(
           color: const Color(0xFF101726),
           border: const Border(
