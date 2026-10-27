@@ -51,7 +51,7 @@ class _PartnerWalkthroughModalState extends State<PartnerWalkthroughModal>
     ),
     _WalkthroughSlide(
       badge: 'FEATURE 02 · 1-TOUCH CONFIRMATION',
-      title: 'CRED Slide to Confirm',
+      title: '1-Touch Slide to Confirm',
       subtitle:
           'Confirm reservations frictionlessly with an intuitive swipe gesture. Instantly locks covers, allocates tables, and dispatches diner WhatsApp confirmations.',
       icon: Icons.swipe_right_alt_rounded,

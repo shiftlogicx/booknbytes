@@ -171,38 +171,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ),
         actions: [
-          // Audio Test Alert Chime Button
-          IconButton(
-            tooltip: 'Test Booking Audio Alert',
-            icon: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    const Color(0xFFDC2626).withOpacity(0.2),
-                    const Color(0xFF991B1B).withOpacity(0.1),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: const Color(0xFFEF4444).withOpacity(0.5)),
-              ),
-              child: const Row(
-                children: [
-                  Icon(Icons.notifications_active_rounded, color: Color(0xFFF87171), size: 14),
-                  SizedBox(width: 4),
-                  Text(
-                    'Test Alarm',
-                    style: TextStyle(
-                      color: Color(0xFFF87171),
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            onPressed: _simulateIncomingAlert,
-          ),
           // 24x7 Support Hotline & Desk
           IconButton(
             tooltip: 'Partner Helpdesk & FAQs',

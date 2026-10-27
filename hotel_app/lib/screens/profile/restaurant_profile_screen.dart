@@ -321,30 +321,22 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
                 validator: (val) => val == null || val.trim().isEmpty ? 'Owner name is mandatory' : null,
               ),
 
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildTextField(
-                      controller: _phoneController,
-                      label: 'Contact Phone *',
-                      hint: '+91 98200 87654',
-                      icon: Icons.phone_rounded,
-                      keyboardType: TextInputType.phone,
-                      validator: (val) => val == null || val.length < 8 ? 'Valid phone required' : null,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildTextField(
-                      controller: _emailController,
-                      label: 'Business Email *',
-                      hint: 'partner@restaurant.com',
-                      icon: Icons.email_rounded,
-                      keyboardType: TextInputType.emailAddress,
-                      validator: (val) => val == null || !val.contains('@') ? 'Valid email required' : null,
-                    ),
-                  ),
-                ],
+              _buildTextField(
+                controller: _phoneController,
+                label: 'Contact Phone *',
+                hint: '+91 98200 87654',
+                icon: Icons.phone_rounded,
+                keyboardType: TextInputType.phone,
+                validator: (val) => val == null || val.length < 8 ? 'Valid phone required' : null,
+              ),
+
+              _buildTextField(
+                controller: _emailController,
+                label: 'Business Email *',
+                hint: 'partner@restaurant.com',
+                icon: Icons.email_rounded,
+                keyboardType: TextInputType.emailAddress,
+                validator: (val) => val == null || !val.contains('@') ? 'Valid email required' : null,
               ),
 
               _buildTextField(

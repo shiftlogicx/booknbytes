@@ -218,21 +218,41 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     const Divider(color: Color(0xFF1E283D), height: 1),
                     const SizedBox(height: 12),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          'Lunch: ${profile.lunchOpen} - ${profile.lunchClose} | Dinner: ${profile.dinnerOpen} - ${profile.dinnerClose}',
-                          style: const TextStyle(fontSize: 10, color: Color(0xFF94A3B8), fontWeight: FontWeight.w600),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Lunch: ${profile.lunchOpen} - ${profile.lunchClose}',
+                                style: const TextStyle(fontSize: 10, color: Color(0xFF94A3B8), fontWeight: FontWeight.w600),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Dinner: ${profile.dinnerOpen} - ${profile.dinnerClose}',
+                                style: const TextStyle(fontSize: 10, color: Color(0xFF94A3B8), fontWeight: FontWeight.w600),
+                              ),
+                            ],
+                          ),
                         ),
-                        const Row(
-                          children: [
-                            Text(
-                              'Edit Details',
-                              style: TextStyle(fontSize: 11, color: Color(0xFF00E599), fontWeight: FontWeight.w800),
-                            ),
-                            SizedBox(width: 4),
-                            Icon(Icons.edit_rounded, size: 12, color: Color(0xFF00E599)),
-                          ],
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF00E599).withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: const Color(0xFF00E599).withValues(alpha: 0.35)),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'Edit Details',
+                                style: TextStyle(fontSize: 11, color: Color(0xFF00E599), fontWeight: FontWeight.w800),
+                              ),
+                              SizedBox(width: 4),
+                              Icon(Icons.edit_rounded, size: 12, color: Color(0xFF00E599)),
+                            ],
+                          ),
                         ),
                       ],
                     ),
@@ -510,7 +530,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _buildActionTile(
               icon: Icons.play_lesson_rounded,
               title: 'Replay App Walkthrough Tutorial',
-              subtitle: 'Explore priority alarms, CRED swipe and dynamic slots',
+              subtitle: 'Explore priority alarms, 1-touch swipe and dynamic slots',
               onTap: _replayTutorial,
               accentColor: const Color(0xFF818CF8),
             ),
