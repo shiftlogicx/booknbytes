@@ -47,7 +47,7 @@ class _LiveDiningQueueTrackerState extends State<LiveDiningQueueTracker>
           ),
         ],
       ),
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

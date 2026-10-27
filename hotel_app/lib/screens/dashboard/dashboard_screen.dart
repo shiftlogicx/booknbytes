@@ -332,7 +332,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
 
-          const SizedBox(height: 14),
+          const SizedBox(height: 10),
 
           // Priority Alarm Active Banner
           Container(
@@ -397,7 +397,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
 
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
 
           // Dynamic Slots & Hourly Discounts Quick Banner
           GestureDetector(
@@ -456,16 +456,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 10),
 
           // Luxury Stats Grid
           GridView.count(
+            padding: EdgeInsets.zero,
             crossAxisCount: 2,
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
-            childAspectRatio: 1.45,
+            crossAxisSpacing: 10,
+            mainAxisSpacing: 10,
+            childAspectRatio: 1.6,
             children: [
               StatsCard(
                 title: 'TODAY RESERVATIONS',
@@ -498,7 +499,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ],
           ),
 
-          const SizedBox(height: 18),
+          const SizedBox(height: 10),
 
           // Live Dining Queue & Capacity Surge Meter
           const LiveDiningQueueTracker(),

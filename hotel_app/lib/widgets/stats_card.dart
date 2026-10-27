@@ -26,7 +26,7 @@ class StatsCard extends StatelessWidget {
     final suffix = value.endsWith('%') ? '%' : '';
 
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: const Color(0xFF101420),
         borderRadius: BorderRadius.circular(20),
