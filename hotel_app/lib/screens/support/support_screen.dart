@@ -110,35 +110,58 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(10),
+                    padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: const Color(0xFF00E599).withValues(alpha: 0.15),
                       shape: BoxShape.circle,
+                      border: Border.all(color: const Color(0xFF00E599).withValues(alpha: 0.4)),
                     ),
-                    child: const Icon(Icons.phone_callback_rounded, color: Color(0xFF00E599), size: 24),
+                    child: const Text('📞', style: TextStyle(fontSize: 26)),
                   ),
                   const SizedBox(width: 14),
                   const Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Priority Callback Requested',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Colors.white),
+                      Row(
+                        children: [
+                          Text(
+                            'Priority Callback Requested',
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Colors.white),
+                          ),
+                          SizedBox(width: 6),
+                          Text('⚡', style: TextStyle(fontSize: 14)),
+                        ],
                       ),
-                      Text('Dedicated Partner Success Manager', style: TextStyle(fontSize: 12, color: Color(0xFF94A3B8))),
+                      SizedBox(height: 2),
+                      Text('Dedicated Partner Success Manager 👨‍💼', style: TextStyle(fontSize: 12, color: Color(0xFF00E599), fontWeight: FontWeight.w600)),
                     ],
                   ),
                 ],
               ),
               const SizedBox(height: 18),
-              const Text(
-                'Our partner support executive will connect directly to your registered mobile (+91 98200 87654) within 5 to 10 minutes.',
-                style: TextStyle(fontSize: 13, color: Color(0xFFCBD5E1), height: 1.4),
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF171E2D),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: const Color(0xFF28344E)),
+                ),
+                child: const Row(
+                  children: [
+                    Text('⏱️ ', style: TextStyle(fontSize: 20)),
+                    Expanded(
+                      child: Text(
+                        'Our partner executive is being dispatched now. You will receive a direct call on your phone within 5 minutes.',
+                        style: TextStyle(fontSize: 12, color: Color(0xFFCBD5E1), height: 1.4),
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 22),
               SizedBox(
                 width: double.infinity,
-                height: 48,
+                height: 50,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF00E599),
@@ -146,7 +169,13 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   ),
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Acknowledged • Return to App', style: TextStyle(fontWeight: FontWeight.w800)),
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('👍 ', style: TextStyle(fontSize: 16)),
+                      Text('Got It • Return to Floor', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14)),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -447,18 +476,76 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
                 style: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
               ),
               const SizedBox(height: 18),
-              SizedBox(
-                width: double.infinity,
-                height: 46,
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF00E599),
-                    foregroundColor: Colors.black,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              // Prominent Responsive Request Callback Card Button
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: _requestCallback,
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFF00E599), Color(0xFF05CD85)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF00E599).withValues(alpha: 0.35),
+                          blurRadius: 16,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(9),
+                          decoration: const BoxDecoration(
+                            color: Colors.black,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.phone_callback_rounded, color: Color(0xFF00E599), size: 18),
+                        ),
+                        const SizedBox(width: 14),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Text(
+                                    'Request Instant Callback',
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.w900,
+                                      fontSize: 14,
+                                      letterSpacing: -0.2,
+                                    ),
+                                  ),
+                                  SizedBox(width: 4),
+                                  Text('⚡', style: TextStyle(fontSize: 12)),
+                                ],
+                              ),
+                              SizedBox(height: 2),
+                              Text(
+                                'Dedicated partner manager calls in < 5 mins',
+                                style: TextStyle(
+                                  color: Color(0xFF064E3B),
+                                  fontWeight: FontWeight.w700,
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Icon(Icons.arrow_forward_rounded, color: Colors.black, size: 18),
+                      ],
+                    ),
                   ),
-                  icon: const Icon(Icons.phone_callback_rounded, size: 18),
-                  label: const Text('Request Instant Callback (< 5 mins)', style: TextStyle(fontWeight: FontWeight.w800)),
-                  onPressed: _requestCallback,
                 ),
               ),
             ],
@@ -471,6 +558,16 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
           style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 0.8, color: Color(0xFF64748B)),
         ),
         const SizedBox(height: 12),
+
+        // Callback Channel Tile
+        _buildSupportTile(
+          icon: Icons.phone_callback_rounded,
+          iconColor: const Color(0xFF00E599),
+          title: 'Request Priority Phone Callback ⚡',
+          subtitle: 'Manager connects to registered mobile in 5 mins',
+          actionLabel: 'Call Me 📞',
+          onTap: _requestCallback,
+        ),
 
         // WhatsApp Channel
         _buildSupportTile(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/booking_model.dart';
+import 'emoji_burst_animation.dart';
 
 class ReservationSuccessDialog extends StatefulWidget {
   final BookingModel booking;
@@ -71,15 +72,15 @@ class _ReservationSuccessDialogState extends State<ReservationSuccessDialog>
           decoration: BoxDecoration(
             color: const Color(0xFF101726),
             borderRadius: BorderRadius.circular(28),
-            border: Border.all(color: const Color(0xFF10B981).withOpacity(0.4), width: 1.5),
+            border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.4), width: 1.5),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFF10B981).withOpacity(0.25),
+                color: const Color(0xFF10B981).withValues(alpha: 0.25),
                 blurRadius: 32,
                 spreadRadius: 2,
               ),
               BoxShadow(
-                color: Colors.black.withOpacity(0.6),
+                color: Colors.black.withValues(alpha: 0.6),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -88,36 +89,13 @@ class _ReservationSuccessDialogState extends State<ReservationSuccessDialog>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Animated Checkmark Badge
-              ScaleTransition(
-                scale: _checkScaleAnimation,
-                child: Container(
-                  width: 82,
-                  height: 82,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF10B981), Color(0xFF047857)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF10B981).withOpacity(0.5),
-                        blurRadius: 20,
-                        spreadRadius: 4,
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.check_rounded,
-                    color: Colors.white,
-                    size: 48,
-                  ),
-                ),
+              // Happy Emoji Burst Animation
+              const EmojiCelebrationBurst(
+                emojis: ['🥳', '🎉', '🍽️', '✨', '👨‍🍳', '🥂', '🔥'],
+                size: 45,
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 12),
 
               // Title
               const Text(
@@ -130,14 +108,25 @@ class _ReservationSuccessDialogState extends State<ReservationSuccessDialog>
                 ),
               ),
               const SizedBox(height: 6),
-              const Text(
-                'Diner has been notified via instant SMS & Push',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Color(0xFF94A3B8),
-                  fontWeight: FontWeight.w500,
-                ),
-                textAlign: TextAlign.center,
+
+              // Italic "Diner is notified"
+              const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('🎉 ', style: TextStyle(fontSize: 13)),
+                  Text(
+                    'Diner is notified',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Color(0xFF00E599),
+                      fontStyle: FontStyle.italic,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.2,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  Text(' ✨', style: TextStyle(fontSize: 13)),
+                ],
               ),
 
               const SizedBox(height: 20),
@@ -166,7 +155,7 @@ class _ReservationSuccessDialogState extends State<ReservationSuccessDialog>
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFF59E0B).withOpacity(0.18),
+                            color: const Color(0xFFF59E0B).withValues(alpha: 0.18),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
@@ -180,44 +169,61 @@ class _ReservationSuccessDialogState extends State<ReservationSuccessDialog>
                         ),
                       ],
                     ),
-                    const Divider(height: 20, color: Color(0xFF222F49)),
+                    const SizedBox(height: 12),
+                    const Divider(color: Color(0xFF222F49), height: 1),
+                    const SizedBox(height: 12),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        _buildMiniDetail(Icons.people_alt_rounded, '${widget.booking.partySize} Guests'),
-                        _buildMiniDetail(Icons.access_time_filled_rounded, widget.booking.timeSlot),
-                        _buildMiniDetail(Icons.calendar_today_rounded, widget.booking.date),
+                        _buildInfoColumn(
+                          Icons.groups_rounded,
+                          '${widget.booking.partySize} Guests',
+                          const Color(0xFF38BDF8),
+                        ),
+                        _buildInfoColumn(
+                          Icons.access_time_rounded,
+                          widget.booking.timeSlot,
+                          const Color(0xFFF59E0B),
+                        ),
+                        _buildInfoColumn(
+                          Icons.percent_rounded,
+                          widget.booking.appliedOffer ?? 'STANDARD',
+                          const Color(0xFF10B981),
+                        ),
                       ],
                     ),
                   ],
                 ),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 22),
 
-              // Return to Floor Button
+              // Done Button
               SizedBox(
                 width: double.infinity,
-                height: 52,
+                height: 48,
                 child: ElevatedButton(
-                  onPressed: () {
-                    HapticFeedback.mediumImpact();
-                    Navigator.pop(context); // Close dialog
-                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFF10B981),
                     foregroundColor: Colors.white,
-                    elevation: 4,
-                    shadowColor: const Color(0xFF10B981).withOpacity(0.4),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                   ),
-                  child: const Text(
-                    'Done • Back to Floor',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.5,
-                    ),
+                  onPressed: () {
+                    HapticFeedback.selectionClick();
+                    Navigator.of(context).pop();
+                  },
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('🍽️ ', style: TextStyle(fontSize: 14)),
+                      Text(
+                        'Ready for Service',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -228,17 +234,17 @@ class _ReservationSuccessDialogState extends State<ReservationSuccessDialog>
     );
   }
 
-  Widget _buildMiniDetail(IconData icon, String label) {
+  Widget _buildInfoColumn(IconData icon, String value, Color color) {
     return Row(
       children: [
-        Icon(icon, size: 14, color: const Color(0xFFF59E0B)),
-        const SizedBox(width: 4),
+        Icon(icon, size: 15, color: color),
+        const SizedBox(width: 5),
         Text(
-          label,
+          value,
           style: const TextStyle(
-            fontSize: 11,
-            color: Color(0xFFCBD5E1),
-            fontWeight: FontWeight.w600,
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+            color: Colors.white,
           ),
         ),
       ],

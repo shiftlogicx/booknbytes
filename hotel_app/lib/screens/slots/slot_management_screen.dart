@@ -171,7 +171,7 @@ class _SlotManagementScreenState extends State<SlotManagementScreen> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Preset Applied: ${type.replaceAll('_', ' ').toUpperCase()}'),
+        content: Text('🎯 Preset Applied: ${type.replaceAll('_', ' ').toUpperCase()} ✨'),
         backgroundColor: const Color(0xFF10B981),
         duration: const Duration(seconds: 1),
         behavior: SnackBarBehavior.floating,
@@ -196,8 +196,8 @@ class _SlotManagementScreenState extends State<SlotManagementScreen> {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                'Published Live! $discountedCount discounted slots available to diners.',
-                style: const TextStyle(fontWeight: FontWeight.w600),
+                '🏷️ 🚀 Published Live! $discountedCount discounted slots available to diners! ✨',
+                style: const TextStyle(fontWeight: FontWeight.w700),
               ),
             ),
           ],

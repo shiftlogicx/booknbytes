@@ -338,32 +338,91 @@ class _PartnerWalkthroughModalState extends State<PartnerWalkthroughModal>
           animation: _pulseController,
           builder: (context, child) {
             return Transform.scale(
-              scale: 1.0 + (_pulseController.value * 0.15),
-              child: const Icon(
-                Icons.notifications_active_rounded,
-                size: 58,
-                color: Color(0xFFEF4444),
+              scale: 1.0 + (_pulseController.value * 0.12),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text('🔔', style: TextStyle(fontSize: 48)),
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('🎶', style: TextStyle(fontSize: 14 + (_pulseController.value * 4))),
+                      const SizedBox(width: 6),
+                      const Text('⚡', style: TextStyle(fontSize: 16)),
+                      const SizedBox(width: 6),
+                      Text('🎶', style: TextStyle(fontSize: 14 + (_pulseController.value * 4))),
+                    ],
+                  ),
+                ],
               ),
             );
           },
         );
       case _VisualType.swipeSlider:
-        return const Icon(
-          Icons.swipe_right_alt_rounded,
-          size: 64,
-          color: Color(0xFF00E599),
+        return AnimatedBuilder(
+          animation: _pulseController,
+          builder: (context, child) {
+            return Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Transform.translate(
+                  offset: Offset(_pulseController.value * 16 - 8, 0),
+                  child: const Text('👉', style: TextStyle(fontSize: 48)),
+                ),
+                const SizedBox(height: 4),
+                const Text('✨ Locked in 1-Swipe 🍽️', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xFF00E599))),
+              ],
+            );
+          },
         );
       case _VisualType.slotDiscounts:
-        return const Icon(
-          Icons.percent_rounded,
-          size: 58,
-          color: Color(0xFFF59E0B),
+        return Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text('🏷️', style: TextStyle(fontSize: 46)),
+            const SizedBox(height: 4),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF59E0B).withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: const Text(
+                    '30% OFF 🎉',
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: Color(0xFFFBBF24)),
+                  ),
+                ),
+              ],
+            ),
+          ],
         );
       case _VisualType.capacityFloor:
-        return const Icon(
-          Icons.pie_chart_rounded,
-          size: 58,
-          color: Color(0xFF38BDF8),
+        return Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text('👨‍🍳', style: TextStyle(fontSize: 46)),
+            const SizedBox(height: 4),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF38BDF8).withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: const Text(
+                    '82% Full 🍽️',
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: Color(0xFF38BDF8)),
+                  ),
+                ),
+              ],
+            ),
+          ],
         );
     }
   }

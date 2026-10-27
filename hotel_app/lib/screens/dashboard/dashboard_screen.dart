@@ -18,6 +18,7 @@ import '../settings/settings_screen.dart';
 import '../slots/slot_management_screen.dart';
 import '../support/support_screen.dart';
 import '../../widgets/partner_walkthrough_modal.dart';
+import '../../widgets/reservation_success_dialog.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -87,12 +88,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (result == false) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Reservation #${mockBooking.bookingId} Declined'),
+          content: Row(
+            children: [
+              const Text('🙏 ', style: TextStyle(fontSize: 16)),
+              Text('Reservation #${mockBooking.bookingId} Declined • Table Released'),
+            ],
+          ),
           backgroundColor: const Color(0xFFEF4444),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       );
+    } else if (result == true) {
+      ReservationSuccessDialog.show(context, mockBooking);
     }
   }
 
@@ -326,6 +334,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   onChanged: (val) {
                     HapticFeedback.selectionClick();
                     setState(() => _isAcceptingReservations = val);
+                    ScaffoldMessenger.of(context).clearSnackBars();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Row(
+                          children: [
+                            Text(val ? '👨‍🍳✨ ' : '☕😴 ', style: const TextStyle(fontSize: 16)),
+                            Expanded(
+                              child: Text(
+                                val ? 'Floor is LIVE! Accepting diner table bookings' : 'Floor Paused! Tables temporarily paused',
+                                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                              ),
+                            ),
+                          ],
+                        ),
+                        backgroundColor: const Color(0xFF101420),
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          side: BorderSide(color: val ? const Color(0xFF00E599) : const Color(0xFF64748B)),
+                        ),
+                        duration: const Duration(milliseconds: 2000),
+                      ),
+                    );
                   },
                 ),
               ],
@@ -605,7 +636,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 final b = filteredList[idx];
                 return BookingCard(
                   booking: b,
-                  onAccept: () => booking.updateStatus(b.bookingId, BookingStatus.confirmed),
+                  onAccept: () {
+                    booking.updateStatus(b.bookingId, BookingStatus.confirmed);
+                    ReservationSuccessDialog.show(context, b);
+                  },
                   onReject: () => booking.updateStatus(b.bookingId, BookingStatus.cancelled),
                 );
               },

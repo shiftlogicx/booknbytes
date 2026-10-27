@@ -358,10 +358,22 @@ class BookingCard extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: const Color(0xFF171D2C),
                             borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: const Color(0xFF00E599).withValues(alpha: 0.3)),
                           ),
-                          child: const Text(
-                            'Diner Notified',
-                            style: TextStyle(fontSize: 10, color: Color(0xFF94A3B8), fontWeight: FontWeight.w700),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text('✨ ', style: TextStyle(fontSize: 10)),
+                              Text(
+                                'Diner is notified',
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: Color(0xFF00E599),
+                                  fontStyle: FontStyle.italic,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],

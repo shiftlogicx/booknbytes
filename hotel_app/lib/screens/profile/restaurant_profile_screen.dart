@@ -176,9 +176,13 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
       SnackBar(
         content: const Row(
           children: [
-            Icon(Icons.verified_rounded, color: Color(0xFF00E599), size: 20),
-            SizedBox(width: 10),
-            Text('Partner Profile & Timings successfully saved!'),
+            Text('🏪 ✨ ', style: TextStyle(fontSize: 16)),
+            Expanded(
+              child: Text(
+                'Partner Profile & Shifts successfully saved! 🌟',
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+              ),
+            ),
           ],
         ),
         backgroundColor: const Color(0xFF101420),

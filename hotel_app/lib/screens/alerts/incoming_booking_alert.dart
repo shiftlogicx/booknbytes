@@ -6,6 +6,7 @@ import '../../models/booking_model.dart';
 import '../../providers/booking_provider.dart';
 import '../../providers/notification_provider.dart';
 import '../../widgets/cred_swipe_slider.dart';
+import '../../widgets/emoji_burst_animation.dart';
 
 /// Full-screen priority incoming booking alert with celebration on confirmation
 class IncomingBookingAlertScreen extends StatefulWidget {
@@ -427,37 +428,14 @@ class _IncomingBookingAlertScreenState extends State<IncomingBookingAlertScreen>
             children: [
               const SizedBox(height: 10),
 
-              // Animated Checkmark and Title
+              // Animated Checkmark, Emoji Burst and Title
               Column(
                 children: [
-                  ScaleTransition(
-                    scale: _checkScaleAnimation,
-                    child: Container(
-                      width: 96,
-                      height: 96,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF10B981), Color(0xFF059669)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF10B981).withOpacity(0.5),
-                            blurRadius: 36,
-                            spreadRadius: 8,
-                          ),
-                        ],
-                      ),
-                      child: const Icon(
-                        Icons.check_rounded,
-                        color: Colors.white,
-                        size: 58,
-                      ),
-                    ),
+                  const EmojiCelebrationBurst(
+                    emojis: ['🥳', '🎉', '🍽️', '✨', '👨‍🍳', '🥂', '🔥'],
+                    size: 48,
                   ),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 14),
                   const Text(
                     'Reservation Confirmed!',
                     style: TextStyle(
@@ -467,14 +445,23 @@ class _IncomingBookingAlertScreenState extends State<IncomingBookingAlertScreen>
                       letterSpacing: -0.5,
                     ),
                   ),
-                  const SizedBox(height: 6),
-                  const Text(
-                    'Diner notified instantly via SMS & Push notification',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Color(0xFF94A3B8),
-                      fontWeight: FontWeight.w500,
-                    ),
+                  const SizedBox(height: 8),
+                  const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('🎉 ', style: TextStyle(fontSize: 14)),
+                      Text(
+                        'Diner is notified',
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: Color(0xFF00E599),
+                          fontStyle: FontStyle.italic,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                      Text(' ✨', style: TextStyle(fontSize: 14)),
+                    ],
                   ),
                 ],
               ),
