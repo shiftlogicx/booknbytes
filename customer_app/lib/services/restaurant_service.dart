@@ -1,11 +1,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../config/firebase_config.dart';
 import '../models/restaurant_model.dart';
 
 class RestaurantService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  FirebaseFirestore get _firestore => FirebaseFirestore.instance;
 
   /// Get all active restaurants
   Future<List<RestaurantModel>> getRestaurants() async {
+    if (!FirebaseConfig.isConfigured) {
+      return _getMockRestaurants();
+    }
     final snapshot = await _firestore
         .collection('restaurants')
         .where('status', isEqualTo: 'ACTIVE')

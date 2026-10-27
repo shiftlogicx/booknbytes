@@ -1,16 +1,20 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 
+import '../config/firebase_config.dart';
 import '../models/booking_model.dart';
 
 class BookingService {
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  FirebaseFirestore get _firestore => FirebaseFirestore.instance;
 
   /// Get bookings collection reference
   CollectionReference get _bookingsRef => _firestore.collection('bookings');
 
   /// Stream of today's bookings for a restaurant
   Stream<List<BookingModel>> streamTodayBookings(String restaurantId) {
+    if (!FirebaseConfig.isConfigured) {
+      return const Stream.empty();
+    }
     final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
     return _bookingsRef
         .where('restaurant_id', isEqualTo: restaurantId)
@@ -24,6 +28,9 @@ class BookingService {
 
   /// Stream of all bookings for a restaurant
   Stream<List<BookingModel>> streamAllBookings(String restaurantId) {
+    if (!FirebaseConfig.isConfigured) {
+      return const Stream.empty();
+    }
     return _bookingsRef
         .where('restaurant_id', isEqualTo: restaurantId)
         .orderBy('created_at', descending: true)

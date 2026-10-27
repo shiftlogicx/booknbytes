@@ -4,6 +4,7 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 
 import '../models/booking_model.dart';
+import '../config/firebase_config.dart';
 import 'notification_service.dart';
 
 /// Top-level background message handler — must be a top-level function
@@ -27,7 +28,12 @@ class FCMService {
 
   /// Initialize FCM and set up message handlers
   Future<void> initialize() async {
-    // Only attempt to initialize FCM if Firebase is actively initialized
+    // Only attempt to initialize FCM if Firebase is actively configured
+    if (!FirebaseConfig.isConfigured) {
+      debugPrint('[FCMService] Firebase credentials not configured; skipping FCM setup for mock mode.');
+      return;
+    }
+
     try {
       // Request notification permissions
       final settings = await _messaging.requestPermission(

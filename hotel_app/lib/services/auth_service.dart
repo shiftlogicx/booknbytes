@@ -1,17 +1,19 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../config/firebase_config.dart';
 import '../models/restaurant_model.dart';
 
 class AuthService {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  FirebaseAuth get _auth => FirebaseAuth.instance;
+  FirebaseFirestore get _firestore => FirebaseFirestore.instance;
 
   /// Current authenticated user
-  User? get currentUser => _auth.currentUser;
+  User? get currentUser => FirebaseConfig.isConfigured ? _auth.currentUser : null;
 
   /// Auth state stream
-  Stream<User?> get authStateChanges => _auth.authStateChanges();
+  Stream<User?> get authStateChanges =>
+      FirebaseConfig.isConfigured ? _auth.authStateChanges() : const Stream.empty();
 
   /// Sign in with email and password
   Future<User?> signInWithEmail(String email, String password) async {
