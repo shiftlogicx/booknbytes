@@ -10,7 +10,7 @@ import '../../widgets/booking_card.dart';
 import '../../widgets/glass_nav_dock.dart';
 import '../../widgets/live_dining_queue.dart';
 import '../../widgets/location_picker_sheet.dart';
-import '../../widgets/stats_card.dart';
+import '../../widgets/shift_pulse_bento.dart';
 import '../alerts/incoming_booking_alert.dart';
 import '../bookings/booking_list_screen.dart';
 import '../profile/restaurant_profile_screen.dart';
@@ -231,74 +231,181 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Live Service Control Card
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF131D30), Color(0xFF0F172A)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+          // 1. UNIFIED COMMAND BAR (Replaces 3 cluttered banners)
+          _buildCommandHeader(locationProvider),
+
+          const SizedBox(height: 18),
+
+          // 2. SECTION A: SHIFT RESERVATION PULSE (4 Key Metrics Bento)
+          _buildSectionHeader(
+            badge: 'OVERVIEW',
+            badgeColor: const Color(0xFF6366F1),
+            title: 'Shift Reservation Pulse',
+            subtitle: 'Tap any quadrant to filter incoming guest stream',
+          ),
+          const SizedBox(height: 10),
+          ShiftPulseBento(
+            todayCount: booking.todayCount,
+            confirmedCount: booking.confirmedCount,
+            pendingCount: booking.pendingCount,
+            expectedCovers: booking.totalCount * 3,
+            selectedFilter: _activeFilter,
+            onFilterChanged: (filter) {
+              setState(() => _activeFilter = filter);
+            },
+          ),
+
+          const SizedBox(height: 20),
+
+          // 3. SECTION B: DINING ROOM & TABLE CAPACITY (Physical Floor & Turnover)
+          _buildSectionHeader(
+            badge: 'CAPACITY',
+            badgeColor: const Color(0xFF00E599),
+            title: 'Dining Room & Table Capacity',
+            subtitle: 'Real-time cover occupancy & table turnover',
+          ),
+          const SizedBox(height: 10),
+          const LiveDiningQueueTracker(),
+
+          const SizedBox(height: 22),
+
+          // 4. SECTION C: GUEST RESERVATION FEED (Live Chronological Diner Actions)
+          _buildSectionHeader(
+            badge: 'GUEST FEED',
+            badgeColor: const Color(0xFFF59E0B),
+            title: 'Live Reservation Feed',
+            subtitle: 'Review, confirm & seat diner arrivals',
+            trailingWidget: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E293B),
+                borderRadius: BorderRadius.circular(8),
               ),
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: const Color(0xFF222F49)),
+              child: Text(
+                '${filteredList.length} of ${allList.length}',
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: Color(0xFF94A3B8),
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
             ),
+          ),
+          const SizedBox(height: 12),
+
+          // Filter tabs (Pills)
+          _buildFilterTabs(allList.length, booking),
+
+          const SizedBox(height: 14),
+
+          // Reservations List
+          if (filteredList.isEmpty)
+            _buildEmptyState()
+          else
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: filteredList.length,
+              itemBuilder: (context, idx) {
+                final b = filteredList[idx];
+                return BookingCard(
+                  booking: b,
+                  onAccept: () {
+                    booking.updateStatus(b.bookingId, BookingStatus.confirmed);
+                    ReservationSuccessDialog.show(context, b);
+                  },
+                  onReject: () => booking.updateStatus(b.bookingId, BookingStatus.cancelled),
+                );
+              },
+            ),
+        ],
+      ),
+    );
+  }
+
+  // 1. Sleek Command Header Bar
+  Widget _buildCommandHeader(LocationProvider locationProvider) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF131D30), Color(0xFF0F172A)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFF222F49)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.35),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // Left: Floor Status Toggle
+          Expanded(
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: _isAcceptingReservations
-                            ? const Color(0xFF10B981).withOpacity(0.15)
-                            : const Color(0xFF64748B).withOpacity(0.15),
-                        shape: BoxShape.circle,
-                        border: Border.all(
+                Container(
+                  width: 9,
+                  height: 9,
+                  decoration: BoxDecoration(
+                    color: _isAcceptingReservations
+                        ? const Color(0xFF10B981)
+                        : const Color(0xFF64748B),
+                    shape: BoxShape.circle,
+                    boxShadow: _isAcceptingReservations
+                        ? [
+                            const BoxShadow(
+                              color: Color(0xFF10B981),
+                              blurRadius: 8,
+                              spreadRadius: 2,
+                            ),
+                          ]
+                        : null,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _isAcceptingReservations ? 'FLOOR IS LIVE' : 'FLOOR PAUSED',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w900,
+                          fontSize: 12,
+                          letterSpacing: 0.7,
                           color: _isAcceptingReservations
-                              ? const Color(0xFF10B981)
-                              : const Color(0xFF64748B),
+                              ? const Color(0xFF00E599)
+                              : const Color(0xFF94A3B8),
                         ),
                       ),
-                      child: Icon(
-                        _isAcceptingReservations
-                            ? Icons.table_restaurant_rounded
-                            : Icons.pause_circle_filled_rounded,
-                        size: 20,
-                        color: _isAcceptingReservations
-                            ? const Color(0xFF10B981)
-                            : const Color(0xFF94A3B8),
+                      Text(
+                        '${locationProvider.currentLocation.locality} · Dinner',
+                        style: const TextStyle(
+                          fontSize: 10,
+                          color: Color(0xFF64748B),
+                          fontWeight: FontWeight.w500,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _isAcceptingReservations ? 'Accepting Reservations' : 'Floor Temporarily Paused',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w800,
-                            fontSize: 14,
-                            color: Colors.white,
-                          ),
-                        ),
-                        Text(
-                          '${locationProvider.currentLocation.locality} · Dinner Service',
-                          style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
-                        ),
-                      ],
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 Switch.adaptive(
                   value: _isAcceptingReservations,
                   activeColor: const Color(0xFF10B981),
-                  activeTrackColor: const Color(0xFF10B981).withOpacity(0.3),
+                  activeTrackColor: const Color(0xFF10B981).withValues(alpha: 0.3),
                   onChanged: (val) {
                     HapticFeedback.selectionClick();
                     setState(() => _isAcceptingReservations = val);
@@ -331,287 +438,302 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
 
-          const SizedBox(height: 10),
+          const SizedBox(width: 8),
 
-          // Priority Alarm Active Banner
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  const Color(0xFFF59E0B).withOpacity(0.12),
-                  const Color(0xFF131B2E),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFF59E0B).withOpacity(0.3)),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF59E0B).withOpacity(0.2),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.ring_volume_rounded, color: Color(0xFFFBBF24), size: 18),
-                ),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Priority Table Ringing Active',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w700,
-                          fontSize: 13,
-                          color: Color(0xFFFDE68A),
-                        ),
-                      ),
-                      Text(
-                        'Instant audible bell & full-screen alert for incoming reservations',
-                        style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
-                      ),
-                    ],
-                  ),
-                ),
-                TextButton(
-                  onPressed: _simulateIncomingAlert,
-                  style: TextButton.styleFrom(
-                    backgroundColor: const Color(0xFFF59E0B),
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                  ),
-                  child: const Text(
-                    'Ring',
-                    style: TextStyle(
-                      color: Color(0xFF0F172A),
-                      fontSize: 11,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 10),
-
-          // Dynamic Slots & Hourly Discounts Quick Banner
-          GestureDetector(
-            onTap: () {
-              HapticFeedback.lightImpact();
-              setState(() => _currentNavIndex = 2);
-            },
-            child: Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [
-                    Color(0xFF1E1B4B), // Indigo luxury tint
-                    Color(0xFF101726),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFF6366F1).withOpacity(0.4)),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
+          // Right: Action Buttons (Ring Bell & Slots)
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Ring Bell Action Pill
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: _simulateIncomingAlert,
+                  borderRadius: BorderRadius.circular(10),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF6366F1).withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(12),
+                      color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.35)),
                     ),
-                    child: const Icon(Icons.percent_rounded, color: Color(0xFFA5B4FC), size: 20),
-                  ),
-                  const SizedBox(width: 12),
-                  const Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
+                        Icon(Icons.ring_volume_rounded, size: 13, color: Color(0xFFFBBF24)),
+                        SizedBox(width: 4),
                         Text(
-                          'Manage Hourly Slots & Discounts',
+                          'Ring',
                           style: TextStyle(
-                            fontWeight: FontWeight.w800,
-                            fontSize: 13,
-                            color: Colors.white,
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xFFFDE68A),
                           ),
-                        ),
-                        SizedBox(height: 2),
-                        Text(
-                          'Configure 10%-40% OFF & table limits per slot',
-                          style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
                         ),
                       ],
                     ),
                   ),
-                  const Icon(Icons.arrow_forward_ios_rounded, color: Color(0xFFA5B4FC), size: 14),
-                ],
+                ),
+              ),
+
+              const SizedBox(width: 6),
+
+              // Hourly Slots & Discounts Action Pill
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    setState(() => _currentNavIndex = 2);
+                  },
+                  borderRadius: BorderRadius.circular(10),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF6366F1).withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: const Color(0xFF6366F1).withValues(alpha: 0.35)),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.percent_rounded, size: 13, color: Color(0xFFA5B4FC)),
+                        SizedBox(width: 4),
+                        Text(
+                          'Slots',
+                          style: TextStyle(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xFFA5B4FC),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Consistent, Distinct Section Header
+  Widget _buildSectionHeader({
+    required String badge,
+    required Color badgeColor,
+    required String title,
+    required String subtitle,
+    Widget? trailingWidget,
+  }) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: badgeColor.withValues(alpha: 0.14),
+                    borderRadius: BorderRadius.circular(5),
+                    border: Border.all(color: badgeColor.withValues(alpha: 0.35)),
+                  ),
+                  child: Text(
+                    badge,
+                    style: TextStyle(
+                      fontSize: 8.5,
+                      fontWeight: FontWeight.w900,
+                      color: badgeColor,
+                      letterSpacing: 0.6,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                    letterSpacing: -0.2,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 2),
+            Text(
+              subtitle,
+              style: const TextStyle(
+                fontSize: 10,
+                color: Color(0xFF64748B),
+                fontWeight: FontWeight.w500,
               ),
             ),
-          ),
+          ],
+        ),
+        if (trailingWidget != null) trailingWidget,
+      ],
+    );
+  }
 
-          const SizedBox(height: 10),
+  // Filter Tabs with Animated Indicators
+  Widget _buildFilterTabs(int totalCount, BookingProvider booking) {
+    final filterOptions = [
+      {'key': 'ALL', 'label': 'ALL', 'count': totalCount, 'color': const Color(0xFFF59E0B)},
+      {'key': 'PENDING', 'label': 'ACTION NEEDED', 'count': booking.pendingCount, 'color': const Color(0xFFF97316), 'isUrgent': booking.pendingCount > 0},
+      {'key': 'CONFIRMED', 'label': 'CONFIRMED', 'count': booking.confirmedCount, 'color': const Color(0xFF00E599)},
+      {'key': 'NO_SHOW', 'label': 'NO-SHOW', 'count': booking.noShowCount, 'color': const Color(0xFFEF4444)},
+      {'key': 'CANCELLED', 'label': 'CANCELLED', 'count': booking.cancelledCount, 'color': const Color(0xFF64748B)},
+    ];
 
-          // Luxury Stats Grid
-          GridView.count(
-            padding: EdgeInsets.zero,
-            crossAxisCount: 2,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisSpacing: 10,
-            mainAxisSpacing: 10,
-            childAspectRatio: 1.6,
-            children: [
-              StatsCard(
-                title: 'TODAY RESERVATIONS',
-                value: '${booking.todayCount}',
-                icon: Icons.calendar_today_rounded,
-                color: const Color(0xFFF59E0B),
-                trend: '+18% today',
-              ),
-              StatsCard(
-                title: 'CONFIRMED TABLES',
-                value: '${booking.confirmedCount}',
-                icon: Icons.check_circle_rounded,
-                color: const Color(0xFF10B981),
-                subtitle: '85% occupancy',
-              ),
-              StatsCard(
-                title: 'PENDING ALERTS',
-                value: '${booking.pendingCount}',
-                icon: Icons.pending_actions_rounded,
-                color: const Color(0xFFF97316),
-                subtitle: 'Requires action',
-              ),
-              StatsCard(
-                title: 'EXPECTED COVERS',
-                value: '${booking.totalCount * 3}',
-                icon: Icons.groups_rounded,
-                color: const Color(0xFF6366F1),
-                subtitle: 'Evening peak',
-              ),
-            ],
-          ),
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      physics: const BouncingScrollPhysics(),
+      child: Row(
+        children: filterOptions.map((opt) {
+          final filterKey = opt['key'] as String;
+          final isSelected = _activeFilter == filterKey;
+          final color = opt['color'] as Color;
+          final count = opt['count'] as int;
+          final isUrgent = (opt['isUrgent'] as bool?) ?? false;
 
-          const SizedBox(height: 10),
-
-          // Live Dining Queue & Capacity Surge Meter
-          const LiveDiningQueueTracker(),
-
-          const SizedBox(height: 22),
-
-          // Live Reservations Section Header & Filter Chips
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Live Floor Stream',
-                style: TextStyle(
-                  fontSize: 17,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white,
-                  letterSpacing: -0.3,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: InkWell(
+              onTap: () {
+                HapticFeedback.selectionClick();
+                setState(() => _activeFilter = filterKey);
+              },
+              borderRadius: BorderRadius.circular(20),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1E293B),
-                  borderRadius: BorderRadius.circular(8),
+                  color: isSelected
+                      ? color
+                      : (isUrgent
+                          ? color.withValues(alpha: 0.15)
+                          : const Color(0xFF131B2E)),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: isSelected
+                        ? color
+                        : (isUrgent
+                            ? color.withValues(alpha: 0.4)
+                            : const Color(0xFF222F49)),
+                    width: isUrgent && !isSelected ? 1.4 : 1.0,
+                  ),
                 ),
-                child: Text(
-                  '${filteredList.length} of ${allList.length}',
-                  style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8), fontWeight: FontWeight.w600),
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 10),
-
-          // Filter tabs
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              children: ['ALL', 'PENDING', 'CONFIRMED', 'CANCELLED'].map((filter) {
-                final isSelected = _activeFilter == filter;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: InkWell(
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      setState(() => _activeFilter = filter);
-                    },
-                    borderRadius: BorderRadius.circular(20),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: isSelected ? const Color(0xFFF59E0B) : const Color(0xFF131B2E),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: isSelected ? const Color(0xFFF59E0B) : const Color(0xFF222F49),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (isUrgent && !isSelected) ...[
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: BoxDecoration(
+                          color: color,
+                          shape: BoxShape.circle,
                         ),
                       ),
+                      const SizedBox(width: 5),
+                    ],
+                    Text(
+                      opt['label'] as String,
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
+                        color: isSelected ? const Color(0xFF0F172A) : const Color(0xFFCBD5E1),
+                      ),
+                    ),
+                    const SizedBox(width: 5),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? Colors.black.withValues(alpha: 0.25)
+                            : const Color(0xFF1E283E),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
                       child: Text(
-                        filter,
+                        '$count',
                         style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                          color: isSelected ? const Color(0xFF0F172A) : const Color(0xFF94A3B8),
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.w900,
+                          color: isSelected ? Colors.black : color,
                         ),
                       ),
                     ),
-                  ),
-                );
-              }).toList(),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  // Cartoon empty state
+  Widget _buildEmptyState() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: const Color(0xFF101422),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFF1E283E)),
+      ),
+      child: Column(
+        children: [
+          const Text('👨‍🍳✨', style: TextStyle(fontSize: 42)),
+          const SizedBox(height: 10),
+          const Text(
+            'No reservations in this view',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.w800,
             ),
           ),
-
-          const SizedBox(height: 14),
-
-          // Reservations List
-          if (filteredList.isEmpty)
-            Container(
-              padding: const EdgeInsets.all(32),
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: const Color(0xFF131B2E),
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: const Color(0xFF222F49)),
-              ),
-              child: const Column(
-                children: [
-                  Icon(Icons.inbox_rounded, size: 40, color: Color(0xFF475569)),
-                  SizedBox(height: 8),
-                  Text(
-                    'No reservations in this view',
-                    style: TextStyle(color: Color(0xFF94A3B8), fontSize: 13, fontWeight: FontWeight.w600),
-                  ),
-                ],
-              ),
-            )
-          else
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: filteredList.length,
-              itemBuilder: (context, idx) {
-                final b = filteredList[idx];
-                return BookingCard(
-                  booking: b,
-                  onAccept: () {
-                    booking.updateStatus(b.bookingId, BookingStatus.confirmed);
-                    ReservationSuccessDialog.show(context, b);
-                  },
-                  onReject: () => booking.updateStatus(b.bookingId, BookingStatus.cancelled),
-                );
-              },
+          const SizedBox(height: 4),
+          const Text(
+            'New online guest bookings will chime and alert live here',
+            style: TextStyle(
+              color: Color(0xFF64748B),
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
             ),
+            textAlign: TextAlign.center,
+          ),
+          if (_activeFilter != 'ALL') ...[
+            const SizedBox(height: 14),
+            TextButton(
+              onPressed: () {
+                HapticFeedback.lightImpact();
+                setState(() => _activeFilter = 'ALL');
+              },
+              style: TextButton.styleFrom(
+                backgroundColor: const Color(0xFF1E283E),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              child: const Text(
+                'Show All Bookings',
+                style: TextStyle(
+                  color: Color(0xFF38BDF8),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
