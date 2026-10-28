@@ -6,17 +6,17 @@ import '../../providers/auth_provider.dart';
 import '../../providers/booking_provider.dart';
 import '../../providers/location_provider.dart';
 import '../../providers/notification_provider.dart';
-import '../../widgets/booking_card.dart';
 import '../../widgets/glass_nav_dock.dart';
 import '../../widgets/location_picker_sheet.dart';
 import '../../widgets/shift_pulse_bento.dart';
 import '../alerts/incoming_booking_alert.dart';
+import '../bookings/booking_list_screen.dart';
+import '../discounts/discounts_offers_screen.dart';
 import '../profile/restaurant_profile_screen.dart';
 import '../settings/settings_screen.dart';
-import '../slots/slot_management_screen.dart';
+import '../slots/slots_inventory_screen.dart';
 import '../support/support_screen.dart';
 import '../../widgets/partner_walkthrough_modal.dart';
-import '../../widgets/reservation_success_dialog.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -125,91 +125,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     return Scaffold(
       backgroundColor: const Color(0xFF090D16),
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: const Color(0xFF101726),
-        titleSpacing: 16,
-        title: InkWell(
-          onTap: () {
-            HapticFeedback.lightImpact();
-            LocationPickerBottomSheet.show(context);
-          },
-          borderRadius: BorderRadius.circular(10),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.location_on_rounded, size: 14, color: Color(0xFFF59E0B)),
-                    const SizedBox(width: 4),
-                    Text(
-                      locationProvider.currentLocation.shortLabel,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    const Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: Color(0xFFF59E0B)),
-                  ],
-                ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 6,
-                      height: 6,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF10B981),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      auth.currentRestaurantName,
-                      style: const TextStyle(
-                        fontSize: 11,
-                        color: Color(0xFF94A3B8),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-        actions: [
-          // 24x7 Support Hotline & Desk
-          IconButton(
-            tooltip: 'Partner Helpdesk & FAQs',
-            icon: const Icon(Icons.headset_mic_rounded, color: Color(0xFF00E599), size: 20),
-            onPressed: () {
-              HapticFeedback.lightImpact();
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const SupportScreen()),
-              );
-            },
-          ),
-          // Edit Restaurant Profile
-          IconButton(
-            tooltip: 'Restaurant Profile & Timings',
-            icon: const Icon(Icons.storefront_rounded, color: Color(0xFF38BDF8), size: 20),
-            onPressed: () {
-              HapticFeedback.lightImpact();
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const RestaurantProfileScreen()),
-              );
-            },
-          ),
-          const SizedBox(width: 4),
-        ],
-      ),
+      appBar: _currentNavIndex == 0 ? _buildHomeAppBar(auth, locationProvider) : null,
       body: _buildCurrentTab(),
       extendBody: true, // Allows content to float under the glass dock
       bottomNavigationBar: GlassNavDock(
@@ -221,36 +137,124 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  PreferredSizeWidget _buildHomeAppBar(AuthProvider auth, LocationProvider locationProvider) {
+    return AppBar(
+      elevation: 0,
+      backgroundColor: const Color(0xFF101726),
+      titleSpacing: 16,
+      title: InkWell(
+        onTap: () {
+          HapticFeedback.lightImpact();
+          LocationPickerBottomSheet.show(context);
+        },
+        borderRadius: BorderRadius.circular(10),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.location_on_rounded, size: 14, color: Color(0xFFF59E0B)),
+                  const SizedBox(width: 4),
+                  Text(
+                    locationProvider.currentLocation.shortLabel,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w800,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  const Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: Color(0xFFF59E0B)),
+                ],
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 6,
+                    height: 6,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF10B981),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    auth.currentRestaurantName,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: Color(0xFF94A3B8),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+      actions: [
+        // 24x7 Support Hotline & Desk
+        IconButton(
+          tooltip: 'Partner Helpdesk & FAQs',
+          icon: const Icon(Icons.headset_mic_rounded, color: Color(0xFF00E599), size: 20),
+          onPressed: () {
+            HapticFeedback.lightImpact();
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const SupportScreen()),
+            );
+          },
+        ),
+        // Edit Restaurant Profile
+        IconButton(
+          tooltip: 'Restaurant Profile & Timings',
+          icon: const Icon(Icons.storefront_rounded, color: Color(0xFF38BDF8), size: 20),
+          onPressed: () {
+            HapticFeedback.lightImpact();
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const RestaurantProfileScreen()),
+            );
+          },
+        ),
+        const SizedBox(width: 4),
+      ],
+    );
+  }
+
   Widget _buildCurrentTab() {
     switch (_currentNavIndex) {
       case 1:
-        return const SlotManagementScreen(isTab: true);
+        return const BookingListScreen();
       case 2:
+        return const TableSlotsScreen();
+      case 3:
+        return const DiscountsOffersScreen();
+      case 4:
         return const SettingsScreen();
       default:
-        return _buildFloorView();
+        return _buildFloorView(); // Initial Home Page: ONLY Shift Reservation Pulse
     }
   }
 
+  // Home Page: Dedicated ONLY to the Shift Reservation Pulse
   Widget _buildFloorView() {
     final booking = Provider.of<BookingProvider>(context);
     final locationProvider = Provider.of<LocationProvider>(context);
 
-    final allList = booking.bookings;
-    final filteredList = _activeFilter == 'ALL'
-        ? allList
-        : allList.where((b) => b.status.value == _activeFilter).toList();
-
     return SingleChildScrollView(
       physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
+      padding: const EdgeInsets.fromLTRB(18, 14, 18, 100),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 1. Sleek Command Header Bar
           _buildCommandHeader(locationProvider),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
 
           // 2. SHIFT RESERVATION PULSE (Interactive 4-Quadrant Metric Bento)
           ShiftPulseBento(
@@ -260,61 +264,63 @@ class _DashboardScreenState extends State<DashboardScreen> {
             expectedCovers: booking.totalCount * 3,
             selectedFilter: _activeFilter,
             onFilterChanged: (filter) {
-              setState(() => _activeFilter = filter);
+              setState(() {
+                _activeFilter = filter;
+                _currentNavIndex = 1; // Switches straight to Bookings tab!
+              });
+              Provider.of<BookingProvider>(context, listen: false).setFilter(filter);
             },
           ),
 
           const SizedBox(height: 20),
 
-          // 3. LIVE RESERVATION FEED (Direct Diner Action Stream)
-          _buildSectionHeader(
-            badge: 'GUEST FEED',
-            badgeColor: const Color(0xFFF59E0B),
-            title: 'Live Reservation Feed',
-            subtitle: 'Review, confirm & seat diner arrivals',
-            trailingWidget: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: const Color(0xFF1E293B),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                '${filteredList.length} of ${allList.length}',
-                style: const TextStyle(
-                  fontSize: 11,
-                  color: Color(0xFF94A3B8),
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
+          // 3. Executive Shift Conversion Bar (CRED/Swiggy luxury style)
+          _buildAttendanceBar(booking),
+
+          const SizedBox(height: 24),
+
+          // 4. Clean Quick-Access Destination Cards (CRED style)
+          const Text(
+            'QUICK OPERATIONS & MANAGEMENT',
+            style: TextStyle(
+              fontSize: 10.5,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.9,
+              color: Color(0xFF64748B),
             ),
           ),
           const SizedBox(height: 12),
 
-          // Filter tabs (Pills)
-          _buildFilterTabs(allList.length, booking),
+          _buildQuickActionCard(
+            title: 'Live Table Reservations',
+            subtitle: '${booking.todayCount} reservations scheduled today · ${booking.pendingCount} needs action',
+            icon: Icons.calendar_month_rounded,
+            accentColor: const Color(0xFF00E599),
+            badge: '${booking.todayCount} ACTIVE',
+            onTap: () => setState(() => _currentNavIndex = 1),
+          ),
 
-          const SizedBox(height: 14),
+          const SizedBox(height: 10),
 
-          // Reservations List
-          if (filteredList.isEmpty)
-            _buildEmptyState()
-          else
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: filteredList.length,
-              itemBuilder: (context, idx) {
-                final b = filteredList[idx];
-                return BookingCard(
-                  booking: b,
-                  onAccept: () {
-                    booking.updateStatus(b.bookingId, BookingStatus.confirmed);
-                    ReservationSuccessDialog.show(context, b);
-                  },
-                  onReject: () => booking.updateStatus(b.bookingId, BookingStatus.cancelled),
-                );
-              },
-            ),
+          _buildQuickActionCard(
+            title: 'Hourly Table Slots & Capacity',
+            subtitle: 'Configure floor tables, limit covers & pause busy slots',
+            icon: Icons.table_restaurant_rounded,
+            accentColor: const Color(0xFF38BDF8),
+            badge: 'SLOTS',
+            onTap: () => setState(() => _currentNavIndex = 2),
+          ),
+
+          const SizedBox(height: 10),
+
+          _buildQuickActionCard(
+            title: 'Discounts & Promotional Offers',
+            subtitle: 'Dynamic 10%–40% Off by time slot & custom promo codes',
+            icon: Icons.local_offer_rounded,
+            accentColor: const Color(0xFFF59E0B),
+            badge: 'OFFERS',
+            onTap: () => setState(() => _currentNavIndex = 3),
+          ),
         ],
       ),
     );
@@ -433,7 +439,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
           const SizedBox(width: 8),
 
-          // Right: Action Buttons (Ring Bell & Slots)
+          // Right: Action Buttons (Ring Bell & View Bookings)
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -444,7 +450,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   onTap: _simulateIncomingAlert,
                   borderRadius: BorderRadius.circular(10),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
                       color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(10),
@@ -456,7 +462,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         Icon(Icons.ring_volume_rounded, size: 13, color: Color(0xFFFBBF24)),
                         SizedBox(width: 4),
                         Text(
-                          'Ring',
+                          'Ring Bell',
                           style: TextStyle(
                             fontSize: 10.5,
                             fontWeight: FontWeight.w900,
@@ -471,7 +477,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
               const SizedBox(width: 6),
 
-              // Hourly Slots & Discounts Action Pill
+              // View Bookings Action Pill
               Material(
                 color: Colors.transparent,
                 child: InkWell(
@@ -481,23 +487,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   },
                   borderRadius: BorderRadius.circular(10),
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF6366F1).withValues(alpha: 0.15),
+                      color: const Color(0xFF00E599).withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: const Color(0xFF6366F1).withValues(alpha: 0.35)),
+                      border: Border.all(color: const Color(0xFF00E599).withValues(alpha: 0.35)),
                     ),
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.percent_rounded, size: 13, color: Color(0xFFA5B4FC)),
+                        Icon(Icons.calendar_month_rounded, size: 13, color: Color(0xFF00E599)),
                         SizedBox(width: 4),
                         Text(
-                          'Slots',
+                          'Bookings',
                           style: TextStyle(
                             fontSize: 10.5,
                             fontWeight: FontWeight.w900,
-                            color: Color(0xFFA5B4FC),
+                            color: Color(0xFF00E599),
                           ),
                         ),
                       ],
@@ -512,222 +518,188 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  // Consistent, Distinct Section Header
-  Widget _buildSectionHeader({
-    required String badge,
-    required Color badgeColor,
-    required String title,
-    required String subtitle,
-    Widget? trailingWidget,
-  }) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: badgeColor.withValues(alpha: 0.14),
-                    borderRadius: BorderRadius.circular(5),
-                    border: Border.all(color: badgeColor.withValues(alpha: 0.35)),
-                  ),
-                  child: Text(
-                    badge,
+  Widget _buildAttendanceBar(BookingProvider booking) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF101422),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFF1E283E)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.35),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Row(
+                children: [
+                  Icon(Icons.donut_large_rounded, size: 14, color: Color(0xFF00E599)),
+                  SizedBox(width: 6),
+                  Text(
+                    'ATTENDANCE CONVERSION',
                     style: TextStyle(
-                      fontSize: 8.5,
-                      fontWeight: FontWeight.w900,
-                      color: badgeColor,
-                      letterSpacing: 0.6,
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.8,
+                      color: Color(0xFF94A3B8),
                     ),
                   ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF00E599).withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(6),
                 ),
-                const SizedBox(width: 6),
-                Text(
-                  title,
+                child: Text(
+                  '${booking.attendanceRate.toStringAsFixed(0)}% Seated Rate',
                   style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                    letterSpacing: -0.2,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    color: Color(0xFF00E599),
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 2),
-            Text(
-              subtitle,
-              style: const TextStyle(
-                fontSize: 10,
-                color: Color(0xFF64748B),
-                fontWeight: FontWeight.w500,
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: SizedBox(
+              height: 8,
+              child: Row(
+                children: [
+                  Expanded(
+                    flex: booking.completedCount > 0 ? booking.completedCount : 8,
+                    child: Container(color: const Color(0xFF00E599)),
+                  ),
+                  Expanded(
+                    flex: booking.confirmedCount > 0 ? booking.confirmedCount : 3,
+                    child: Container(color: const Color(0xFFF59E0B)),
+                  ),
+                  Expanded(
+                    flex: booking.noShowCount > 0 ? booking.noShowCount : 1,
+                    child: Container(color: const Color(0xFFEF4444)),
+                  ),
+                ],
               ),
             ),
-          ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildPulseLegend(const Color(0xFF00E599), 'Seated (${booking.completedCount})'),
+              _buildPulseLegend(const Color(0xFFF59E0B), 'Confirmed (${booking.confirmedCount})'),
+              _buildPulseLegend(const Color(0xFFEF4444), 'No-Show (${booking.noShowCount})'),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPulseLegend(Color color, String label) {
+    return Row(
+      children: [
+        Container(width: 7, height: 7, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 10, color: Color(0xFF94A3B8), fontWeight: FontWeight.w600),
         ),
-        if (trailingWidget != null) trailingWidget,
       ],
     );
   }
 
-  // Filter Tabs with Animated Indicators
-  Widget _buildFilterTabs(int totalCount, BookingProvider booking) {
-    final filterOptions = [
-      {'key': 'ALL', 'label': 'ALL', 'count': totalCount, 'color': const Color(0xFFF59E0B)},
-      {'key': 'PENDING', 'label': 'ACTION NEEDED', 'count': booking.pendingCount, 'color': const Color(0xFFF97316), 'isUrgent': booking.pendingCount > 0},
-      {'key': 'CONFIRMED', 'label': 'CONFIRMED', 'count': booking.confirmedCount, 'color': const Color(0xFF00E599)},
-      {'key': 'NO_SHOW', 'label': 'NO-SHOW', 'count': booking.noShowCount, 'color': const Color(0xFFEF4444)},
-      {'key': 'CANCELLED', 'label': 'CANCELLED', 'count': booking.cancelledCount, 'color': const Color(0xFF64748B)},
-    ];
-
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      physics: const BouncingScrollPhysics(),
-      child: Row(
-        children: filterOptions.map((opt) {
-          final filterKey = opt['key'] as String;
-          final isSelected = _activeFilter == filterKey;
-          final color = opt['color'] as Color;
-          final count = opt['count'] as int;
-          final isUrgent = (opt['isUrgent'] as bool?) ?? false;
-
-          return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: InkWell(
-              onTap: () {
-                HapticFeedback.selectionClick();
-                setState(() => _activeFilter = filterKey);
-              },
-              borderRadius: BorderRadius.circular(20),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+  Widget _buildQuickActionCard({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color accentColor,
+    required String badge,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () {
+          HapticFeedback.lightImpact();
+          onTap();
+        },
+        borderRadius: BorderRadius.circular(18),
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: const Color(0xFF101422),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: const Color(0xFF1E283E)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: isSelected
-                      ? color
-                      : (isUrgent
-                          ? color.withValues(alpha: 0.15)
-                          : const Color(0xFF131B2E)),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: isSelected
-                        ? color
-                        : (isUrgent
-                            ? color.withValues(alpha: 0.4)
-                            : const Color(0xFF222F49)),
-                    width: isUrgent && !isSelected ? 1.4 : 1.0,
-                  ),
+                  color: accentColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
+                child: Icon(icon, color: accentColor, size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (isUrgent && !isSelected) ...[
-                      Container(
-                        width: 6,
-                        height: 6,
-                        decoration: BoxDecoration(
-                          color: color,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 5),
-                    ],
                     Text(
-                      opt['label'] as String,
-                      style: TextStyle(
-                        fontSize: 10.5,
-                        fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
-                        color: isSelected ? const Color(0xFF0F172A) : const Color(0xFFCBD5E1),
+                      title,
+                      style: const TextStyle(
+                        fontSize: 13.5,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
                       ),
                     ),
-                    const SizedBox(width: 5),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                      decoration: BoxDecoration(
-                        color: isSelected
-                            ? Colors.black.withValues(alpha: 0.25)
-                            : const Color(0xFF1E283E),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        '$count',
-                        style: TextStyle(
-                          fontSize: 9.5,
-                          fontWeight: FontWeight.w900,
-                          color: isSelected ? Colors.black : color,
-                        ),
-                      ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(fontSize: 10.5, color: Color(0xFF94A3B8)),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
               ),
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
-
-  // Cartoon empty state
-  Widget _buildEmptyState() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: const Color(0xFF101422),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFF1E283E)),
-      ),
-      child: Column(
-        children: [
-          const Text('👨‍🍳✨', style: TextStyle(fontSize: 42)),
-          const SizedBox(height: 10),
-          const Text(
-            'No reservations in this view',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-          const SizedBox(height: 4),
-          const Text(
-            'New online guest bookings will chime and alert live here',
-            style: TextStyle(
-              color: Color(0xFF64748B),
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          if (_activeFilter != 'ALL') ...[
-            const SizedBox(height: 14),
-            TextButton(
-              onPressed: () {
-                HapticFeedback.lightImpact();
-                setState(() => _activeFilter = 'ALL');
-              },
-              style: TextButton.styleFrom(
-                backgroundColor: const Color(0xFF1E283E),
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-              ),
-              child: const Text(
-                'Show All Bookings',
-                style: TextStyle(
-                  color: Color(0xFF38BDF8),
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                decoration: BoxDecoration(
+                  color: accentColor.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: accentColor.withValues(alpha: 0.3)),
+                ),
+                child: Text(
+                  badge,
+                  style: TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w900,
+                    color: accentColor,
+                    letterSpacing: 0.6,
+                  ),
                 ),
               ),
-            ),
-          ],
-        ],
+              const SizedBox(width: 4),
+              const Icon(Icons.arrow_forward_ios_rounded, size: 12, color: Color(0xFF64748B)),
+            ],
+          ),
+        ),
       ),
     );
   }
