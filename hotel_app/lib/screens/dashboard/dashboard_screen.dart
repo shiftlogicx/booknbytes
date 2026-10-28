@@ -98,7 +98,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
       );
     } else if (result == true) {
-      ReservationSuccessDialog.show(context, mockBooking);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Text('👨‍🍳✨ ', style: TextStyle(fontSize: 16)),
+              Text('Table #${mockBooking.bookingId.replaceAll('bk_', '')} Confirmed · Diner Notified'),
+            ],
+          ),
+          backgroundColor: const Color(0xFF101420),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+            side: const BorderSide(color: Color(0xFF00E599), width: 1.2),
+          ),
+          duration: const Duration(milliseconds: 2500),
+        ),
+      );
     }
   }
 

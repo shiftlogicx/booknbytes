@@ -592,7 +592,7 @@ class _IncomingBookingAlertScreenState extends State<IncomingBookingAlertScreen>
                   },
                   icon: const Icon(Icons.dashboard_rounded, color: Colors.white, size: 22),
                   label: const Text(
-                    'DONE • RETURN TO LIVE FLOOR',
+                    'DONE • READY FOR SERVICE',
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w800,
