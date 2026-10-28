@@ -4,7 +4,7 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/booking_provider.dart';
 import '../../widgets/brand_logo.dart';
-import 'booking_ledger_doc_screen.dart';
+import 'booking_audit_doc_screen.dart';
 
 class RestaurantProfileScreen extends StatefulWidget {
   const RestaurantProfileScreen({super.key});
@@ -310,12 +310,12 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
 
               const SizedBox(height: 16),
 
-              // Merchant Booking Ledger & Audit Doc Banner
+              // Merchant Booking Audit Documents Banner
               InkWell(
                 onTap: () {
                   HapticFeedback.lightImpact();
                   Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const BookingLedgerDocScreen()),
+                    MaterialPageRoute(builder: (_) => const BookingAuditDocScreen()),
                   );
                 },
                 borderRadius: BorderRadius.circular(18),
@@ -351,7 +351,7 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
                             Row(
                               children: [
                                 const Text(
-                                  'Booking Ledger & Audit Doc',
+                                  'Booking Audit Documents',
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w800,

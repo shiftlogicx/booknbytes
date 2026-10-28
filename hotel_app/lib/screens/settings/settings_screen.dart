@@ -8,7 +8,7 @@ import '../../widgets/brand_logo.dart';
 import '../../widgets/location_picker_sheet.dart';
 import '../../widgets/restaurant_walkthrough_modal.dart';
 import '../profile/restaurant_profile_screen.dart';
-import '../profile/booking_ledger_doc_screen.dart';
+import '../profile/booking_audit_doc_screen.dart';
 import '../support/support_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -470,12 +470,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             _buildActionTile(
               icon: Icons.receipt_long_rounded,
-              title: 'Booking Audit Ledger & Doc',
+              title: 'Booking Audit Documents',
               subtitle: 'Statement of platform arrivals, no-shows & discounts applied',
               onTap: () {
                 HapticFeedback.lightImpact();
                 Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const BookingLedgerDocScreen()),
+                  MaterialPageRoute(builder: (_) => const BookingAuditDocScreen()),
                 );
               },
               accentColor: const Color(0xFF2563EB),

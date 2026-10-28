@@ -5,14 +5,14 @@ import '../../providers/auth_provider.dart';
 import '../../providers/booking_provider.dart';
 import '../../models/booking_model.dart';
 
-class BookingLedgerDocScreen extends StatefulWidget {
-  const BookingLedgerDocScreen({super.key});
+class BookingAuditDocScreen extends StatefulWidget {
+  const BookingAuditDocScreen({super.key});
 
   @override
-  State<BookingLedgerDocScreen> createState() => _BookingLedgerDocScreenState();
+  State<BookingAuditDocScreen> createState() => _BookingAuditDocScreenState();
 }
 
-class _BookingLedgerDocScreenState extends State<BookingLedgerDocScreen> {
+class _BookingAuditDocScreenState extends State<BookingAuditDocScreen> {
   String _activeFilter = 'ALL'; // ALL, COMPLETED, NO_SHOW, DISCOUNTED
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
@@ -33,7 +33,7 @@ class _BookingLedgerDocScreenState extends State<BookingLedgerDocScreen> {
             Text('📄 ✨ ', style: TextStyle(fontSize: 16)),
             Expanded(
               child: Text(
-                'Ledger Statement & Reconciliation PDF generated and saved to device storage!',
+                'Audit Document & Reconciliation PDF generated and saved to device storage!',
                 style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: Colors.white),
               ),
             ),
@@ -85,7 +85,7 @@ class _BookingLedgerDocScreenState extends State<BookingLedgerDocScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Restaurant Booking Ledger',
+              'Restaurant Audit Documents',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
@@ -379,14 +379,14 @@ class _BookingLedgerDocScreenState extends State<BookingLedgerDocScreen> {
                     Icon(Icons.search_off_rounded, size: 36, color: Color(0xFF94A3B8)),
                     SizedBox(height: 10),
                     Text(
-                      'No matching bookings found in ledger',
+                      'No matching bookings found in audit documents',
                       style: TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF64748B), fontSize: 13),
                     ),
                   ],
                 ),
               )
             else
-              ...filteredBookings.map((b) => _buildLedgerEntryCard(b)),
+              ...filteredBookings.map((b) => _buildAuditEntryCard(b)),
           ],
         ),
       ),
@@ -516,7 +516,7 @@ class _BookingLedgerDocScreenState extends State<BookingLedgerDocScreen> {
     );
   }
 
-  Widget _buildLedgerEntryCard(BookingModel item) {
+  Widget _buildAuditEntryCard(BookingModel item) {
     Color statusBg;
     Color statusText;
     String statusLabel;
