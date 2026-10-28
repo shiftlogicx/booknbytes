@@ -160,9 +160,9 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                                 end: Alignment.bottomRight,
                               ).createShader(bounds),
                               child: const Text(
-                                'Book & Bite Partner',
+                                'BookNBytes Restaurant',
                                 style: TextStyle(
-                                  fontSize: 28,
+                                  fontSize: 27,
                                   fontWeight: FontWeight.w900,
                                   letterSpacing: -0.5,
                                   color: Colors.white,

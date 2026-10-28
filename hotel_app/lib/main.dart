@@ -43,7 +43,7 @@ class BookAndBiteHotelApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => LocationProvider()),
       ],
       child: MaterialApp(
-        title: 'Book & Bite Partner',
+        title: 'BookNBytes Restaurant',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.darkTheme,
         home: const SplashScreen(),

@@ -7,13 +7,13 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Book &amp; Bite Partner</string>
+	<string>BookNBytes Restaurant</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Book &amp; Bite uses your location to identify your restaurant outlet and nearest dining hubs.</string>
+	<string>BookNBytes Restaurant uses your location to identify your restaurant outlet and nearest dining hubs.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>Book &amp; Bite uses your location to identify your restaurant outlet.</string>
+	<string>BookNBytes Restaurant uses your location to identify your restaurant outlet.</string>
 	<key>CFBundleIdentifier</key>
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>

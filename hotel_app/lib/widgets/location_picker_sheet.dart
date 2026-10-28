@@ -86,9 +86,9 @@ class _LocationPickerBottomSheetState extends State<LocationPickerBottomSheet> {
                       ),
                     ),
                     SizedBox(height: 2),
-                    const Text(
-                      'Book & Bite Dining Network',
-                      style: TextStyle(
+                    Text(
+                      'BookNBytes Dining Network',
+                      style: const TextStyle(
                         fontSize: 12,
                         color: Color(0xFF94A3B8),
                       ),

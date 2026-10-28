@@ -194,7 +194,13 @@ class AuthProvider extends ChangeNotifier {
   Future<void> _loadPersistedData() async {
     try {
       final dir = await getApplicationDocumentsDirectory();
-      final file = File('${dir.path}/partner_profile.json');
+      var file = File('${dir.path}/restaurant_profile.json');
+      if (!await file.exists()) {
+        final legacyFile = File('${dir.path}/partner_profile.json');
+        if (await legacyFile.exists()) {
+          file = legacyFile;
+        }
+      }
       if (await file.exists()) {
         final content = await file.readAsString();
         final Map<String, dynamic> data = jsonDecode(content);
@@ -209,21 +215,21 @@ class AuthProvider extends ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
-      debugPrint('Error loading persisted partner profile: $e');
+      debugPrint('Error loading persisted restaurant profile: $e');
     }
   }
 
   Future<void> _savePersistedData() async {
     try {
       final dir = await getApplicationDocumentsDirectory();
-      final file = File('${dir.path}/partner_profile.json');
+      final file = File('${dir.path}/restaurant_profile.json');
       final payload = {
         'profile': _profile.toJson(),
         'has_seen_tutorial': _hasSeenTutorial,
       };
       await file.writeAsString(jsonEncode(payload));
     } catch (e) {
-      debugPrint('Error saving partner profile: $e');
+      debugPrint('Error saving restaurant profile: $e');
     }
   }
 

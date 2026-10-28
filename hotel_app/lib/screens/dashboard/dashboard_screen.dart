@@ -16,7 +16,7 @@ import '../profile/restaurant_profile_screen.dart';
 import '../settings/settings_screen.dart';
 import '../slots/slots_inventory_screen.dart';
 import '../support/support_screen.dart';
-import '../../widgets/partner_walkthrough_modal.dart';
+import '../../widgets/restaurant_walkthrough_modal.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -40,11 +40,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
       // Automatically detect real device GPS coordinates on launch
       Provider.of<LocationProvider>(context, listen: false).detectCurrentLocation();
 
-      // Show interactive first-time partner walkthrough if not yet seen
+      // Show interactive first-time restaurant walkthrough if not yet seen
       if (!auth.hasSeenTutorial) {
         Future.delayed(const Duration(milliseconds: 600), () {
           if (mounted) {
-            PartnerWalkthroughModal.show(context);
+            RestaurantWalkthroughModal.show(context);
           }
         });
       }
@@ -200,7 +200,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       actions: [
         // 24x7 Support Hotline & Desk
         IconButton(
-          tooltip: 'Partner Helpdesk & FAQs',
+          tooltip: 'Restaurant Helpdesk & FAQs',
           icon: const Icon(Icons.headset_mic_rounded, color: Color(0xFF00E599), size: 20),
           onPressed: () {
             HapticFeedback.lightImpact();

@@ -86,7 +86,7 @@ class _BookingLedgerDocScreenState extends State<BookingLedgerDocScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Partner Booking Ledger',
+              'Restaurant Booking Ledger',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
@@ -184,7 +184,7 @@ class _BookingLedgerDocScreenState extends State<BookingLedgerDocScreen> {
                       SizedBox(width: 6),
                       Expanded(
                         child: Text(
-                          'Direct diner UPI settlement · 0% commission deducted by Book & Bite',
+                          'Direct diner UPI settlement · 0% commission deducted by BookNBytes',
                           style: TextStyle(fontSize: 11, color: Color(0xFFCBD5E1), fontWeight: FontWeight.w600),
                         ),
                       ),

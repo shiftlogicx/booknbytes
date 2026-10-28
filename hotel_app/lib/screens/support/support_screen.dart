@@ -29,7 +29,7 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
       category: 'PAYMENTS & SETTLEMENT',
     ),
     _FaqItem(
-      question: 'What is the partner policy for guest no-shows?',
+      question: 'What is the restaurant policy for guest no-shows?',
       answer:
           'Diners are given a 15-minute grace window past their reserved time slot. If they do not arrive, you can tap \'Mark No-Show\' in the Bookings tab, which immediately frees up table capacity and alerts the customer.',
       category: 'RESERVATIONS & SEATING',
@@ -133,7 +133,7 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
                         ],
                       ),
                       SizedBox(height: 2),
-                      Text('Dedicated Partner Success Manager 👨‍💼', style: TextStyle(fontSize: 12, color: Color(0xFF00E599), fontWeight: FontWeight.w600)),
+                      Text('Dedicated Restaurant Success Manager 👨‍💼', style: TextStyle(fontSize: 12, color: Color(0xFF00E599), fontWeight: FontWeight.w600)),
                     ],
                   ),
                 ],
@@ -151,7 +151,7 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
                     Text('⏱️ ', style: TextStyle(fontSize: 20)),
                     Expanded(
                       child: Text(
-                        'Our partner executive is being dispatched now. You will receive a direct call on your phone within 5 minutes.',
+                        'Our restaurant executive is being dispatched now. You will receive a direct call on your phone within 5 minutes.',
                         style: TextStyle(fontSize: 12, color: Color(0xFFCBD5E1), height: 1.4),
                       ),
                     ),
@@ -217,7 +217,7 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text(
-                          'Partner Feedback & Bug Report',
+                          'Restaurant Feedback & Bug Report',
                           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Colors.white),
                         ),
                         IconButton(
@@ -228,7 +228,7 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
                     ),
                     const SizedBox(height: 6),
                     const Text(
-                      'Your direct feedback shapes future releases for Book & Bite Partner.',
+                      'Your direct feedback shapes future releases for BookNBytes Restaurant.',
                       style: TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
                     ),
                     const SizedBox(height: 18),
@@ -340,7 +340,7 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
                             ),
                           );
                         },
-                        child: const Text('Submit Partner Feedback', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
+                        child: const Text('Submit Restaurant Feedback', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
                       ),
                     ),
                   ],
@@ -370,7 +370,7 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Partner Help & Support',
+              'Restaurant Help & Support',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
@@ -442,7 +442,7 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
                       ),
                       const SizedBox(width: 8),
                       const Text(
-                        'PARTNER DESK LIVE',
+                        'RESTAURANT DESK LIVE',
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w800,
@@ -467,7 +467,7 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
               ),
               const SizedBox(height: 12),
               const Text(
-                'Direct Merchant Concierge',
+                'Direct Restaurant Concierge',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white),
               ),
               const SizedBox(height: 4),
@@ -532,7 +532,7 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
                               ),
                               SizedBox(height: 2),
                               Text(
-                                'Dedicated partner manager calls in < 5 mins',
+                                'Dedicated restaurant manager calls in < 5 mins',
                                 style: TextStyle(
                                   color: Color(0xFF064E3B),
                                   fontWeight: FontWeight.w700,
@@ -573,7 +573,7 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
         _buildSupportTile(
           icon: Icons.chat_rounded,
           iconColor: const Color(0xFF25D366),
-          title: 'WhatsApp Merchant Desk',
+          title: 'WhatsApp Restaurant Desk',
           subtitle: '+91 98200 12345 · Instant chat support',
           actionLabel: 'Chat / Copy',
           onTap: () => _copyToClipboard('WhatsApp Number', '+91 98200 12345'),
@@ -583,10 +583,10 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
         _buildSupportTile(
           icon: Icons.phone_in_talk_rounded,
           iconColor: const Color(0xFF38BDF8),
-          title: 'Priority Partner Helpline',
-          subtitle: '1800-BOOK-BITE (Toll-Free 24x7)',
+          title: 'Priority Restaurant Helpline',
+          subtitle: '1800-BOOK-BYTES (Toll-Free 24x7)',
           actionLabel: 'Call / Copy',
-          onTap: () => _copyToClipboard('Partner Helpline', '1800-2665-2483'),
+          onTap: () => _copyToClipboard('Restaurant Helpline', '1800-2665-2483'),
         ),
 
         // Email Channel
@@ -594,9 +594,9 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
           icon: Icons.email_rounded,
           iconColor: const Color(0xFFF59E0B),
           title: 'Executive Support Email',
-          subtitle: 'partner-desk@booknbite.com',
+          subtitle: 'support@booknbytes.com',
           actionLabel: 'Mail / Copy',
-          onTap: () => _copyToClipboard('Support Email', 'partner-desk@booknbite.com'),
+          onTap: () => _copyToClipboard('Support Email', 'support@booknbytes.com'),
         ),
 
         const SizedBox(height: 24),
@@ -627,7 +627,7 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
                   children: [
                     Text('Rohan Singhal', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: Colors.white)),
                     SizedBox(height: 2),
-                    Text('Senior Partner Growth Manager · Pune Region', style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8))),
+                    Text('Senior Restaurant Growth Manager · Pune Region', style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8))),
                   ],
                 ),
               ),
@@ -659,7 +659,7 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
             onChanged: (val) => setState(() => _searchQuery = val),
             style: const TextStyle(color: Colors.white, fontSize: 13),
             decoration: InputDecoration(
-              hintText: 'Search partner questions, alerts, UPI...',
+              hintText: 'Search restaurant questions, alerts, UPI...',
               hintStyle: const TextStyle(color: Color(0xFF64748B), fontSize: 12),
               prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF00E599), size: 18),
               suffixIcon: _searchQuery.isNotEmpty
@@ -757,7 +757,7 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
               const Icon(Icons.rate_review_rounded, color: Color(0xFF00E599), size: 32),
               const SizedBox(height: 14),
               const Text(
-                'Partner Feedback & Bug Reports',
+                'Restaurant Feedback & Bug Reports',
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white),
               ),
               const SizedBox(height: 6),
@@ -804,7 +804,7 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
         _buildCommunityTile(
           icon: Icons.update_rounded,
           title: 'Weekly Feature Updates',
-          subtitle: 'Partner feedback directly drives weekly app updates',
+          subtitle: 'Restaurant feedback directly drives weekly app updates',
         ),
       ],
     );

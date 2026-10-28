@@ -181,7 +181,7 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
             Text('🏪 ✨ ', style: TextStyle(fontSize: 16)),
             Expanded(
               child: Text(
-                'Partner Profile & Shifts successfully saved! 🌟',
+                'Restaurant Profile & Shifts successfully saved! 🌟',
                 style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
               ),
             ),
@@ -423,7 +423,7 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
               _buildTextField(
                 controller: _emailController,
                 label: 'Business Email *',
-                hint: 'partner@restaurant.com',
+                hint: 'contact@restaurant.com',
                 icon: Icons.email_rounded,
                 keyboardType: TextInputType.emailAddress,
                 validator: (val) => val == null || !val.contains('@') ? 'Valid email required' : null,
@@ -643,7 +643,7 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
                       Icon(Icons.save_rounded, size: 20),
                       SizedBox(width: 8),
                       Text(
-                        'Save & Publish Partner Profile',
+                        'Save & Publish Restaurant Profile',
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w800,

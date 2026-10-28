@@ -6,7 +6,7 @@ import '../../providers/location_provider.dart';
 import '../../services/notification_service.dart';
 import '../../widgets/brand_logo.dart';
 import '../../widgets/location_picker_sheet.dart';
-import '../../widgets/partner_walkthrough_modal.dart';
+import '../../widgets/restaurant_walkthrough_modal.dart';
 import '../profile/booking_ledger_doc_screen.dart';
 import '../profile/restaurant_profile_screen.dart';
 import '../support/support_screen.dart';
@@ -99,7 +99,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   void _replayTutorial() {
     HapticFeedback.mediumImpact();
-    PartnerWalkthroughModal.show(context);
+    RestaurantWalkthroughModal.show(context);
   }
 
   @override
@@ -117,7 +117,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Partner Controls & Settings',
+              'Restaurant Controls & Settings',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
@@ -125,7 +125,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
             Text(
-              'Hardware Alerts, Profile & Merchant Preferences',
+              'Hardware Alerts, Profile & Restaurant Preferences',
               style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
             ),
           ],
@@ -506,14 +506,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             _buildActionTile(
               icon: Icons.headset_mic_rounded,
-              title: '24x7 Partner Concierge & Helpline',
+              title: '24x7 Restaurant Concierge & Helpline',
               subtitle: 'Instant WhatsApp desk, priority hotline & callback',
               onTap: _openSupport,
               accentColor: const Color(0xFF00E599),
             ),
             _buildActionTile(
               icon: Icons.quiz_rounded,
-              title: 'General Partner FAQs',
+              title: 'General Restaurant FAQs',
               subtitle: 'Answers for alerts, no-show rules, UPI & rush hours',
               onTap: _openSupport,
               accentColor: const Color(0xFF38BDF8),
@@ -530,7 +530,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             // Onboarding & Tutorial
             const Text(
-              'PARTNER WALKTHROUGH',
+              'RESTAURANT WALKTHROUGH',
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w800,

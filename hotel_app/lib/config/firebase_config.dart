@@ -1,7 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 
-/// Firebase configuration for Book & Bite app.
+/// Firebase configuration for BookNBytes app.
 /// Replace these placeholder values with your actual Firebase project config
 /// obtained from the Firebase Console or `flutterfire configure`.
 class FirebaseConfig {

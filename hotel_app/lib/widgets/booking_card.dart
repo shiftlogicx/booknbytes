@@ -74,7 +74,7 @@ class BookingCard extends StatelessWidget {
                     Text('⏱️ ', style: TextStyle(fontSize: 20)),
                     Expanded(
                       child: Text(
-                        '15-minute grace window expired. Marking as No-Show immediately releases the reserved table for walk-ins and logs this entry in your partner audit ledger.',
+                        '15-minute grace window expired. Marking as No-Show immediately releases the reserved table for walk-ins and logs this entry in your restaurant audit ledger.',
                         style: TextStyle(fontSize: 12, color: Color(0xFFCBD5E1), height: 1.4),
                       ),
                     ),
@@ -386,7 +386,7 @@ class BookingCard extends StatelessWidget {
                               ),
                               const SizedBox(height: 2),
                               Text(
-                                booking.customerPhone ?? '+91 • Verified Partner Guest',
+                                booking.customerPhone ?? '+91 • Verified Restaurant Guest',
                                 style: const TextStyle(
                                   fontSize: 12,
                                   color: Color(0xFF64748B),

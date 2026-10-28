@@ -188,7 +188,7 @@ class _IncomingBookingAlertScreenState extends State<IncomingBookingAlertScreen>
                   ),
                   const SizedBox(height: 2),
                   const Text(
-                    'Book & Bite Instant Table Alert',
+                    'BookNBytes Instant Table Alert',
                     style: TextStyle(fontSize: 12, color: Color(0xFFD4AF37), fontWeight: FontWeight.w600, letterSpacing: 0.5),
                   ),
                 ],
