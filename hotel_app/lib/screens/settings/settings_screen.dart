@@ -3,12 +3,12 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/location_provider.dart';
-import '../../services/notification_service.dart';
+import '../../providers/notification_provider.dart';
 import '../../widgets/brand_logo.dart';
 import '../../widgets/location_picker_sheet.dart';
 import '../../widgets/restaurant_walkthrough_modal.dart';
-import '../profile/booking_ledger_doc_screen.dart';
 import '../profile/restaurant_profile_screen.dart';
+import '../profile/booking_ledger_doc_screen.dart';
 import '../support/support_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -19,68 +19,59 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  // Working Preference Toggles
+  // Alert & Hardware Toggles
   bool _fullScreenAlerts = true;
   bool _loudChimeMode = true;
   bool _hapticRinging = true;
+
+  // Automation & Communication
   bool _instantSmsDiner = true;
   bool _autoAssignTables = true;
   bool _peakHourSurgePricing = true;
 
-  void _showToggleNotice(String setting, bool enabled) {
+  void _showToggleNotice(String name, bool val) {
     HapticFeedback.selectionClick();
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Row(
-          children: [
-            Icon(
-              enabled ? Icons.check_circle_rounded : Icons.do_not_disturb_on_rounded,
-              color: enabled ? const Color(0xFF00E599) : const Color(0xFF94A3B8),
-              size: 18,
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                '$setting: ${enabled ? "ACTIVATED" : "DISABLED"}',
-                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
-              ),
-            ),
-          ],
+        content: Text(
+          '$name is now ${val ? "ENABLED ⚡" : "DISABLED"}',
+          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: Colors.white),
         ),
-        backgroundColor: const Color(0xFF101420),
-        duration: const Duration(milliseconds: 1400),
+        backgroundColor: const Color(0xFF0F172A),
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(color: Color(0xFF26324D)),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        duration: const Duration(milliseconds: 1400),
       ),
     );
   }
 
   void _testAudioChime() async {
     HapticFeedback.heavyImpact();
-    final notifService = NotificationService();
-    await notifService.startRinging();
+    final notifProvider = Provider.of<NotificationProvider>(context, listen: false);
+    await notifProvider.testAlarm();
+
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: const Row(
           children: [
-            Icon(Icons.volume_up_rounded, color: Color(0xFF00E599), size: 18),
-            SizedBox(width: 10),
-            Text('Playing loud notification chime (2s)...', style: TextStyle(fontWeight: FontWeight.w600)),
+            Text('🔔 ✨ ', style: TextStyle(fontSize: 16)),
+            Expanded(
+              child: Text(
+                'Playing Priority Dining Bell Acoustic Ringtone...',
+                style: TextStyle(fontWeight: FontWeight.w700, color: Colors.white),
+              ),
+            ),
           ],
         ),
-        backgroundColor: const Color(0xFF101420),
-        duration: const Duration(seconds: 2),
+        backgroundColor: const Color(0xFF0F172A),
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
       ),
     );
-    await Future.delayed(const Duration(milliseconds: 2200));
-    await notifService.stopRinging();
   }
 
   void _openProfile() {
@@ -109,10 +100,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final locationProvider = Provider.of<LocationProvider>(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF07090E),
+      backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF101420),
+        backgroundColor: Colors.white,
         elevation: 0,
+        shape: const Border(
+          bottom: BorderSide(color: Color(0xFFE2E8F0), width: 1.0),
+        ),
         title: const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -121,12 +115,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
-                color: Colors.white,
+                color: Color(0xFF0F172A),
               ),
             ),
             Text(
               'Hardware Alerts, Profile & Restaurant Preferences',
-              style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
+              style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
             ),
           ],
         ),
@@ -142,18 +136,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: Container(
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF131726), Color(0xFF0F121C)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(22),
-                  border: Border.all(color: const Color(0xFF222B3D), width: 1.2),
+                  border: Border.all(color: const Color(0xFFE2E8F0), width: 1.0),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.4),
+                      color: const Color(0xFF0F172A).withValues(alpha: 0.05),
                       blurRadius: 16,
-                      offset: const Offset(0, 6),
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
@@ -172,13 +162,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 style: const TextStyle(
                                   fontSize: 17,
                                   fontWeight: FontWeight.w800,
-                                  color: Colors.white,
+                                  color: Color(0xFF0F172A),
                                 ),
                               ),
                               const SizedBox(height: 3),
                               Text(
                                 'Owner: ${profile.ownerName} · ID: ${profile.restaurantId}',
-                                style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
+                                style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
                               ),
                               const SizedBox(height: 8),
                               Row(
@@ -186,21 +176,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFF00E599).withValues(alpha: 0.15),
+                                      color: const Color(0xFFECFDF5),
                                       borderRadius: BorderRadius.circular(6),
-                                      border: Border.all(color: const Color(0xFF00E599).withValues(alpha: 0.4)),
+                                      border: Border.all(color: const Color(0xFFA7F3D0)),
                                     ),
                                     child: const Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        Icon(Icons.verified_rounded, size: 11, color: Color(0xFF00E599)),
+                                        Icon(Icons.verified_rounded, size: 11, color: Color(0xFF059669)),
                                         SizedBox(width: 4),
                                         Text(
-                                          'ACTIVE MERCHANT',
+                                          'ACTIVE RESTAURANT',
                                           style: TextStyle(
                                             fontSize: 9,
                                             fontWeight: FontWeight.w800,
-                                            color: Color(0xFF00E599),
+                                            color: Color(0xFF059669),
                                             letterSpacing: 0.6,
                                           ),
                                         ),
@@ -212,11 +202,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             ],
                           ),
                         ),
-                        const Icon(Icons.arrow_forward_ios_rounded, color: Color(0xFF64748B), size: 16),
+                        const Icon(Icons.arrow_forward_ios_rounded, color: Color(0xFF94A3B8), size: 16),
                       ],
                     ),
                     const SizedBox(height: 14),
-                    const Divider(color: Color(0xFF1E283D), height: 1),
+                    const Divider(color: Color(0xFFE2E8F0), height: 1),
                     const SizedBox(height: 12),
                     Row(
                       children: [
@@ -226,12 +216,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             children: [
                               Text(
                                 'Lunch: ${profile.lunchOpen} - ${profile.lunchClose}',
-                                style: const TextStyle(fontSize: 10, color: Color(0xFF94A3B8), fontWeight: FontWeight.w600),
+                                style: const TextStyle(fontSize: 10, color: Color(0xFF64748B), fontWeight: FontWeight.w600),
                               ),
                               const SizedBox(height: 2),
                               Text(
                                 'Dinner: ${profile.dinnerOpen} - ${profile.dinnerClose}',
-                                style: const TextStyle(fontSize: 10, color: Color(0xFF94A3B8), fontWeight: FontWeight.w600),
+                                style: const TextStyle(fontSize: 10, color: Color(0xFF64748B), fontWeight: FontWeight.w600),
                               ),
                             ],
                           ),
@@ -239,19 +229,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF00E599).withValues(alpha: 0.12),
+                            color: const Color(0xFFECFDF5),
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: const Color(0xFF00E599).withValues(alpha: 0.35)),
+                            border: Border.all(color: const Color(0xFFA7F3D0)),
                           ),
                           child: const Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
                                 'Edit Details',
-                                style: TextStyle(fontSize: 11, color: Color(0xFF00E599), fontWeight: FontWeight.w800),
+                                style: TextStyle(fontSize: 11, color: Color(0xFF059669), fontWeight: FontWeight.w800),
                               ),
                               SizedBox(width: 4),
-                              Icon(Icons.edit_rounded, size: 12, color: Color(0xFF00E599)),
+                              Icon(Icons.edit_rounded, size: 12, color: Color(0xFF059669)),
                             ],
                           ),
                         ),
@@ -285,19 +275,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF101420),
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFF222B3D)),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF0F172A).withValues(alpha: 0.03),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
                 ),
                 child: Row(
                   children: [
                     Container(
                       padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFFFFBEB),
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.location_on_rounded, color: Color(0xFFFBBF24), size: 20),
+                      child: const Icon(Icons.location_on_rounded, color: Color(0xFFD97706), size: 20),
                     ),
                     const SizedBox(width: 14),
                     Expanded(
@@ -309,18 +306,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             style: TextStyle(
                               fontWeight: FontWeight.w700,
                               fontSize: 14,
-                              color: Colors.white,
+                              color: Color(0xFF0F172A),
                             ),
                           ),
                           const SizedBox(height: 2),
                           Text(
                             locationProvider.currentLocation.fullAddress,
-                            style: const TextStyle(fontSize: 12, color: Color(0xFFFBBF24), fontWeight: FontWeight.w600),
+                            style: const TextStyle(fontSize: 12, color: Color(0xFFD97706), fontWeight: FontWeight.w600),
                           ),
                         ],
                       ),
                     ),
-                    const Icon(Icons.chevron_right_rounded, color: Color(0xFF64748B)),
+                    const Icon(Icons.chevron_right_rounded, color: Color(0xFF94A3B8)),
                   ],
                 ),
               ),
@@ -343,10 +340,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 TextButton.icon(
                   onPressed: _testAudioChime,
-                  icon: const Icon(Icons.volume_up_rounded, size: 14, color: Color(0xFF00E599)),
+                  icon: const Icon(Icons.volume_up_rounded, size: 14, color: Color(0xFF059669)),
                   label: const Text(
                     'Test Sound',
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xFF00E599)),
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xFF059669)),
                   ),
                 ),
               ],
@@ -452,7 +449,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   onPressed: _openProfile,
                   child: const Text(
                     'Edit Details',
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xFF00E599)),
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xFF059669)),
                   ),
                 ),
               ],
@@ -481,7 +478,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   MaterialPageRoute(builder: (_) => const BookingLedgerDocScreen()),
                 );
               },
-              accentColor: const Color(0xFF38BDF8),
+              accentColor: const Color(0xFF2563EB),
             ),
             _buildActionTile(
               icon: Icons.currency_rupee_rounded,
@@ -509,21 +506,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
               title: '24x7 Restaurant Concierge & Helpline',
               subtitle: 'Instant WhatsApp desk, priority hotline & callback',
               onTap: _openSupport,
-              accentColor: const Color(0xFF00E599),
+              accentColor: const Color(0xFF059669),
             ),
             _buildActionTile(
               icon: Icons.quiz_rounded,
               title: 'General Restaurant FAQs',
               subtitle: 'Answers for alerts, no-show rules, UPI & rush hours',
               onTap: _openSupport,
-              accentColor: const Color(0xFF38BDF8),
+              accentColor: const Color(0xFF2563EB),
             ),
             _buildActionTile(
               icon: Icons.feedback_rounded,
               title: 'Send Feedback & Bug Reports',
               subtitle: 'Share comments directly with the engineering team',
               onTap: _openSupport,
-              accentColor: const Color(0xFFF59E0B),
+              accentColor: const Color(0xFFD97706),
             ),
 
             const SizedBox(height: 24),
@@ -545,7 +542,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               title: 'Replay App Walkthrough Tutorial',
               subtitle: 'Explore priority alarms, 1-touch swipe and dynamic slots',
               onTap: _replayTutorial,
-              accentColor: const Color(0xFF818CF8),
+              accentColor: const Color(0xFF4F46E5),
             ),
           ],
         ),
@@ -564,24 +561,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF101420),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: value ? const Color(0xFF00E599).withValues(alpha: 0.3) : const Color(0xFF222B3D),
-          width: 1.2,
+          color: value ? const Color(0xFF059669).withValues(alpha: 0.3) : const Color(0xFFE2E8F0),
+          width: 1.0,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0F172A).withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(9),
             decoration: BoxDecoration(
-              color: (value ? const Color(0xFF00E599) : const Color(0xFF64748B)).withValues(alpha: 0.15),
+              color: (value ? const Color(0xFF059669) : const Color(0xFF64748B)).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
               icon,
-              color: value ? const Color(0xFF00E599) : const Color(0xFF64748B),
+              color: value ? const Color(0xFF059669) : const Color(0xFF64748B),
               size: 20,
             ),
           ),
@@ -595,13 +599,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   style: const TextStyle(
                     fontWeight: FontWeight.w700,
                     fontSize: 13,
-                    color: Colors.white,
+                    color: Color(0xFF0F172A),
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
+                  style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
                 ),
               ],
             ),
@@ -610,10 +614,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             scale: 0.85,
             child: Switch.adaptive(
               value: value,
-              activeColor: const Color(0xFF00E599),
-              activeTrackColor: const Color(0xFF00E599).withValues(alpha: 0.35),
-              inactiveThumbColor: const Color(0xFF64748B),
-              inactiveTrackColor: const Color(0xFF1A2234),
+              activeColor: const Color(0xFF059669),
               onChanged: onChanged,
             ),
           ),
@@ -627,7 +628,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required String title,
     required String subtitle,
     required VoidCallback onTap,
-    Color accentColor = const Color(0xFFF59E0B),
+    Color accentColor = const Color(0xFFD97706),
   }) {
     return InkWell(
       onTap: onTap,
@@ -636,16 +637,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF101420),
+          color: Colors.white,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFF222B3D)),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF0F172A).withValues(alpha: 0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(9),
               decoration: BoxDecoration(
-                color: accentColor.withValues(alpha: 0.15),
+                color: accentColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Icon(icon, color: accentColor, size: 20),
@@ -660,18 +668,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     style: const TextStyle(
                       fontWeight: FontWeight.w700,
                       fontSize: 13,
-                      color: Colors.white,
+                      color: Color(0xFF0F172A),
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
+                    style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.arrow_forward_ios_rounded, color: Color(0xFF64748B), size: 14),
+            const Icon(Icons.arrow_forward_ios_rounded, color: Color(0xFF94A3B8), size: 14),
           ],
         ),
       ),

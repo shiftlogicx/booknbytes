@@ -24,32 +24,32 @@ class GlassNavDock extends StatelessWidget {
 
     return SafeArea(
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        height: 68,
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        height: 66,
         decoration: BoxDecoration(
-          color: const Color(0xFF0F1420).withValues(alpha: 0.88),
-          borderRadius: BorderRadius.circular(36),
+          color: Colors.white.withValues(alpha: 0.94),
+          borderRadius: BorderRadius.circular(34),
           border: Border.all(
-            color: const Color(0xFF28344E).withValues(alpha: 0.6),
-            width: 1.2,
+            color: const Color(0xFFE2E8F0),
+            width: 1.0,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.55),
-              blurRadius: 28,
-              offset: const Offset(0, 10),
+              color: const Color(0xFF0F172A).withValues(alpha: 0.08),
+              blurRadius: 24,
+              offset: const Offset(0, 8),
             ),
             BoxShadow(
-              color: const Color(0xFF00E599).withValues(alpha: 0.05),
-              blurRadius: 16,
-              spreadRadius: 2,
+              color: const Color(0xFF059669).withValues(alpha: 0.04),
+              blurRadius: 12,
+              spreadRadius: 1,
             ),
           ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(36),
+          borderRadius: BorderRadius.circular(34),
           child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+            filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: List.generate(tabs.length, (idx) {
@@ -64,16 +64,22 @@ class GlassNavDock extends StatelessWidget {
                       onTabSelected(idx);
                     },
                     child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 260),
+                      duration: const Duration(milliseconds: 240),
                       curve: Curves.easeOutCubic,
-                      margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 6),
+                      margin: const EdgeInsets.symmetric(horizontal: 3, vertical: 5),
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? const Color(0xFF1E283E)
+                            ? const Color(0xFF0F172A)
                             : Colors.transparent,
                         borderRadius: BorderRadius.circular(20),
-                        border: isSelected
-                            ? Border.all(color: const Color(0xFF38BDF8).withValues(alpha: 0.35))
+                        boxShadow: isSelected
+                            ? [
+                                BoxShadow(
+                                  color: const Color(0xFF0F172A).withValues(alpha: 0.2),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ]
                             : null,
                       ),
                       child: Column(
@@ -84,9 +90,9 @@ class GlassNavDock extends StatelessWidget {
                             children: [
                               Icon(
                                 isSelected ? tab.activeIcon : tab.icon,
-                                size: 20,
+                                size: 19,
                                 color: isSelected
-                                    ? const Color(0xFF00E599) // CRED neon emerald
+                                    ? const Color(0xFF10B981) // High-contrast emerald
                                     : const Color(0xFF64748B),
                               ),
                               if (tab.badgeCount != null)
@@ -96,9 +102,12 @@ class GlassNavDock extends StatelessWidget {
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFFEF4444),
+                                      color: const Color(0xFFDC2626),
                                       borderRadius: BorderRadius.circular(10),
-                                      border: Border.all(color: const Color(0xFF0F1420), width: 1.5),
+                                      border: Border.all(
+                                        color: isSelected ? const Color(0xFF0F172A) : Colors.white,
+                                        width: 1.2,
+                                      ),
                                     ),
                                     child: Text(
                                       '${tab.badgeCount}',

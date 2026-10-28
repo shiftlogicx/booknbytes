@@ -14,10 +14,13 @@ class BookingListScreen extends StatelessWidget {
     final booking = Provider.of<BookingProvider>(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF090D16),
+      backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF101726),
+        backgroundColor: Colors.white,
         elevation: 0,
+        shape: const Border(
+          bottom: BorderSide(color: Color(0xFFE2E8F0), width: 1.0),
+        ),
         title: const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -26,18 +29,18 @@ class BookingListScreen extends StatelessWidget {
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
-                color: Colors.white,
+                color: Color(0xFF0F172A),
               ),
             ),
             Text(
               'Live Guest Management',
-              style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
+              style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
             ),
           ],
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh_rounded, color: Color(0xFF94A3B8)),
+            icon: const Icon(Icons.refresh_rounded, color: Color(0xFF64748B)),
             onPressed: () {
               HapticFeedback.lightImpact();
               booking.fetchBookings('res_12345xyz');
@@ -51,7 +54,7 @@ class BookingListScreen extends StatelessWidget {
           children: [
             // Filter Pills
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 physics: const BouncingScrollPhysics(),
@@ -78,9 +81,16 @@ class BookingListScreen extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.all(22),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF131B2E),
+                              color: Colors.white,
                               shape: BoxShape.circle,
-                              border: Border.all(color: const Color(0xFF28344E), width: 1.5),
+                              border: Border.all(color: const Color(0xFFE2E8F0), width: 1.5),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFF0F172A).withValues(alpha: 0.05),
+                                  blurRadius: 16,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
                             ),
                             child: const Text('👨‍🍳', style: TextStyle(fontSize: 44)),
                           ),
@@ -88,7 +98,7 @@ class BookingListScreen extends StatelessWidget {
                           const Text(
                             'Dining Floor is Sparkling Clean! ✨',
                             style: TextStyle(
-                              color: Colors.white,
+                              color: Color(0xFF0F172A),
                               fontSize: 16,
                               fontWeight: FontWeight.w800,
                             ),
@@ -96,14 +106,14 @@ class BookingListScreen extends StatelessWidget {
                           const SizedBox(height: 6),
                           const Text(
                             'Tables prepped and ready for incoming reservations 🍽️',
-                            style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
+                            style: TextStyle(color: Color(0xFF64748B), fontSize: 12),
                           ),
                         ],
                       ),
                     )
                   : ListView.builder(
                       physics: const BouncingScrollPhysics(),
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 95),
+                      padding: const EdgeInsets.fromLTRB(16, 6, 16, 95),
                       itemCount: booking.bookings.length,
                       itemBuilder: (context, idx) {
                         final b = booking.bookings[idx];
@@ -134,18 +144,25 @@ class BookingListScreen extends StatelessWidget {
         margin: const EdgeInsets.only(right: 8),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF00E599) : const Color(0xFF131B2E),
+          color: isSelected ? const Color(0xFF0F172A) : Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? const Color(0xFF00E599) : const Color(0xFF222F49),
+            color: isSelected ? const Color(0xFF0F172A) : const Color(0xFFE2E8F0),
           ),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF0F172A).withValues(alpha: isSelected ? 0.12 : 0.03),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Text(
           label,
           style: TextStyle(
             fontSize: 11,
             fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-            color: isSelected ? const Color(0xFF0F172A) : const Color(0xFF94A3B8),
+            color: isSelected ? Colors.white : const Color(0xFF475569),
           ),
         ),
       ),

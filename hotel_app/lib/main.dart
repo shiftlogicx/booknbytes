@@ -45,7 +45,7 @@ class BookAndBiteHotelApp extends StatelessWidget {
       child: MaterialApp(
         title: 'BookNBytes Restaurant',
         debugShowCheckedModeBanner: false,
-        theme: AppTheme.darkTheme,
+        theme: AppTheme.lightTheme,
         home: const SplashScreen(),
       ),
     );

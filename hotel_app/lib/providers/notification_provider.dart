@@ -17,6 +17,13 @@ class NotificationProvider extends ChangeNotifier {
     };
   }
 
+  Future<void> testAlarm() async {
+    await _notificationService.startRinging();
+    Future.delayed(const Duration(seconds: 4), () {
+      _notificationService.stopRinging();
+    });
+  }
+
   void triggerIncomingBookingAlert(BookingModel booking) {
     _activeAlertBooking = booking;
     _isAlertVisible = true;

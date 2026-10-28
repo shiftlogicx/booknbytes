@@ -12,36 +12,27 @@ class TableSlotsScreen extends StatefulWidget {
 class _TableSlotsScreenState extends State<TableSlotsScreen> {
   int _selectedDateIndex = 0;
   String _shiftFilter = 'ALL';
-  late List<DateTime> _dates;
 
-  // Dedicated Slot Capacity Data
-  late List<_SlotCapacityItem> _slots;
+  final List<DateTime> _dates = List.generate(
+    7,
+    (index) => DateTime.now().add(Duration(days: index)),
+  );
 
-  @override
-  void initState() {
-    super.initState();
-    final now = DateTime.now();
-    _dates = List.generate(7, (i) => now.add(Duration(days: i)));
-
-    _slots = [
-      // Lunch
-      _SlotCapacityItem(time: '12:00 PM', shift: 'LUNCH', totalTables: 8, bookedTables: 2, isOpen: true),
-      _SlotCapacityItem(time: '12:30 PM', shift: 'LUNCH', totalTables: 10, bookedTables: 4, isOpen: true),
-      _SlotCapacityItem(time: '01:00 PM', shift: 'LUNCH', totalTables: 12, bookedTables: 8, isOpen: true),
-      _SlotCapacityItem(time: '01:30 PM', shift: 'LUNCH', totalTables: 12, bookedTables: 11, isOpen: true),
-      _SlotCapacityItem(time: '02:00 PM', shift: 'LUNCH', totalTables: 8, bookedTables: 3, isOpen: true),
-      _SlotCapacityItem(time: '02:30 PM', shift: 'LUNCH', totalTables: 8, bookedTables: 1, isOpen: false),
-
-      // Dinner
-      _SlotCapacityItem(time: '07:00 PM', shift: 'DINNER', totalTables: 10, bookedTables: 3, isOpen: true),
-      _SlotCapacityItem(time: '07:30 PM', shift: 'DINNER', totalTables: 12, bookedTables: 6, isOpen: true),
-      _SlotCapacityItem(time: '08:00 PM', shift: 'DINNER', totalTables: 14, bookedTables: 12, isOpen: true),
-      _SlotCapacityItem(time: '08:30 PM', shift: 'DINNER', totalTables: 14, bookedTables: 13, isOpen: true),
-      _SlotCapacityItem(time: '09:00 PM', shift: 'DINNER', totalTables: 12, bookedTables: 9, isOpen: true),
-      _SlotCapacityItem(time: '09:30 PM', shift: 'DINNER', totalTables: 10, bookedTables: 4, isOpen: true),
-      _SlotCapacityItem(time: '10:00 PM', shift: 'DINNER', totalTables: 8, bookedTables: 2, isOpen: true),
-    ];
-  }
+  final List<_SlotCapacityItem> _slots = [
+    _SlotCapacityItem(time: '12:00 PM', shift: 'LUNCH', totalTables: 12, bookedTables: 8, isOpen: true),
+    _SlotCapacityItem(time: '12:30 PM', shift: 'LUNCH', totalTables: 12, bookedTables: 10, isOpen: true),
+    _SlotCapacityItem(time: '01:00 PM', shift: 'LUNCH', totalTables: 14, bookedTables: 14, isOpen: true),
+    _SlotCapacityItem(time: '01:30 PM', shift: 'LUNCH', totalTables: 14, bookedTables: 11, isOpen: true),
+    _SlotCapacityItem(time: '02:00 PM', shift: 'LUNCH', totalTables: 10, bookedTables: 5, isOpen: true),
+    _SlotCapacityItem(time: '02:30 PM', shift: 'LUNCH', totalTables: 10, bookedTables: 2, isOpen: true),
+    _SlotCapacityItem(time: '07:00 PM', shift: 'DINNER', totalTables: 16, bookedTables: 12, isOpen: true),
+    _SlotCapacityItem(time: '07:30 PM', shift: 'DINNER', totalTables: 18, bookedTables: 16, isOpen: true),
+    _SlotCapacityItem(time: '08:00 PM', shift: 'DINNER', totalTables: 20, bookedTables: 20, isOpen: true),
+    _SlotCapacityItem(time: '08:30 PM', shift: 'DINNER', totalTables: 20, bookedTables: 19, isOpen: true),
+    _SlotCapacityItem(time: '09:00 PM', shift: 'DINNER', totalTables: 18, bookedTables: 14, isOpen: true),
+    _SlotCapacityItem(time: '09:30 PM', shift: 'DINNER', totalTables: 14, bookedTables: 7, isOpen: true),
+    _SlotCapacityItem(time: '10:00 PM', shift: 'DINNER', totalTables: 10, bookedTables: 3, isOpen: false),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -56,10 +47,13 @@ class _TableSlotsScreenState extends State<TableSlotsScreen> {
     final openTables = totalTables - bookedTables;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF090D16),
+      backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF101726),
+        backgroundColor: Colors.white,
         elevation: 0,
+        shape: const Border(
+          bottom: BorderSide(color: Color(0xFFE2E8F0), width: 1.0),
+        ),
         title: const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -68,19 +62,19 @@ class _TableSlotsScreenState extends State<TableSlotsScreen> {
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
-                color: Colors.white,
+                color: Color(0xFF0F172A),
               ),
             ),
             Text(
               'Manage Table Inventory & Hourly Availability',
-              style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
+              style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
             ),
           ],
         ),
       ),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 100),
           children: [
             // 7-Day Date Selector
             SizedBox(
@@ -105,11 +99,18 @@ class _TableSlotsScreenState extends State<TableSlotsScreen> {
                       margin: const EdgeInsets.only(right: 8),
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       decoration: BoxDecoration(
-                        color: isSelected ? const Color(0xFF38BDF8) : const Color(0xFF131B2E),
+                        color: isSelected ? const Color(0xFF0F172A) : Colors.white,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
-                          color: isSelected ? const Color(0xFF38BDF8) : const Color(0xFF222F49),
+                          color: isSelected ? const Color(0xFF0F172A) : const Color(0xFFE2E8F0),
                         ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF0F172A).withValues(alpha: isSelected ? 0.12 : 0.03),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -119,7 +120,7 @@ class _TableSlotsScreenState extends State<TableSlotsScreen> {
                             style: TextStyle(
                               fontSize: 9.5,
                               fontWeight: FontWeight.w800,
-                              color: isSelected ? const Color(0xFF0F172A) : const Color(0xFF94A3B8),
+                              color: isSelected ? Colors.white70 : const Color(0xFF64748B),
                             ),
                           ),
                           const SizedBox(height: 3),
@@ -128,7 +129,7 @@ class _TableSlotsScreenState extends State<TableSlotsScreen> {
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w900,
-                              color: isSelected ? const Color(0xFF0F172A) : Colors.white,
+                              color: isSelected ? Colors.white : const Color(0xFF0F172A),
                             ),
                           ),
                         ],
@@ -145,13 +146,16 @@ class _TableSlotsScreenState extends State<TableSlotsScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF131D30), Color(0xFF0F172A)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: const Color(0xFF222F49)),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF0F172A).withValues(alpha: 0.04),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
               ),
               child: Row(
                 children: [
@@ -159,25 +163,25 @@ class _TableSlotsScreenState extends State<TableSlotsScreen> {
                     child: _buildMetric(
                       label: 'TOTAL CAPACITY',
                       value: '$totalTables Tables',
-                      color: const Color(0xFF38BDF8),
+                      color: const Color(0xFF2563EB),
                       icon: Icons.table_restaurant_rounded,
                     ),
                   ),
-                  Container(width: 1, height: 38, color: const Color(0xFF1E283E)),
+                  Container(width: 1, height: 38, color: const Color(0xFFE2E8F0)),
                   Expanded(
                     child: _buildMetric(
                       label: 'BOOKED TODAY',
                       value: '$bookedTables Tables',
-                      color: const Color(0xFFF59E0B),
+                      color: const Color(0xFFD97706),
                       icon: Icons.check_circle_outline_rounded,
                     ),
                   ),
-                  Container(width: 1, height: 38, color: const Color(0xFF1E283E)),
+                  Container(width: 1, height: 38, color: const Color(0xFFE2E8F0)),
                   Expanded(
                     child: _buildMetric(
                       label: 'AVAILABLE FREE',
                       value: '$openTables Tables',
-                      color: const Color(0xFF00E599),
+                      color: const Color(0xFF059669),
                       icon: Icons.event_available_rounded,
                     ),
                   ),
@@ -200,20 +204,27 @@ class _TableSlotsScreenState extends State<TableSlotsScreen> {
                     },
                     borderRadius: BorderRadius.circular(20),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                       decoration: BoxDecoration(
-                        color: isSel ? const Color(0xFF38BDF8) : const Color(0xFF131B2E),
+                        color: isSel ? const Color(0xFF0F172A) : Colors.white,
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: isSel ? const Color(0xFF38BDF8) : const Color(0xFF222F49),
+                          color: isSel ? const Color(0xFF0F172A) : const Color(0xFFE2E8F0),
                         ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF0F172A).withValues(alpha: isSel ? 0.1 : 0.03),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
                       child: Text(
                         shift == 'ALL' ? 'ALL SHIFTS' : (shift == 'LUNCH' ? 'LUNCH (12–3 PM)' : 'DINNER (7–11 PM)'),
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: isSel ? FontWeight.w900 : FontWeight.w700,
-                          color: isSel ? const Color(0xFF0F172A) : const Color(0xFF94A3B8),
+                          color: isSel ? Colors.white : const Color(0xFF475569),
                         ),
                       ),
                     ),
@@ -257,7 +268,7 @@ class _TableSlotsScreenState extends State<TableSlotsScreen> {
           style: const TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w900,
-            color: Colors.white,
+            color: Color(0xFF0F172A),
           ),
         ),
       ],
@@ -272,11 +283,18 @@ class _TableSlotsScreenState extends State<TableSlotsScreen> {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: slot.isOpen ? const Color(0xFF101422) : const Color(0xFF0D101A),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: slot.isOpen ? const Color(0xFF1E283E) : const Color(0xFF1A2030),
+          color: slot.isOpen ? const Color(0xFFE2E8F0) : const Color(0xFFF1F5F9),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0F172A).withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Column(
         children: [
@@ -288,16 +306,16 @@ class _TableSlotsScreenState extends State<TableSlotsScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF161F33),
+                      color: const Color(0xFFF1F5F9),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: const Color(0xFF24324E)),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
                     ),
                     child: Text(
                       slot.time,
                       style: TextStyle(
                         fontSize: 12.5,
                         fontWeight: FontWeight.w900,
-                        color: slot.isOpen ? Colors.white : const Color(0xFF64748B),
+                        color: slot.isOpen ? const Color(0xFF0F172A) : const Color(0xFF94A3B8),
                       ),
                     ),
                   ),
@@ -306,16 +324,21 @@ class _TableSlotsScreenState extends State<TableSlotsScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
                       color: slot.shift == 'LUNCH'
-                          ? const Color(0xFFF59E0B).withValues(alpha: 0.15)
-                          : const Color(0xFF818CF8).withValues(alpha: 0.15),
+                          ? const Color(0xFFFFFBEB)
+                          : const Color(0xFFEEF2FF),
                       borderRadius: BorderRadius.circular(6),
+                      border: Border.all(
+                        color: slot.shift == 'LUNCH'
+                            ? const Color(0xFFFDE68A)
+                            : const Color(0xFFC7D2FE),
+                      ),
                     ),
                     child: Text(
                       slot.shift,
                       style: TextStyle(
                         fontSize: 9,
                         fontWeight: FontWeight.w900,
-                        color: slot.shift == 'LUNCH' ? const Color(0xFFFBBF24) : const Color(0xFFA5B4FC),
+                        color: slot.shift == 'LUNCH' ? const Color(0xFFD97706) : const Color(0xFF4F46E5),
                       ),
                     ),
                   ),
@@ -330,13 +353,13 @@ class _TableSlotsScreenState extends State<TableSlotsScreen> {
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w900,
-                      color: slot.isOpen ? const Color(0xFF00E599) : const Color(0xFF64748B),
+                      color: slot.isOpen ? const Color(0xFF059669) : const Color(0xFF94A3B8),
                     ),
                   ),
                   const SizedBox(width: 4),
                   Switch.adaptive(
                     value: slot.isOpen,
-                    activeColor: const Color(0xFF00E599),
+                    activeColor: const Color(0xFF059669),
                     onChanged: (val) {
                       HapticFeedback.selectionClick();
                       setState(() => slot.isOpen = val);
@@ -347,9 +370,9 @@ class _TableSlotsScreenState extends State<TableSlotsScreen> {
                             val
                                 ? '${slot.time} slot is now OPEN for diner bookings'
                                 : '${slot.time} slot is now PAUSED (no bookings)',
-                            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+                            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: Colors.white),
                           ),
-                          backgroundColor: const Color(0xFF101420),
+                          backgroundColor: const Color(0xFF0F172A),
                           behavior: SnackBarBehavior.floating,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           duration: const Duration(milliseconds: 1500),
@@ -369,11 +392,11 @@ class _TableSlotsScreenState extends State<TableSlotsScreen> {
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
               value: occupancy.clamp(0.0, 1.0),
-              backgroundColor: const Color(0xFF182236),
+              backgroundColor: const Color(0xFFF1F5F9),
               valueColor: AlwaysStoppedAnimation<Color>(
                 occupancy > 0.85
-                    ? const Color(0xFFEF4444)
-                    : (occupancy > 0.5 ? const Color(0xFFF59E0B) : const Color(0xFF00E599)),
+                    ? const Color(0xFFDC2626)
+                    : (occupancy > 0.5 ? const Color(0xFFD97706) : const Color(0xFF059669)),
               ),
               minHeight: 6,
             ),
@@ -387,14 +410,14 @@ class _TableSlotsScreenState extends State<TableSlotsScreen> {
             children: [
               Text(
                 '${slot.bookedTables} of ${slot.totalTables} Tables Booked ($available Available)',
-                style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8), fontWeight: FontWeight.w600),
+                style: const TextStyle(fontSize: 11, color: Color(0xFF64748B), fontWeight: FontWeight.w600),
               ),
 
               // +/- Table capacity
               Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.remove_circle_outline_rounded, size: 20, color: Color(0xFF64748B)),
+                    icon: const Icon(Icons.remove_circle_outline_rounded, size: 20, color: Color(0xFF94A3B8)),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                     onPressed: slot.totalTables > slot.bookedTables
@@ -408,11 +431,11 @@ class _TableSlotsScreenState extends State<TableSlotsScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 8),
                     child: Text(
                       '${slot.totalTables}',
-                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: Colors.white),
+                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: Color(0xFF0F172A)),
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.add_circle_outline_rounded, size: 20, color: Color(0xFF38BDF8)),
+                    icon: const Icon(Icons.add_circle_outline_rounded, size: 20, color: Color(0xFF2563EB)),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
                     onPressed: () {

@@ -90,9 +90,12 @@ class _ReservationSuccessDialogState extends State<ReservationSuccessDialog>
             mainAxisSize: MainAxisSize.min,
             children: [
               // Happy Emoji Burst Animation
-              const EmojiCelebrationBurst(
-                emojis: ['🥳', '🎉', '🍽️', '✨', '👨‍🍳', '🥂', '🔥'],
-                size: 45,
+              ScaleTransition(
+                scale: _checkScaleAnimation,
+                child: const EmojiCelebrationBurst(
+                  emojis: ['🥳', '🎉', '🍽️', '✨', '👨‍🍳', '🥂', '🔥'],
+                  size: 45,
+                ),
               ),
 
               const SizedBox(height: 12),

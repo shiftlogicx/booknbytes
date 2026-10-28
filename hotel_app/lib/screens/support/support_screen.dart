@@ -80,12 +80,17 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle_rounded, color: Color(0xFF00E599), size: 18),
+            const Icon(Icons.check_circle_rounded, color: Color(0xFF059669), size: 18),
             const SizedBox(width: 10),
-            Text('$label copied to clipboard: $value'),
+            Expanded(
+              child: Text(
+                '$label copied to clipboard: $value',
+                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13),
+              ),
+            ),
           ],
         ),
-        backgroundColor: const Color(0xFF101420),
+        backgroundColor: const Color(0xFF0F172A),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
@@ -96,7 +101,7 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
     HapticFeedback.mediumImpact();
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF101420),
+      backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -112,9 +117,9 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF00E599).withValues(alpha: 0.15),
+                      color: const Color(0xFFECFDF5),
                       shape: BoxShape.circle,
-                      border: Border.all(color: const Color(0xFF00E599).withValues(alpha: 0.4)),
+                      border: Border.all(color: const Color(0xFFA7F3D0)),
                     ),
                     child: const Text('📞', style: TextStyle(fontSize: 26)),
                   ),
@@ -126,14 +131,14 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
                         children: [
                           Text(
                             'Priority Callback Requested',
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Colors.white),
+                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
                           ),
                           SizedBox(width: 6),
                           Text('⚡', style: TextStyle(fontSize: 14)),
                         ],
                       ),
                       SizedBox(height: 2),
-                      Text('Dedicated Restaurant Success Manager 👨‍💼', style: TextStyle(fontSize: 12, color: Color(0xFF00E599), fontWeight: FontWeight.w600)),
+                      Text('Dedicated Restaurant Success Manager 👨‍💼', style: TextStyle(fontSize: 12, color: Color(0xFF059669), fontWeight: FontWeight.w700)),
                     ],
                   ),
                 ],
@@ -142,9 +147,9 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF171E2D),
+                  color: const Color(0xFFF8FAFC),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(0xFF28344E)),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
                 ),
                 child: const Row(
                   children: [
@@ -152,7 +157,7 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
                     Expanded(
                       child: Text(
                         'Our restaurant executive is being dispatched now. You will receive a direct call on your phone within 5 minutes.',
-                        style: TextStyle(fontSize: 12, color: Color(0xFFCBD5E1), height: 1.4),
+                        style: TextStyle(fontSize: 12, color: Color(0xFF334155), height: 1.4, fontWeight: FontWeight.w500),
                       ),
                     ),
                   ],
@@ -164,16 +169,17 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
                 height: 50,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF00E599),
-                    foregroundColor: Colors.black,
+                    backgroundColor: const Color(0xFF059669),
+                    foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    elevation: 0,
                   ),
                   onPressed: () => Navigator.of(context).pop(),
                   child: const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text('👍 ', style: TextStyle(fontSize: 16)),
-                      Text('Got It • Return to Floor', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14)),
+                      Text('Got It • Return to Floor', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
                     ],
                   ),
                 ),
@@ -194,7 +200,7 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF101420),
+      backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -218,18 +224,18 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
                       children: [
                         const Text(
                           'Restaurant Feedback & Bug Report',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Colors.white),
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.close_rounded, color: Color(0xFF94A3B8), size: 20),
+                          icon: const Icon(Icons.close_rounded, color: Color(0xFF64748B), size: 20),
                           onPressed: () => Navigator.of(context).pop(),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 4),
                     const Text(
                       'Your direct feedback shapes future releases for BookNBytes Restaurant.',
-                      style: TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
+                      style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
                     ),
                     const SizedBox(height: 18),
 
@@ -241,7 +247,7 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
                         return IconButton(
                           icon: Icon(
                             starIndex <= selectedRating ? Icons.star_rounded : Icons.star_outline_rounded,
-                            color: const Color(0xFFF59E0B),
+                            color: const Color(0xFFD97706),
                             size: 34,
                           ),
                           onPressed: () {
@@ -253,7 +259,7 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
                     ),
 
                     const SizedBox(height: 16),
-                    const Text('FEEDBACK CATEGORY', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xFF64748B))),
+                    const Text('FEEDBACK CATEGORY', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xFF64748B), letterSpacing: 0.5)),
                     const SizedBox(height: 8),
 
                     Wrap(
@@ -270,12 +276,15 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
                         return ChoiceChip(
                           label: Text(cat),
                           selected: isSel,
-                          selectedColor: const Color(0xFF00E599).withValues(alpha: 0.2),
-                          backgroundColor: const Color(0xFF171E2D),
+                          selectedColor: const Color(0xFFECFDF5),
+                          backgroundColor: const Color(0xFFF1F5F9),
+                          side: BorderSide(
+                            color: isSel ? const Color(0xFF059669) : const Color(0xFFE2E8F0),
+                          ),
                           labelStyle: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
-                            color: isSel ? const Color(0xFF00E599) : const Color(0xFF94A3B8),
+                            color: isSel ? const Color(0xFF059669) : const Color(0xFF475569),
                           ),
                           onSelected: (val) {
                             if (val) setModalState(() => selectedCategory = cat);
@@ -285,29 +294,29 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
                     ),
 
                     const SizedBox(height: 16),
-                    const Text('YOUR MESSAGE / BUG DETAILS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xFF64748B))),
+                    const Text('YOUR MESSAGE / BUG DETAILS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xFF64748B), letterSpacing: 0.5)),
                     const SizedBox(height: 8),
 
                     TextField(
                       controller: feedbackController,
                       maxLines: 4,
-                      style: const TextStyle(color: Colors.white, fontSize: 13),
+                      style: const TextStyle(color: Color(0xFF0F172A), fontSize: 13, fontWeight: FontWeight.w500),
                       decoration: InputDecoration(
                         hintText: 'Describe what happened or suggest an enhancement...',
-                        hintStyle: const TextStyle(color: Color(0xFF475569), fontSize: 12),
+                        hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
                         filled: true,
-                        fillColor: const Color(0xFF171E2D),
+                        fillColor: const Color(0xFFF8FAFC),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14),
-                          borderSide: const BorderSide(color: Color(0xFF28344E)),
+                          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14),
-                          borderSide: const BorderSide(color: Color(0xFF28344E)),
+                          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(14),
-                          borderSide: const BorderSide(color: Color(0xFF00E599)),
+                          borderSide: const BorderSide(color: Color(0xFF059669), width: 1.5),
                         ),
                       ),
                     ),
@@ -318,9 +327,10 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
                       height: 50,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF00E599),
-                          foregroundColor: Colors.black,
+                          backgroundColor: const Color(0xFF059669),
+                          foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          elevation: 0,
                         ),
                         onPressed: () {
                           HapticFeedback.mediumImpact();
@@ -329,12 +339,17 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
                             SnackBar(
                               content: const Row(
                                 children: [
-                                  Icon(Icons.check_circle_rounded, color: Color(0xFF00E599)),
+                                  Icon(Icons.check_circle_rounded, color: Color(0xFF059669)),
                                   SizedBox(width: 10),
-                                  Text('Thank you! Your feedback has been sent to our tech team.'),
+                                  Expanded(
+                                    child: Text(
+                                      'Thank you! Your feedback has been sent to our tech team.',
+                                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                                    ),
+                                  ),
                                 ],
                               ),
-                              backgroundColor: const Color(0xFF101420),
+                              backgroundColor: const Color(0xFF0F172A),
                               behavior: SnackBarBehavior.floating,
                               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             ),
@@ -358,12 +373,13 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
     final auth = Provider.of<AuthProvider>(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF07090E),
+      backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF101420),
+        backgroundColor: Colors.white,
         elevation: 0,
+        surfaceTintColor: Colors.transparent,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: Color(0xFF0F172A)),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: const Column(
@@ -374,27 +390,35 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
-                color: Colors.white,
+                color: Color(0xFF0F172A),
               ),
             ),
             Text(
               '24x7 Merchant Helpdesk, FAQs & Feedback',
-              style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
+              style: TextStyle(fontSize: 11, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
             ),
           ],
         ),
-        bottom: TabBar(
-          controller: _tabController,
-          indicatorColor: const Color(0xFF00E599),
-          indicatorWeight: 3,
-          labelColor: const Color(0xFF00E599),
-          unselectedLabelColor: const Color(0xFF94A3B8),
-          labelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
-          tabs: const [
-            Tab(text: 'CONTACT US'),
-            Tab(text: 'GENERAL FAQS'),
-            Tab(text: 'FEEDBACK'),
-          ],
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(49),
+          child: Container(
+            decoration: const BoxDecoration(
+              border: Border(bottom: BorderSide(color: Color(0xFFE2E8F0))),
+            ),
+            child: TabBar(
+              controller: _tabController,
+              indicatorColor: const Color(0xFF059669),
+              indicatorWeight: 3,
+              labelColor: const Color(0xFF059669),
+              unselectedLabelColor: const Color(0xFF64748B),
+              labelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, letterSpacing: 0.5),
+              tabs: const [
+                Tab(text: 'CONTACT US'),
+                Tab(text: 'GENERAL FAQS'),
+                Tab(text: 'FEEDBACK'),
+              ],
+            ),
+          ),
         ),
       ),
       body: TabBarView(
@@ -416,13 +440,16 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF131D30), Color(0xFF0F172A)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            color: Colors.white,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: const Color(0xFF222F49)),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x0A0F172A),
+                blurRadius: 14,
+                offset: Offset(0, 4),
+              ),
+            ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -436,7 +463,7 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
                         width: 10,
                         height: 10,
                         decoration: const BoxDecoration(
-                          color: Color(0xFF00E599),
+                          color: Color(0xFF059669),
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -447,7 +474,7 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
                           fontSize: 11,
                           fontWeight: FontWeight.w800,
                           letterSpacing: 0.8,
-                          color: Color(0xFF00E599),
+                          color: Color(0xFF059669),
                         ),
                       ),
                     ],
@@ -455,12 +482,13 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF38BDF8).withValues(alpha: 0.15),
+                      color: const Color(0xFFEFF6FF),
                       borderRadius: BorderRadius.circular(6),
+                      border: Border.all(color: const Color(0xFFBFDBFE)),
                     ),
                     child: const Text(
                       'Avg Response: < 2 min',
-                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFF38BDF8)),
+                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFF2563EB)),
                     ),
                   ),
                 ],
@@ -468,12 +496,12 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
               const SizedBox(height: 12),
               const Text(
                 'Direct Restaurant Concierge',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
               ),
               const SizedBox(height: 4),
               Text(
                 'Support for ${auth.currentRestaurantName} (${auth.currentRestaurantId})',
-                style: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
+                style: const TextStyle(fontSize: 12, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
               ),
               const SizedBox(height: 18),
               // Prominent Responsive Request Callback Card Button
@@ -487,16 +515,16 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [Color(0xFF00E599), Color(0xFF05CD85)],
+                        colors: [Color(0xFF059669), Color(0xFF047857)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
+                      boxShadow: const [
                         BoxShadow(
-                          color: const Color(0xFF00E599).withValues(alpha: 0.35),
-                          blurRadius: 16,
-                          offset: const Offset(0, 4),
+                          color: Color(0x28059669),
+                          blurRadius: 14,
+                          offset: Offset(0, 4),
                         ),
                       ],
                     ),
@@ -505,10 +533,10 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
                         Container(
                           padding: const EdgeInsets.all(9),
                           decoration: const BoxDecoration(
-                            color: Colors.black,
+                            color: Colors.white,
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(Icons.phone_callback_rounded, color: Color(0xFF00E599), size: 18),
+                          child: const Icon(Icons.phone_callback_rounded, color: Color(0xFF059669), size: 18),
                         ),
                         const SizedBox(width: 14),
                         const Expanded(
@@ -520,7 +548,7 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
                                   Text(
                                     'Request Instant Callback',
                                     style: TextStyle(
-                                      color: Colors.black,
+                                      color: Colors.white,
                                       fontWeight: FontWeight.w900,
                                       fontSize: 14,
                                       letterSpacing: -0.2,
@@ -534,15 +562,15 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
                               Text(
                                 'Dedicated restaurant manager calls in < 5 mins',
                                 style: TextStyle(
-                                  color: Color(0xFF064E3B),
-                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFFD1FAE5),
+                                  fontWeight: FontWeight.w600,
                                   fontSize: 11,
                                 ),
                               ),
                             ],
                           ),
                         ),
-                        const Icon(Icons.arrow_forward_rounded, color: Colors.black, size: 18),
+                        const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 18),
                       ],
                     ),
                   ),
@@ -562,7 +590,7 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
         // Callback Channel Tile
         _buildSupportTile(
           icon: Icons.phone_callback_rounded,
-          iconColor: const Color(0xFF00E599),
+          iconColor: const Color(0xFF059669),
           title: 'Request Priority Phone Callback ⚡',
           subtitle: 'Manager connects to registered mobile in 5 mins',
           actionLabel: 'Call Me 📞',
@@ -572,7 +600,7 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
         // WhatsApp Channel
         _buildSupportTile(
           icon: Icons.chat_rounded,
-          iconColor: const Color(0xFF25D366),
+          iconColor: const Color(0xFF16A34A),
           title: 'WhatsApp Restaurant Desk',
           subtitle: '+91 98200 12345 · Instant chat support',
           actionLabel: 'Chat / Copy',
@@ -582,7 +610,7 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
         // Priority Helpline
         _buildSupportTile(
           icon: Icons.phone_in_talk_rounded,
-          iconColor: const Color(0xFF38BDF8),
+          iconColor: const Color(0xFF2563EB),
           title: 'Priority Restaurant Helpline',
           subtitle: '1800-BOOK-BYTES (Toll-Free 24x7)',
           actionLabel: 'Call / Copy',
@@ -592,7 +620,7 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
         // Email Channel
         _buildSupportTile(
           icon: Icons.email_rounded,
-          iconColor: const Color(0xFFF59E0B),
+          iconColor: const Color(0xFFD97706),
           title: 'Executive Support Email',
           subtitle: 'support@booknbytes.com',
           actionLabel: 'Mail / Copy',
@@ -609,30 +637,37 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: const Color(0xFF101420),
+            color: Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFF222B3D)),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x060F172A),
+                blurRadius: 10,
+                offset: Offset(0, 2),
+              ),
+            ],
           ),
           child: Row(
             children: [
-              CircleAvatar(
+              const CircleAvatar(
                 radius: 22,
-                backgroundColor: const Color(0xFF00E599).withValues(alpha: 0.2),
-                child: const Text('RS', style: TextStyle(color: Color(0xFF00E599), fontWeight: FontWeight.w800)),
+                backgroundColor: Color(0xFFECFDF5),
+                child: Text('RS', style: TextStyle(color: Color(0xFF059669), fontWeight: FontWeight.w800)),
               ),
               const SizedBox(width: 14),
               const Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Rohan Singhal', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: Colors.white)),
+                    Text('Rohan Singhal', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: Color(0xFF0F172A))),
                     SizedBox(height: 2),
-                    Text('Senior Restaurant Growth Manager · Pune Region', style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8))),
+                    Text('Senior Restaurant Growth Manager · Pune Region', style: TextStyle(fontSize: 11, color: Color(0xFF64748B))),
                   ],
                 ),
               ),
               IconButton(
-                icon: const Icon(Icons.phone_rounded, color: Color(0xFF00E599), size: 20),
+                icon: const Icon(Icons.phone_rounded, color: Color(0xFF059669), size: 20),
                 onPressed: () => _copyToClipboard('Manager Phone', '+91 99887 66554'),
               ),
             ],
@@ -657,11 +692,11 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
           child: TextField(
             controller: _faqSearchController,
             onChanged: (val) => setState(() => _searchQuery = val),
-            style: const TextStyle(color: Colors.white, fontSize: 13),
+            style: const TextStyle(color: Color(0xFF0F172A), fontSize: 13, fontWeight: FontWeight.w600),
             decoration: InputDecoration(
               hintText: 'Search restaurant questions, alerts, UPI...',
-              hintStyle: const TextStyle(color: Color(0xFF64748B), fontSize: 12),
-              prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF00E599), size: 18),
+              hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
+              prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF059669), size: 18),
               suffixIcon: _searchQuery.isNotEmpty
                   ? IconButton(
                       icon: const Icon(Icons.clear_rounded, color: Color(0xFF64748B), size: 18),
@@ -672,11 +707,11 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
                     )
                   : null,
               filled: true,
-              fillColor: const Color(0xFF101420),
+              fillColor: Colors.white,
               contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFF222B3D))),
-              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFF222B3D))),
-              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFF00E599))),
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFF059669), width: 1.5)),
             ),
           ),
         ),
@@ -685,7 +720,7 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
         Expanded(
           child: filteredFaqs.isEmpty
               ? const Center(
-                  child: Text('No matching questions found', style: TextStyle(color: Color(0xFF94A3B8))),
+                  child: Text('No matching questions found', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w500)),
                 )
               : ListView.builder(
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 40),
@@ -695,14 +730,21 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
                     return Container(
                       margin: const EdgeInsets.only(bottom: 10),
                       decoration: BoxDecoration(
-                        color: const Color(0xFF101420),
+                        color: Colors.white,
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: const Color(0xFF222B3D)),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x060F172A),
+                            blurRadius: 8,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
                       ),
                       child: Theme(
                         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
                         child: ExpansionTile(
-                          iconColor: const Color(0xFF00E599),
+                          iconColor: const Color(0xFF059669),
                           collapsedIconColor: const Color(0xFF94A3B8),
                           tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                           childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
@@ -711,19 +753,19 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
                             children: [
                               Text(
                                 item.category,
-                                style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: Color(0xFF00E599), letterSpacing: 0.6),
+                                style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: Color(0xFF059669), letterSpacing: 0.6),
                               ),
                               const SizedBox(height: 3),
                               Text(
                                 item.question,
-                                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white),
+                                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF0F172A)),
                               ),
                             ],
                           ),
                           children: [
                             Text(
                               item.answer,
-                              style: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8), height: 1.45),
+                              style: const TextStyle(fontSize: 12, color: Color(0xFF475569), height: 1.45),
                             ),
                           ],
                         ),
@@ -743,27 +785,30 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF131726), Color(0xFF0F121C)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
+            color: Colors.white,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: const Color(0xFF222B3D)),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x0A0F172A),
+                blurRadius: 14,
+                offset: Offset(0, 4),
+              ),
+            ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Icon(Icons.rate_review_rounded, color: Color(0xFF00E599), size: 32),
+              const Icon(Icons.rate_review_rounded, color: Color(0xFF059669), size: 32),
               const SizedBox(height: 14),
               const Text(
                 'Restaurant Feedback & Bug Reports',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
               ),
               const SizedBox(height: 6),
               const Text(
                 'Notice an issue with the alarm chime, dining slots, or want a new feature? Share your thoughts directly with the product engineering team.',
-                style: TextStyle(fontSize: 12, color: Color(0xFF94A3B8), height: 1.4),
+                style: TextStyle(fontSize: 12, color: Color(0xFF64748B), height: 1.4),
               ),
               const SizedBox(height: 20),
               SizedBox(
@@ -771,9 +816,10 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
                 height: 48,
                 child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF00E599),
-                    foregroundColor: Colors.black,
+                    backgroundColor: const Color(0xFF059669),
+                    foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    elevation: 0,
                   ),
                   icon: const Icon(Icons.add_comment_rounded, size: 18),
                   label: const Text('Write Feedback or Report Bug', style: TextStyle(fontWeight: FontWeight.w800)),
@@ -822,16 +868,23 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF101420),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF222B3D)),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x060F172A),
+            blurRadius: 10,
+            offset: Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: iconColor.withValues(alpha: 0.15),
+              color: iconColor.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: iconColor, size: 22),
@@ -841,9 +894,9 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: Colors.white)),
+                Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: Color(0xFF0F172A))),
                 const SizedBox(height: 2),
-                Text(subtitle, style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8))),
+                Text(subtitle, style: const TextStyle(fontSize: 11, color: Color(0xFF64748B))),
               ],
             ),
           ),
@@ -853,13 +906,13 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
-                color: const Color(0xFF171E2D),
+                color: const Color(0xFFF1F5F9),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: const Color(0xFF28344E)),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
               ),
               child: Text(
                 actionLabel,
-                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF00E599)),
+                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF059669)),
               ),
             ),
           ),
@@ -877,21 +930,28 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFF101420),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFF222B3D)),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x040F172A),
+            blurRadius: 6,
+            offset: Offset(0, 1),
+          ),
+        ],
       ),
       child: Row(
         children: [
-          Icon(icon, color: const Color(0xFF00E599), size: 20),
+          Icon(icon, color: const Color(0xFF059669), size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: Colors.white)),
+                Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: Color(0xFF0F172A))),
                 const SizedBox(height: 2),
-                Text(subtitle, style: const TextStyle(fontSize: 10, color: Color(0xFF94A3B8))),
+                Text(subtitle, style: const TextStyle(fontSize: 10, color: Color(0xFF64748B))),
               ],
             ),
           ),

@@ -124,7 +124,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final locationProvider = Provider.of<LocationProvider>(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF090D16),
+      backgroundColor: const Color(0xFFF8F9FA),
       appBar: _currentNavIndex == 0 ? _buildHomeAppBar(auth, locationProvider) : null,
       body: _buildCurrentTab(),
       extendBody: true, // Allows content to float under the glass dock
@@ -140,7 +140,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
   PreferredSizeWidget _buildHomeAppBar(AuthProvider auth, LocationProvider locationProvider) {
     return AppBar(
       elevation: 0,
-      backgroundColor: const Color(0xFF101726),
+      backgroundColor: Colors.white,
+      shape: const Border(
+        bottom: BorderSide(color: Color(0xFFE2E8F0), width: 1.0),
+      ),
       titleSpacing: 16,
       title: InkWell(
         onTap: () {
@@ -157,18 +160,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.location_on_rounded, size: 14, color: Color(0xFFF59E0B)),
+                  const Icon(Icons.location_on_rounded, size: 14, color: Color(0xFFD97706)),
                   const SizedBox(width: 4),
                   Text(
                     locationProvider.currentLocation.shortLabel,
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w800,
-                      color: Colors.white,
+                      color: Color(0xFF0F172A),
                     ),
                   ),
                   const SizedBox(width: 4),
-                  const Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: Color(0xFFF59E0B)),
+                  const Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: Color(0xFFD97706)),
                 ],
               ),
               Row(
@@ -178,7 +181,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     width: 6,
                     height: 6,
                     decoration: const BoxDecoration(
-                      color: Color(0xFF10B981),
+                      color: Color(0xFF059669),
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -187,7 +190,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     auth.currentRestaurantName,
                     style: const TextStyle(
                       fontSize: 11,
-                      color: Color(0xFF94A3B8),
+                      color: Color(0xFF64748B),
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -201,7 +204,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         // 24x7 Support Hotline & Desk
         IconButton(
           tooltip: 'Restaurant Helpdesk & FAQs',
-          icon: const Icon(Icons.headset_mic_rounded, color: Color(0xFF00E599), size: 20),
+          icon: const Icon(Icons.headset_mic_rounded, color: Color(0xFF059669), size: 20),
           onPressed: () {
             HapticFeedback.lightImpact();
             Navigator.of(context).push(
@@ -212,7 +215,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         // Edit Restaurant Profile
         IconButton(
           tooltip: 'Restaurant Profile & Timings',
-          icon: const Icon(Icons.storefront_rounded, color: Color(0xFF38BDF8), size: 20),
+          icon: const Icon(Icons.storefront_rounded, color: Color(0xFF2563EB), size: 20),
           onPressed: () {
             HapticFeedback.lightImpact();
             Navigator.of(context).push(
@@ -331,16 +334,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF131D30), Color(0xFF0F172A)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFF222F49)),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.35),
+            color: const Color(0xFF0F172A).withValues(alpha: 0.05),
             blurRadius: 12,
             offset: const Offset(0, 4),
           ),
@@ -358,15 +357,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   height: 9,
                   decoration: BoxDecoration(
                     color: _isAcceptingReservations
-                        ? const Color(0xFF10B981)
-                        : const Color(0xFF64748B),
+                        ? const Color(0xFF059669)
+                        : const Color(0xFF94A3B8),
                     shape: BoxShape.circle,
                     boxShadow: _isAcceptingReservations
                         ? [
-                            const BoxShadow(
-                              color: Color(0xFF10B981),
-                              blurRadius: 8,
-                              spreadRadius: 2,
+                            BoxShadow(
+                              color: const Color(0xFF059669).withValues(alpha: 0.4),
+                              blurRadius: 6,
+                              spreadRadius: 1,
                             ),
                           ]
                         : null,
@@ -384,8 +383,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           fontSize: 12,
                           letterSpacing: 0.7,
                           color: _isAcceptingReservations
-                              ? const Color(0xFF00E599)
-                              : const Color(0xFF94A3B8),
+                              ? const Color(0xFF059669)
+                              : const Color(0xFF64748B),
                         ),
                       ),
                       Text(
@@ -403,8 +402,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
                 Switch.adaptive(
                   value: _isAcceptingReservations,
-                  activeColor: const Color(0xFF10B981),
-                  activeTrackColor: const Color(0xFF10B981).withValues(alpha: 0.3),
+                  activeColor: const Color(0xFF059669),
+                  activeTrackColor: const Color(0xFF059669).withValues(alpha: 0.25),
                   onChanged: (val) {
                     HapticFeedback.selectionClick();
                     setState(() => _isAcceptingReservations = val);
@@ -417,16 +416,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             Expanded(
                               child: Text(
                                 val ? 'Floor is LIVE! Accepting diner table bookings' : 'Floor Paused! Tables temporarily paused',
-                                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: Colors.white),
                               ),
                             ),
                           ],
                         ),
-                        backgroundColor: const Color(0xFF101420),
+                        backgroundColor: const Color(0xFF0F172A),
                         behavior: SnackBarBehavior.floating,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(14),
-                          side: BorderSide(color: val ? const Color(0xFF00E599) : const Color(0xFF64748B)),
                         ),
                         duration: const Duration(milliseconds: 2000),
                       ),
@@ -452,21 +450,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
+                      color: const Color(0xFFFFFBEB),
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.35)),
+                      border: Border.all(color: const Color(0xFFFDE68A)),
                     ),
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.ring_volume_rounded, size: 13, color: Color(0xFFFBBF24)),
+                        Icon(Icons.ring_volume_rounded, size: 13, color: Color(0xFFD97706)),
                         SizedBox(width: 4),
                         Text(
                           'Ring Bell',
                           style: TextStyle(
                             fontSize: 10.5,
                             fontWeight: FontWeight.w900,
-                            color: Color(0xFFFDE68A),
+                            color: Color(0xFFB45309),
                           ),
                         ),
                       ],
@@ -489,21 +487,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF00E599).withValues(alpha: 0.15),
+                      color: const Color(0xFFECFDF5),
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: const Color(0xFF00E599).withValues(alpha: 0.35)),
+                      border: Border.all(color: const Color(0xFFA7F3D0)),
                     ),
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.calendar_month_rounded, size: 13, color: Color(0xFF00E599)),
+                        Icon(Icons.calendar_month_rounded, size: 13, color: Color(0xFF059669)),
                         SizedBox(width: 4),
                         Text(
                           'Bookings',
                           style: TextStyle(
                             fontSize: 10.5,
                             fontWeight: FontWeight.w900,
-                            color: Color(0xFF00E599),
+                            color: Color(0xFF047857),
                           ),
                         ),
                       ],
@@ -522,12 +520,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF101422),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFF1E283E)),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.35),
+            color: const Color(0xFF0F172A).withValues(alpha: 0.05),
             blurRadius: 14,
             offset: const Offset(0, 4),
           ),
@@ -541,7 +539,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             children: [
               const Row(
                 children: [
-                  Icon(Icons.donut_large_rounded, size: 14, color: Color(0xFF00E599)),
+                  Icon(Icons.donut_large_rounded, size: 14, color: Color(0xFF059669)),
                   SizedBox(width: 6),
                   Text(
                     'ATTENDANCE CONVERSION',
@@ -549,7 +547,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       fontSize: 10.5,
                       fontWeight: FontWeight.w800,
                       letterSpacing: 0.8,
-                      color: Color(0xFF94A3B8),
+                      color: Color(0xFF64748B),
                     ),
                   ),
                 ],
@@ -557,15 +555,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF00E599).withValues(alpha: 0.14),
+                  color: const Color(0xFFECFDF5),
                   borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: const Color(0xFFA7F3D0)),
                 ),
                 child: Text(
                   '${booking.attendanceRate.toStringAsFixed(0)}% Seated Rate',
                   style: const TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w900,
-                    color: Color(0xFF00E599),
+                    color: Color(0xFF047857),
                   ),
                 ),
               ),
@@ -580,15 +579,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 children: [
                   Expanded(
                     flex: booking.completedCount > 0 ? booking.completedCount : 8,
-                    child: Container(color: const Color(0xFF00E599)),
+                    child: Container(color: const Color(0xFF059669)),
                   ),
                   Expanded(
                     flex: booking.confirmedCount > 0 ? booking.confirmedCount : 3,
-                    child: Container(color: const Color(0xFFF59E0B)),
+                    child: Container(color: const Color(0xFFD97706)),
                   ),
                   Expanded(
                     flex: booking.noShowCount > 0 ? booking.noShowCount : 1,
-                    child: Container(color: const Color(0xFFEF4444)),
+                    child: Container(color: const Color(0xFFDC2626)),
                   ),
                 ],
               ),
@@ -598,9 +597,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildPulseLegend(const Color(0xFF00E599), 'Seated (${booking.completedCount})'),
-              _buildPulseLegend(const Color(0xFFF59E0B), 'Confirmed (${booking.confirmedCount})'),
-              _buildPulseLegend(const Color(0xFFEF4444), 'No-Show (${booking.noShowCount})'),
+              _buildPulseLegend(const Color(0xFF059669), 'Seated (${booking.completedCount})'),
+              _buildPulseLegend(const Color(0xFFD97706), 'Confirmed (${booking.confirmedCount})'),
+              _buildPulseLegend(const Color(0xFFDC2626), 'No-Show (${booking.noShowCount})'),
             ],
           ),
         ],
@@ -615,7 +614,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         const SizedBox(width: 4),
         Text(
           label,
-          style: const TextStyle(fontSize: 10, color: Color(0xFF94A3B8), fontWeight: FontWeight.w600),
+          style: const TextStyle(fontSize: 10, color: Color(0xFF475569), fontWeight: FontWeight.w600),
         ),
       ],
     );
@@ -640,16 +639,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: const Color(0xFF101422),
+            color: Colors.white,
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: const Color(0xFF1E283E)),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF0F172A).withValues(alpha: 0.04),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+            ],
           ),
           child: Row(
             children: [
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: accentColor.withValues(alpha: 0.12),
+                  color: accentColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(icon, color: accentColor, size: 20),
@@ -664,13 +670,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       style: const TextStyle(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w800,
-                        color: Colors.white,
+                        color: Color(0xFF0F172A),
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       subtitle,
-                      style: const TextStyle(fontSize: 10.5, color: Color(0xFF94A3B8)),
+                      style: const TextStyle(fontSize: 10.5, color: Color(0xFF64748B)),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -679,11 +685,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               const SizedBox(width: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: accentColor.withValues(alpha: 0.12),
+                  color: accentColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: accentColor.withValues(alpha: 0.3)),
+                  border: Border.all(color: accentColor.withValues(alpha: 0.25)),
                 ),
                 child: Text(
                   badge,
@@ -696,7 +702,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ),
               const SizedBox(width: 4),
-              const Icon(Icons.arrow_forward_ios_rounded, size: 12, color: Color(0xFF64748B)),
+              const Icon(Icons.arrow_forward_ios_rounded, size: 12, color: Color(0xFF94A3B8)),
             ],
           ),
         ),

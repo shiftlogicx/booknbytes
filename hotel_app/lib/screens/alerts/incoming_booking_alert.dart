@@ -431,9 +431,12 @@ class _IncomingBookingAlertScreenState extends State<IncomingBookingAlertScreen>
               // Animated Checkmark, Emoji Burst and Title
               Column(
                 children: [
-                  const EmojiCelebrationBurst(
-                    emojis: ['🥳', '🎉', '🍽️', '✨', '👨‍🍳', '🥂', '🔥'],
-                    size: 48,
+                  ScaleTransition(
+                    scale: _checkScaleAnimation,
+                    child: const EmojiCelebrationBurst(
+                      emojis: ['🥳', '🎉', '🍽️', '✨', '👨‍🍳', '🥂', '🔥'],
+                      size: 48,
+                    ),
                   ),
                   const SizedBox(height: 14),
                   const Text(

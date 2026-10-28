@@ -11,32 +11,32 @@ class DiscountsOffersScreen extends StatefulWidget {
 class _DiscountsOffersScreenState extends State<DiscountsOffersScreen> {
   String _activeTab = 'SLOTS'; // 'SLOTS' or 'PROMOS'
 
-  // Presets state
+  // Presets
   bool _earlyBirdActive = true;
   bool _lateNightActive = true;
   bool _happyHourActive = false;
 
-  // Time slot discounts
   final List<_SlotDiscountConfig> _slotDiscounts = [
-    _SlotDiscountConfig(time: '12:00 PM', shift: 'LUNCH', discount: 20, tag: 'Early Bird'),
-    _SlotDiscountConfig(time: '12:30 PM', shift: 'LUNCH', discount: 15),
+    _SlotDiscountConfig(time: '12:00 PM', shift: 'LUNCH', discount: 25, tag: 'Early Bird'),
+    _SlotDiscountConfig(time: '12:30 PM', shift: 'LUNCH', discount: 20),
     _SlotDiscountConfig(time: '01:00 PM', shift: 'LUNCH', discount: 10),
-    _SlotDiscountConfig(time: '01:30 PM', shift: 'LUNCH', discount: 0, tag: 'Peak Lunch'),
-    _SlotDiscountConfig(time: '02:00 PM', shift: 'LUNCH', discount: 25, tag: 'Happy Hour'),
-    _SlotDiscountConfig(time: '07:00 PM', shift: 'DINNER', discount: 20, tag: 'Early Dinner'),
+    _SlotDiscountConfig(time: '01:30 PM', shift: 'LUNCH', discount: 10),
+    _SlotDiscountConfig(time: '02:00 PM', shift: 'LUNCH', discount: 20, tag: 'Happy Hour'),
+    _SlotDiscountConfig(time: '02:30 PM', shift: 'LUNCH', discount: 30, tag: 'Happy Hour'),
+    _SlotDiscountConfig(time: '07:00 PM', shift: 'DINNER', discount: 25, tag: 'Early Bird'),
     _SlotDiscountConfig(time: '07:30 PM', shift: 'DINNER', discount: 15),
-    _SlotDiscountConfig(time: '08:00 PM', shift: 'DINNER', discount: 0, tag: 'Prime Time'),
-    _SlotDiscountConfig(time: '08:30 PM', shift: 'DINNER', discount: 0, tag: 'Prime Time'),
+    _SlotDiscountConfig(time: '08:00 PM', shift: 'DINNER', discount: 0),
+    _SlotDiscountConfig(time: '08:30 PM', shift: 'DINNER', discount: 0),
     _SlotDiscountConfig(time: '09:00 PM', shift: 'DINNER', discount: 10),
     _SlotDiscountConfig(time: '09:30 PM', shift: 'DINNER', discount: 20),
     _SlotDiscountConfig(time: '10:00 PM', shift: 'DINNER', discount: 30, tag: 'Late Night Deal'),
   ];
 
-  // Custom Promo Codes
   final List<_PromoCodeItem> _promoCodes = [
-    _PromoCodeItem(code: 'TASTE20', discount: '20% OFF', description: 'Flat 20% Off on Food Bill', isActive: true, usageCount: 42),
-    _PromoCodeItem(code: 'FLAT15', discount: '15% OFF', description: 'Flat 15% Off Total Bill', isActive: true, usageCount: 28),
-    _PromoCodeItem(code: 'ROYAL30', discount: '30% OFF', description: 'Special VIP Dinner Promotion', isActive: true, usageCount: 15),
+    _PromoCodeItem(code: 'WELCOME20', discount: '20% OFF', description: 'New Guest First Booking Deal', isActive: true, usageCount: 42),
+    _PromoCodeItem(code: 'WEEKEND30', discount: '30% OFF', description: 'Saturday & Sunday Table Surge', isActive: true, usageCount: 78),
+    _PromoCodeItem(code: 'CORPORATE15', discount: '15% OFF', description: 'Tech Park Team Lunch Deal', isActive: false, usageCount: 19),
+    _PromoCodeItem(code: 'VIPDINER40', discount: '40% OFF', description: 'Loyalty Reward for 5+ Bookings', isActive: true, usageCount: 11),
   ];
 
   void _showAddPromoSheet() {
@@ -47,7 +47,7 @@ class _DiscountsOffersScreenState extends State<DiscountsOffersScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: const Color(0xFF101422),
+      backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -64,44 +64,44 @@ class _DiscountsOffersScreenState extends State<DiscountsOffersScreen> {
                     child: Container(
                       width: 40,
                       height: 4,
-                      decoration: BoxDecoration(color: const Color(0xFF334155), borderRadius: BorderRadius.circular(2)),
+                      decoration: BoxDecoration(color: const Color(0xFFCBD5E1), borderRadius: BorderRadius.circular(2)),
                     ),
                   ),
                   const SizedBox(height: 16),
                   const Text(
                     'Create New Promotional Offer',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Colors.white),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
                   ),
                   const SizedBox(height: 4),
                   const Text(
                     'Drive online bookings with custom promotional codes',
-                    style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
+                    style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
                   ),
                   const SizedBox(height: 16),
 
                   TextField(
                     controller: codeController,
                     textCapitalization: TextCapitalization.characters,
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800),
+                    style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w800),
                     decoration: InputDecoration(
                       labelText: 'PROMO CODE (e.g. FESTIVE25)',
-                      labelStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 11),
+                      labelStyle: const TextStyle(color: Color(0xFF64748B), fontSize: 11),
                       filled: true,
-                      fillColor: const Color(0xFF171E2E),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      fillColor: const Color(0xFFF8FAFC),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
                     ),
                   ),
                   const SizedBox(height: 12),
 
                   TextField(
                     controller: descController,
-                    style: const TextStyle(color: Colors.white),
+                    style: const TextStyle(color: Color(0xFF0F172A)),
                     decoration: InputDecoration(
                       labelText: 'OFFER DESCRIPTION (e.g. 25% Off on Food Bill)',
-                      labelStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 11),
+                      labelStyle: const TextStyle(color: Color(0xFF64748B), fontSize: 11),
                       filled: true,
-                      fillColor: const Color(0xFF171E2E),
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      fillColor: const Color(0xFFF8FAFC),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
                     ),
                   ),
                   const SizedBox(height: 14),
@@ -124,16 +124,16 @@ class _DiscountsOffersScreenState extends State<DiscountsOffersScreen> {
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                           decoration: BoxDecoration(
-                            color: isSel ? const Color(0xFFF59E0B) : const Color(0xFF171E2E),
+                            color: isSel ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
                             borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: isSel ? const Color(0xFFF59E0B) : const Color(0xFF28344E)),
+                            border: Border.all(color: isSel ? const Color(0xFF0F172A) : const Color(0xFFE2E8F0)),
                           ),
                           child: Text(
                             '$pct%',
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w800,
-                              color: isSel ? Colors.black : Colors.white,
+                              color: isSel ? Colors.white : const Color(0xFF475569),
                             ),
                           ),
                         ),
@@ -148,8 +148,8 @@ class _DiscountsOffersScreenState extends State<DiscountsOffersScreen> {
                     height: 48,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFF59E0B),
-                        foregroundColor: Colors.black,
+                        backgroundColor: const Color(0xFF0F172A),
+                        foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                       ),
                       onPressed: () {
@@ -186,10 +186,13 @@ class _DiscountsOffersScreenState extends State<DiscountsOffersScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF090D16),
+      backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF101726),
+        backgroundColor: Colors.white,
         elevation: 0,
+        shape: const Border(
+          bottom: BorderSide(color: Color(0xFFE2E8F0), width: 1.0),
+        ),
         title: const Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -198,18 +201,18 @@ class _DiscountsOffersScreenState extends State<DiscountsOffersScreen> {
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
-                color: Colors.white,
+                color: Color(0xFF0F172A),
               ),
             ),
             Text(
               'Dynamic Slot Discounts & Promo Offers',
-              style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
+              style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
             ),
           ],
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.add_circle_rounded, color: Color(0xFFF59E0B)),
+            icon: const Icon(Icons.add_circle_rounded, color: Color(0xFFD97706)),
             tooltip: 'Add Promo Code',
             onPressed: _showAddPromoSheet,
           ),
@@ -218,15 +221,15 @@ class _DiscountsOffersScreenState extends State<DiscountsOffersScreen> {
       ),
       body: SafeArea(
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 100),
           children: [
             // Mode Switcher: Hourly Slot Discounts vs Promo Codes
             Container(
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
-                color: const Color(0xFF131B2E),
+                color: const Color(0xFFF1F5F9),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFF222F49)),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
               ),
               child: Row(
                 children: [
@@ -265,7 +268,7 @@ class _DiscountsOffersScreenState extends State<DiscountsOffersScreen> {
                 title: '🌅 Early Bird Offer (25% OFF)',
                 subtitle: 'Applies 25% Off to 12:00 PM & 07:00 PM slots',
                 isActive: _earlyBirdActive,
-                accentColor: const Color(0xFFF59E0B),
+                accentColor: const Color(0xFFD97706),
                 onToggle: (val) {
                   setState(() => _earlyBirdActive = val);
                   _toggleSlotPreset('Early Bird', 25, val);
@@ -276,7 +279,7 @@ class _DiscountsOffersScreenState extends State<DiscountsOffersScreen> {
                 title: '🌙 Late Night Deal (30% OFF)',
                 subtitle: 'Applies 30% Off to slots after 10:00 PM',
                 isActive: _lateNightActive,
-                accentColor: const Color(0xFF818CF8),
+                accentColor: const Color(0xFF4F46E5),
                 onToggle: (val) {
                   setState(() => _lateNightActive = val);
                   _toggleSlotPreset('Late Night Deal', 30, val);
@@ -287,7 +290,7 @@ class _DiscountsOffersScreenState extends State<DiscountsOffersScreen> {
                 title: '⚡ Afternoon Happy Hour (20% OFF)',
                 subtitle: 'Applies 20% Off to 02:00 PM – 04:00 PM slots',
                 isActive: _happyHourActive,
-                accentColor: const Color(0xFF00E599),
+                accentColor: const Color(0xFF059669),
                 onToggle: (val) {
                   setState(() => _happyHourActive = val);
                   _toggleSlotPreset('Happy Hour', 20, val);
@@ -315,8 +318,8 @@ class _DiscountsOffersScreenState extends State<DiscountsOffersScreen> {
                   ),
                   TextButton.icon(
                     onPressed: _showAddPromoSheet,
-                    icon: const Icon(Icons.add, size: 14, color: Color(0xFFF59E0B)),
-                    label: const Text('Add Offer', style: TextStyle(color: Color(0xFFF59E0B), fontSize: 11, fontWeight: FontWeight.w800)),
+                    icon: const Icon(Icons.add, size: 14, color: Color(0xFFD97706)),
+                    label: const Text('Add Offer', style: TextStyle(color: Color(0xFFD97706), fontSize: 11, fontWeight: FontWeight.w800)),
                   ),
                 ],
               ),
@@ -352,22 +355,31 @@ class _DiscountsOffersScreenState extends State<DiscountsOffersScreen> {
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 10),
+        padding: const EdgeInsets.symmetric(vertical: 9),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF1E283E) : Colors.transparent,
+          color: isSelected ? Colors.white : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFF0F172A).withValues(alpha: 0.06),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 14, color: isSelected ? const Color(0xFFF59E0B) : const Color(0xFF64748B)),
+            Icon(icon, size: 14, color: isSelected ? const Color(0xFF0F172A) : const Color(0xFF64748B)),
             const SizedBox(width: 6),
             Text(
               label,
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: isSelected ? FontWeight.w900 : FontWeight.w600,
-                color: isSelected ? Colors.white : const Color(0xFF94A3B8),
+                color: isSelected ? const Color(0xFF0F172A) : const Color(0xFF64748B),
               ),
             ),
           ],
@@ -386,12 +398,19 @@ class _DiscountsOffersScreenState extends State<DiscountsOffersScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF101422),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: isActive ? accentColor.withValues(alpha: 0.4) : const Color(0xFF1E283E),
-          width: isActive ? 1.2 : 1.0,
+          color: isActive ? accentColor.withValues(alpha: 0.5) : const Color(0xFFE2E8F0),
+          width: isActive ? 1.4 : 1.0,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0F172A).withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -402,12 +421,12 @@ class _DiscountsOffersScreenState extends State<DiscountsOffersScreen> {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.white),
+                  style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: const TextStyle(fontSize: 10.5, color: Color(0xFF94A3B8)),
+                  style: const TextStyle(fontSize: 10.5, color: Color(0xFF64748B)),
                 ),
               ],
             ),
@@ -430,9 +449,16 @@ class _DiscountsOffersScreenState extends State<DiscountsOffersScreen> {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: const Color(0xFF101422),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF1E283E)),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0F172A).withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Column(
         children: [
@@ -443,19 +469,20 @@ class _DiscountsOffersScreenState extends State<DiscountsOffersScreen> {
                 children: [
                   Text(
                     slot.time,
-                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: Colors.white),
+                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: Color(0xFF0F172A)),
                   ),
                   if (slot.tag != null) ...[
                     const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
+                        color: const Color(0xFFFFFBEB),
                         borderRadius: BorderRadius.circular(6),
+                        border: Border.all(color: const Color(0xFFFDE68A)),
                       ),
                       child: Text(
                         slot.tag!,
-                        style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: Color(0xFFFBBF24)),
+                        style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: Color(0xFFD97706)),
                       ),
                     ),
                   ],
@@ -465,11 +492,11 @@ class _DiscountsOffersScreenState extends State<DiscountsOffersScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: slot.discount > 0
-                      ? const Color(0xFF00E599).withValues(alpha: 0.15)
-                      : const Color(0xFF1E283E),
+                      ? const Color(0xFFECFDF5)
+                      : const Color(0xFFF1F5F9),
                   borderRadius: BorderRadius.circular(8),
                   border: slot.discount > 0
-                      ? Border.all(color: const Color(0xFF00E599).withValues(alpha: 0.35))
+                      ? Border.all(color: const Color(0xFFA7F3D0))
                       : null,
                 ),
                 child: Text(
@@ -477,7 +504,7 @@ class _DiscountsOffersScreenState extends State<DiscountsOffersScreen> {
                   style: TextStyle(
                     fontSize: 10.5,
                     fontWeight: FontWeight.w900,
-                    color: slot.discount > 0 ? const Color(0xFF00E599) : const Color(0xFF64748B),
+                    color: slot.discount > 0 ? const Color(0xFF059669) : const Color(0xFF64748B),
                   ),
                 ),
               ),
@@ -504,10 +531,10 @@ class _DiscountsOffersScreenState extends State<DiscountsOffersScreen> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                       decoration: BoxDecoration(
-                        color: isSel ? const Color(0xFF00E599) : const Color(0xFF151C2C),
+                        color: isSel ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: isSel ? const Color(0xFF00E599) : const Color(0xFF222B3D),
+                          color: isSel ? const Color(0xFF0F172A) : const Color(0xFFE2E8F0),
                         ),
                       ),
                       child: Text(
@@ -515,7 +542,7 @@ class _DiscountsOffersScreenState extends State<DiscountsOffersScreen> {
                         style: TextStyle(
                           fontSize: 10.5,
                           fontWeight: isSel ? FontWeight.w900 : FontWeight.w700,
-                          color: isSel ? Colors.black : const Color(0xFF94A3B8),
+                          color: isSel ? Colors.white : const Color(0xFF475569),
                         ),
                       ),
                     ),
@@ -534,9 +561,16 @@ class _DiscountsOffersScreenState extends State<DiscountsOffersScreen> {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFF101422),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF1E283E)),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0F172A).withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -546,10 +580,11 @@ class _DiscountsOffersScreenState extends State<DiscountsOffersScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF59E0B).withValues(alpha: 0.15),
+                  color: const Color(0xFFFFFBEB),
                   borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0xFFFDE68A)),
                 ),
-                child: const Icon(Icons.local_offer_rounded, size: 18, color: Color(0xFFFBBF24)),
+                child: const Icon(Icons.local_offer_rounded, size: 18, color: Color(0xFFD97706)),
               ),
               const SizedBox(width: 12),
               Column(
@@ -563,19 +598,20 @@ class _DiscountsOffersScreenState extends State<DiscountsOffersScreen> {
                           fontFamily: 'monospace',
                           fontSize: 14,
                           fontWeight: FontWeight.w900,
-                          color: Colors.white,
+                          color: Color(0xFF0F172A),
                         ),
                       ),
                       const SizedBox(width: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF00E599).withValues(alpha: 0.15),
+                          color: const Color(0xFFECFDF5),
                           borderRadius: BorderRadius.circular(6),
+                          border: Border.all(color: const Color(0xFFA7F3D0)),
                         ),
                         child: Text(
                           promo.discount,
-                          style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.w900, color: Color(0xFF00E599)),
+                          style: const TextStyle(fontSize: 9.5, fontWeight: FontWeight.w900, color: Color(0xFF059669)),
                         ),
                       ),
                     ],
@@ -583,7 +619,7 @@ class _DiscountsOffersScreenState extends State<DiscountsOffersScreen> {
                   const SizedBox(height: 2),
                   Text(
                     '${promo.description} · ${promo.usageCount} Diners Used',
-                    style: const TextStyle(fontSize: 10.5, color: Color(0xFF94A3B8)),
+                    style: const TextStyle(fontSize: 10.5, color: Color(0xFF64748B)),
                   ),
                 ],
               ),
@@ -592,7 +628,7 @@ class _DiscountsOffersScreenState extends State<DiscountsOffersScreen> {
 
           Switch.adaptive(
             value: promo.isActive,
-            activeColor: const Color(0xFF00E599),
+            activeColor: const Color(0xFF059669),
             onChanged: (val) {
               HapticFeedback.selectionClick();
               setState(() => promo.isActive = val);

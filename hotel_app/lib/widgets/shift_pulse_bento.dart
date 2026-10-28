@@ -37,7 +37,7 @@ class _ShiftPulseBentoState extends State<ShiftPulseBento>
       duration: const Duration(milliseconds: 1200),
     )..repeat(reverse: true);
 
-    _glowAnimation = Tween<double>(begin: 0.2, end: 0.8).animate(
+    _glowAnimation = Tween<double>(begin: 0.3, end: 0.9).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
   }
@@ -52,18 +52,18 @@ class _ShiftPulseBentoState extends State<ShiftPulseBento>
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF101422),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFF1E283E), width: 1.2),
+        border: Border.all(color: const Color(0xFFE2E8F0), width: 1.0),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.4),
+            color: const Color(0xFF0F172A).withValues(alpha: 0.05),
             blurRadius: 18,
-            offset: const Offset(0, 6),
+            offset: const Offset(0, 5),
           ),
         ],
       ),
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(15),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -76,16 +76,16 @@ class _ShiftPulseBentoState extends State<ShiftPulseBento>
                   Container(
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF6366F1).withValues(alpha: 0.15),
+                      color: const Color(0xFF4F46E5).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: const Color(0xFF6366F1).withValues(alpha: 0.35),
+                        color: const Color(0xFF4F46E5).withValues(alpha: 0.25),
                       ),
                     ),
                     child: const Icon(
                       Icons.insights_rounded,
                       size: 14,
-                      color: Color(0xFFA5B4FC),
+                      color: Color(0xFF4F46E5),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -97,8 +97,8 @@ class _ShiftPulseBentoState extends State<ShiftPulseBento>
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w900,
-                          letterSpacing: 0.9,
-                          color: Colors.white,
+                          letterSpacing: 0.8,
+                          color: Color(0xFF0F172A),
                         ),
                       ),
                       Text(
@@ -116,21 +116,21 @@ class _ShiftPulseBentoState extends State<ShiftPulseBento>
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF182236),
+                  color: const Color(0xFFF1F5F9),
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: const Color(0xFF263550)),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
                 ),
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.touch_app_rounded, size: 11, color: Color(0xFF94A3B8)),
+                    Icon(Icons.touch_app_rounded, size: 11, color: Color(0xFF64748B)),
                     SizedBox(width: 3),
                     Text(
                       'Interactive',
                       style: TextStyle(
                         fontSize: 9.5,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFF94A3B8),
+                        color: Color(0xFF64748B),
                       ),
                     ),
                   ],
@@ -150,7 +150,9 @@ class _ShiftPulseBentoState extends State<ShiftPulseBento>
                   value: widget.todayCount,
                   subtitle: '+18% Today',
                   icon: Icons.calendar_month_rounded,
-                  accentColor: const Color(0xFFF59E0B),
+                  accentColor: const Color(0xFFD97706), // warm amber
+                  bgColor: const Color(0xFFFFFBEB),
+                  borderColor: const Color(0xFFFDE68A),
                   filterKey: 'ALL',
                   isSelected: widget.selectedFilter == 'ALL',
                 ),
@@ -162,7 +164,9 @@ class _ShiftPulseBentoState extends State<ShiftPulseBento>
                   value: widget.confirmedCount,
                   subtitle: '85% Occupancy',
                   icon: Icons.check_circle_rounded,
-                  accentColor: const Color(0xFF00E599),
+                  accentColor: const Color(0xFF059669), // emerald
+                  bgColor: const Color(0xFFECFDF5),
+                  borderColor: const Color(0xFFA7F3D0),
                   filterKey: 'CONFIRMED',
                   isSelected: widget.selectedFilter == 'CONFIRMED',
                 ),
@@ -183,7 +187,9 @@ class _ShiftPulseBentoState extends State<ShiftPulseBento>
                       value: widget.pendingCount,
                       subtitle: widget.pendingCount > 0 ? 'Awaiting Host' : 'All Clear',
                       icon: Icons.notification_important_rounded,
-                      accentColor: const Color(0xFFF97316),
+                      accentColor: const Color(0xFFEA580C), // orange
+                      bgColor: const Color(0xFFFFF7ED),
+                      borderColor: const Color(0xFFFED7AA),
                       filterKey: 'PENDING',
                       isSelected: widget.selectedFilter == 'PENDING',
                       isPulsing: widget.pendingCount > 0,
@@ -199,7 +205,9 @@ class _ShiftPulseBentoState extends State<ShiftPulseBento>
                   value: widget.expectedCovers,
                   subtitle: 'Dinner Peak',
                   icon: Icons.groups_rounded,
-                  accentColor: const Color(0xFF818CF8),
+                  accentColor: const Color(0xFF4F46E5), // indigo
+                  bgColor: const Color(0xFFEEF2FF),
+                  borderColor: const Color(0xFFC7D2FE),
                   filterKey: 'ALL',
                   isSelected: false,
                   valueSuffix: ' Guests',
@@ -218,6 +226,8 @@ class _ShiftPulseBentoState extends State<ShiftPulseBento>
     required String subtitle,
     required IconData icon,
     required Color accentColor,
+    required Color bgColor,
+    required Color borderColor,
     required String filterKey,
     required bool isSelected,
     bool isPulsing = false,
@@ -235,24 +245,22 @@ class _ShiftPulseBentoState extends State<ShiftPulseBento>
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
-            color: isSelected
-                ? accentColor.withValues(alpha: 0.12)
-                : const Color(0xFF141926),
+            color: isSelected ? accentColor.withValues(alpha: 0.14) : bgColor,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
               color: isSelected
                   ? accentColor
                   : (isPulsing
                       ? accentColor.withValues(alpha: pulseOpacity)
-                      : const Color(0xFF202738)),
-              width: isSelected ? 1.6 : (isPulsing ? 1.4 : 1.0),
+                      : borderColor),
+              width: isSelected ? 1.8 : 1.0,
             ),
-            boxShadow: isPulsing
+            boxShadow: isSelected
                 ? [
                     BoxShadow(
-                      color: accentColor.withValues(alpha: pulseOpacity * 0.35),
+                      color: accentColor.withValues(alpha: 0.16),
                       blurRadius: 10,
-                      spreadRadius: 1,
+                      offset: const Offset(0, 3),
                     ),
                   ]
                 : null,
@@ -271,7 +279,7 @@ class _ShiftPulseBentoState extends State<ShiftPulseBento>
                         fontSize: 9.5,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 0.6,
-                        color: isSelected ? accentColor : const Color(0xFF64748B),
+                        color: isSelected ? accentColor : const Color(0xFF475569),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -280,10 +288,11 @@ class _ShiftPulseBentoState extends State<ShiftPulseBento>
                   Container(
                     padding: const EdgeInsets.all(5),
                     decoration: BoxDecoration(
-                      color: accentColor.withValues(alpha: 0.14),
+                      color: Colors.white,
                       borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: borderColor),
                     ),
-                    child: Icon(icon, size: 14, color: accentColor),
+                    child: Icon(icon, size: 13, color: accentColor),
                   ),
                 ],
               ),
@@ -295,11 +304,11 @@ class _ShiftPulseBentoState extends State<ShiftPulseBento>
                 children: [
                   AnimatedStatCounter(
                     targetValue: value,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w900,
                       letterSpacing: -0.5,
-                      color: isSelected ? Colors.white : const Color(0xFFE2E8F0),
+                      color: Color(0xFF0F172A),
                     ),
                   ),
                   if (valueSuffix.isNotEmpty)
@@ -318,8 +327,9 @@ class _ShiftPulseBentoState extends State<ShiftPulseBento>
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: accentColor.withValues(alpha: 0.1),
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: borderColor.withValues(alpha: 0.6)),
                 ),
                 child: Text(
                   subtitle,

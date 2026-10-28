@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import '../../models/booking_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/booking_provider.dart';
+import '../../models/booking_model.dart';
 
 class BookingLedgerDocScreen extends StatefulWidget {
   const BookingLedgerDocScreen({super.key});
@@ -13,7 +13,7 @@ class BookingLedgerDocScreen extends StatefulWidget {
 }
 
 class _BookingLedgerDocScreenState extends State<BookingLedgerDocScreen> {
-  String _activeFilter = 'ALL';
+  String _activeFilter = 'ALL'; // ALL, COMPLETED, NO_SHOW, DISCOUNTED
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
@@ -25,6 +25,7 @@ class _BookingLedgerDocScreenState extends State<BookingLedgerDocScreen> {
 
   void _downloadStatement() {
     HapticFeedback.mediumImpact();
+    ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: const Row(
@@ -32,18 +33,16 @@ class _BookingLedgerDocScreenState extends State<BookingLedgerDocScreen> {
             Text('📄 ✨ ', style: TextStyle(fontSize: 16)),
             Expanded(
               child: Text(
-                'Reconciliation Doc Generated: BB-LEDGER-OCT2026.pdf exported to device!',
-                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12),
+                'Ledger Statement & Reconciliation PDF generated and saved to device storage!',
+                style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: Colors.white),
               ),
             ),
           ],
         ),
-        backgroundColor: const Color(0xFF101420),
+        backgroundColor: const Color(0xFF0F172A),
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-          side: const BorderSide(color: Color(0xFF00E599), width: 1),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        duration: const Duration(milliseconds: 2600),
       ),
     );
   }
@@ -52,34 +51,34 @@ class _BookingLedgerDocScreenState extends State<BookingLedgerDocScreen> {
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthProvider>(context);
     final booking = Provider.of<BookingProvider>(context);
-    final all = booking.allBookings;
 
-    // Filter by tab
-    List<BookingModel> filtered = all.where((b) {
-      if (_activeFilter == 'SEATED') return b.isCompleted;
-      if (_activeFilter == 'NO_SHOW') return b.isNoShow;
-      if (_activeFilter == 'DISCOUNTED') return b.appliedOffer != null && b.appliedOffer!.isNotEmpty;
+    // Apply Filter & Search to Bookings
+    final allBookings = booking.bookings;
+    final filteredBookings = allBookings.where((b) {
+      if (_activeFilter == 'COMPLETED' && !b.isCompleted) return false;
+      if (_activeFilter == 'NO_SHOW' && !b.isNoShow) return false;
+      if (_activeFilter == 'DISCOUNTED' && (b.appliedOffer == null || b.appliedOffer!.isEmpty)) return false;
+
+      if (_searchQuery.isNotEmpty) {
+        final q = _searchQuery.toLowerCase();
+        final nameMatch = (b.customerName ?? '').toLowerCase().contains(q);
+        final idMatch = b.bookingId.toLowerCase().contains(q);
+        final offerMatch = (b.appliedOffer ?? '').toLowerCase().contains(q);
+        if (!nameMatch && !idMatch && !offerMatch) return false;
+      }
       return true;
     }).toList();
 
-    // Filter by search
-    if (_searchQuery.isNotEmpty) {
-      filtered = filtered.where((b) {
-        final query = _searchQuery.toLowerCase();
-        final name = (b.customerName ?? '').toLowerCase();
-        final id = b.bookingId.toLowerCase();
-        final offer = (b.appliedOffer ?? '').toLowerCase();
-        return name.contains(query) || id.contains(query) || offer.contains(query);
-      }).toList();
-    }
-
     return Scaffold(
-      backgroundColor: const Color(0xFF07090E),
+      backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF101420),
+        backgroundColor: Colors.white,
         elevation: 0,
+        shape: const Border(
+          bottom: BorderSide(color: Color(0xFFE2E8F0), width: 1.0),
+        ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: Color(0xFF0F172A)),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: const Column(
@@ -90,19 +89,19 @@ class _BookingLedgerDocScreenState extends State<BookingLedgerDocScreen> {
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
-                color: Colors.white,
+                color: Color(0xFF0F172A),
               ),
             ),
             Text(
               'Audit Statement of Bookings, Attendance & Discounts',
-              style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
+              style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
             ),
           ],
         ),
         actions: [
           IconButton(
             tooltip: 'Download PDF Statement',
-            icon: const Icon(Icons.download_rounded, color: Color(0xFF00E599)),
+            icon: const Icon(Icons.download_rounded, color: Color(0xFF059669)),
             onPressed: _downloadStatement,
           ),
           const SizedBox(width: 6),
@@ -116,18 +115,14 @@ class _BookingLedgerDocScreenState extends State<BookingLedgerDocScreen> {
             Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFF131D30), Color(0xFF0F172A)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(22),
-                border: Border.all(color: const Color(0xFF222F49), width: 1.2),
+                border: Border.all(color: const Color(0xFFE2E8F0), width: 1.0),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.5),
+                    color: const Color(0xFF0F172A).withValues(alpha: 0.05),
                     blurRadius: 16,
-                    offset: const Offset(0, 6),
+                    offset: const Offset(0, 4),
                   ),
                 ],
               ),
@@ -140,9 +135,9 @@ class _BookingLedgerDocScreenState extends State<BookingLedgerDocScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF00E599).withValues(alpha: 0.15),
+                          color: const Color(0xFFECFDF5),
                           borderRadius: BorderRadius.circular(6),
-                          border: Border.all(color: const Color(0xFF00E599).withValues(alpha: 0.4)),
+                          border: Border.all(color: const Color(0xFFA7F3D0)),
                         ),
                         child: const Row(
                           children: [
@@ -152,7 +147,7 @@ class _BookingLedgerDocScreenState extends State<BookingLedgerDocScreen> {
                               style: TextStyle(
                                 fontSize: 9,
                                 fontWeight: FontWeight.w900,
-                                color: Color(0xFF00E599),
+                                color: Color(0xFF059669),
                                 letterSpacing: 0.6,
                               ),
                             ),
@@ -161,31 +156,31 @@ class _BookingLedgerDocScreenState extends State<BookingLedgerDocScreen> {
                       ),
                       const Text(
                         'Period: Oct 2026',
-                        style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8), fontWeight: FontWeight.w600),
+                        style: TextStyle(fontSize: 11, color: Color(0xFF64748B), fontWeight: FontWeight.w600),
                       ),
                     ],
                   ),
                   const SizedBox(height: 12),
                   Text(
                     auth.currentRestaurantName,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Colors.white),
+                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     'Merchant ID: ${auth.currentRestaurantId} · Settlement UPI: ${auth.profile.upiId}',
-                    style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
+                    style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
                   ),
                   const SizedBox(height: 14),
-                  const Divider(color: Color(0xFF1E283E), height: 1),
+                  const Divider(color: Color(0xFFE2E8F0), height: 1),
                   const SizedBox(height: 12),
                   const Row(
                     children: [
-                      Icon(Icons.shield_rounded, color: Color(0xFF00E599), size: 14),
+                      Icon(Icons.shield_rounded, color: Color(0xFF059669), size: 14),
                       SizedBox(width: 6),
                       Expanded(
                         child: Text(
                           'Direct diner UPI settlement · 0% commission deducted by BookNBytes',
-                          style: TextStyle(fontSize: 11, color: Color(0xFFCBD5E1), fontWeight: FontWeight.w600),
+                          style: TextStyle(fontSize: 11, color: Color(0xFF475569), fontWeight: FontWeight.w600),
                         ),
                       ),
                     ],
@@ -217,28 +212,28 @@ class _BookingLedgerDocScreenState extends State<BookingLedgerDocScreen> {
                   value: '${booking.totalCount}',
                   subtitle: 'Platform Generated',
                   icon: Icons.receipt_long_rounded,
-                  color: const Color(0xFF38BDF8),
+                  color: const Color(0xFF2563EB),
                 ),
                 _buildKpiCard(
                   title: 'ACTUALLY CAME',
                   value: '${booking.completedCount}',
                   subtitle: '${booking.attendanceRate.toStringAsFixed(1)}% Conversion',
                   icon: Icons.check_circle_rounded,
-                  color: const Color(0xFF00E599),
+                  color: const Color(0xFF059669),
                 ),
                 _buildKpiCard(
                   title: 'MARKED NO-SHOW',
                   value: '${booking.noShowCount}',
                   subtitle: '${((booking.noShowCount / (booking.totalCount == 0 ? 1 : booking.totalCount)) * 100).toStringAsFixed(1)}% No-Show',
                   icon: Icons.person_off_rounded,
-                  color: const Color(0xFFEF4444),
+                  color: const Color(0xFFDC2626),
                 ),
                 _buildKpiCard(
                   title: 'DISCOUNTS APPLIED',
                   value: '₹${booking.totalDiscountGiven}',
                   subtitle: '${booking.discountedCount} Discounted Covers',
                   icon: Icons.percent_rounded,
-                  color: const Color(0xFFF59E0B),
+                  color: const Color(0xFFD97706),
                 ),
               ],
             ),
@@ -249,9 +244,16 @@ class _BookingLedgerDocScreenState extends State<BookingLedgerDocScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: const Color(0xFF101420),
+                color: Colors.white,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: const Color(0xFF222B3D)),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF0F172A).withValues(alpha: 0.03),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -265,7 +267,7 @@ class _BookingLedgerDocScreenState extends State<BookingLedgerDocScreen> {
                       ),
                       Text(
                         '${booking.attendanceRate.toStringAsFixed(0)}% Seated Success',
-                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xFF00E599)),
+                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xFF059669)),
                       ),
                     ],
                   ),
@@ -278,19 +280,19 @@ class _BookingLedgerDocScreenState extends State<BookingLedgerDocScreen> {
                         children: [
                           Expanded(
                             flex: booking.completedCount > 0 ? booking.completedCount : 8,
-                            child: Container(color: const Color(0xFF00E599)),
+                            child: Container(color: const Color(0xFF059669)),
                           ),
                           Expanded(
                             flex: booking.noShowCount > 0 ? booking.noShowCount : 1,
-                            child: Container(color: const Color(0xFFEF4444)),
+                            child: Container(color: const Color(0xFFDC2626)),
                           ),
                           Expanded(
                             flex: booking.confirmedCount > 0 ? booking.confirmedCount : 2,
-                            child: Container(color: const Color(0xFFF59E0B)),
+                            child: Container(color: const Color(0xFFD97706)),
                           ),
                           Expanded(
                             flex: booking.cancelledCount > 0 ? booking.cancelledCount : 1,
-                            child: Container(color: const Color(0xFF334155)),
+                            child: Container(color: const Color(0xFF94A3B8)),
                           ),
                         ],
                       ),
@@ -300,10 +302,10 @@ class _BookingLedgerDocScreenState extends State<BookingLedgerDocScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _buildLegend(const Color(0xFF00E599), 'Came (${booking.completedCount})'),
-                      _buildLegend(const Color(0xFFEF4444), 'No-Show (${booking.noShowCount})'),
-                      _buildLegend(const Color(0xFFF59E0B), 'Active (${booking.confirmedCount})'),
-                      _buildLegend(const Color(0xFF334155), 'Cancelled (${booking.cancelledCount})'),
+                      _buildLegend(const Color(0xFF059669), 'Came (${booking.completedCount})'),
+                      _buildLegend(const Color(0xFFDC2626), 'No-Show (${booking.noShowCount})'),
+                      _buildLegend(const Color(0xFFD97706), 'Active (${booking.confirmedCount})'),
+                      _buildLegend(const Color(0xFF94A3B8), 'Cancelled (${booking.cancelledCount})'),
                     ],
                   ),
                 ],
@@ -323,11 +325,11 @@ class _BookingLedgerDocScreenState extends State<BookingLedgerDocScreen> {
             TextField(
               controller: _searchController,
               onChanged: (val) => setState(() => _searchQuery = val),
-              style: const TextStyle(color: Colors.white, fontSize: 13),
+              style: const TextStyle(color: Color(0xFF0F172A), fontSize: 13),
               decoration: InputDecoration(
                 hintText: 'Search diner name, booking ID, or discount code...',
-                hintStyle: const TextStyle(color: Color(0xFF64748B), fontSize: 12),
-                prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF00E599), size: 18),
+                hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
+                prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF059669), size: 18),
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
                         icon: const Icon(Icons.clear_rounded, color: Color(0xFF64748B), size: 16),
@@ -338,58 +340,53 @@ class _BookingLedgerDocScreenState extends State<BookingLedgerDocScreen> {
                       )
                     : null,
                 filled: true,
-                fillColor: const Color(0xFF101420),
+                fillColor: Colors.white,
                 contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFF222B3D))),
-                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFF222B3D))),
-                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFF00E599))),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+                enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+                focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFF059669))),
               ),
             ),
 
             const SizedBox(height: 12),
 
-            // Filter Tabs
+            // Quick Filter Chips
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
                 children: [
-                  _buildFilterChip('ALL', 'All Bookings (${all.length})'),
-                  _buildFilterChip('SEATED', 'Actually Came (${booking.completedCount})'),
+                  _buildFilterChip('ALL', 'All Bookings (${allBookings.length})'),
+                  _buildFilterChip('COMPLETED', 'Came & Seated (${booking.completedCount})'),
                   _buildFilterChip('NO_SHOW', 'Marked No-Show (${booking.noShowCount})'),
-                  _buildFilterChip('DISCOUNTED', 'With Discounts (${booking.discountedCount})'),
+                  _buildFilterChip('DISCOUNTED', 'With % Discount (${booking.discountedCount})'),
                 ],
               ),
             ),
 
-            const SizedBox(height: 14),
+            const SizedBox(height: 16),
 
-            // Detailed Bookings List
-            if (filtered.isEmpty)
+            // Booking Audit Cards List
+            if (filteredBookings.isEmpty)
               Container(
                 padding: const EdgeInsets.all(32),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF101420),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFF222B3D)),
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
                 ),
                 child: const Column(
                   children: [
-                    Text('📋', style: TextStyle(fontSize: 34)),
+                    Icon(Icons.search_off_rounded, size: 36, color: Color(0xFF94A3B8)),
                     SizedBox(height: 10),
                     Text(
-                      'No bookings match this audit filter',
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      'Try switching filter chips above to view records',
-                      style: TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
+                      'No matching bookings found in ledger',
+                      style: TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF64748B), fontSize: 13),
                     ),
                   ],
                 ),
               )
             else
-              ...filtered.map((item) => _buildLedgerEntryCard(item)),
+              ...filteredBookings.map((b) => _buildLedgerEntryCard(b)),
           ],
         ),
       ),
@@ -404,11 +401,18 @@ class _BookingLedgerDocScreenState extends State<BookingLedgerDocScreen> {
     required Color color,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF101420),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF222B3D)),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0F172A).withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -433,7 +437,7 @@ class _BookingLedgerDocScreenState extends State<BookingLedgerDocScreen> {
               Container(
                 padding: const EdgeInsets.all(5),
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.15),
+                  color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(icon, color: color, size: 13),
@@ -448,7 +452,7 @@ class _BookingLedgerDocScreenState extends State<BookingLedgerDocScreen> {
               style: const TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w900,
-                color: Colors.white,
+                color: Color(0xFF0F172A),
                 letterSpacing: -0.5,
               ),
             ),
@@ -473,7 +477,7 @@ class _BookingLedgerDocScreenState extends State<BookingLedgerDocScreen> {
       children: [
         Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
         const SizedBox(width: 4),
-        Text(label, style: const TextStyle(fontSize: 10, color: Color(0xFF94A3B8), fontWeight: FontWeight.w600)),
+        Text(label, style: const TextStyle(fontSize: 10, color: Color(0xFF64748B), fontWeight: FontWeight.w600)),
       ],
     );
   }
@@ -489,16 +493,23 @@ class _BookingLedgerDocScreenState extends State<BookingLedgerDocScreen> {
         margin: const EdgeInsets.only(right: 8),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
         decoration: BoxDecoration(
-          color: isSel ? const Color(0xFF00E599) : const Color(0xFF101420),
+          color: isSel ? const Color(0xFF0F172A) : Colors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: isSel ? const Color(0xFF00E599) : const Color(0xFF222B3D)),
+          border: Border.all(color: isSel ? const Color(0xFF0F172A) : const Color(0xFFE2E8F0)),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF0F172A).withValues(alpha: isSel ? 0.1 : 0.03),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Text(
           label,
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w800,
-            color: isSel ? Colors.black : const Color(0xFF94A3B8),
+            color: isSel ? Colors.white : const Color(0xFF475569),
           ),
         ),
       ),
@@ -512,28 +523,28 @@ class _BookingLedgerDocScreenState extends State<BookingLedgerDocScreen> {
     IconData statusIcon;
 
     if (item.isCompleted) {
-      statusBg = const Color(0xFF00E599).withValues(alpha: 0.15);
-      statusText = const Color(0xFF00E599);
+      statusBg = const Color(0xFFECFDF5);
+      statusText = const Color(0xFF059669);
       statusLabel = 'SEATED';
       statusIcon = Icons.check_circle_rounded;
     } else if (item.isNoShow) {
-      statusBg = const Color(0xFFEF4444).withValues(alpha: 0.15);
-      statusText = const Color(0xFFEF4444);
+      statusBg = const Color(0xFFFEF2F2);
+      statusText = const Color(0xFFDC2626);
       statusLabel = 'NO-SHOW';
       statusIcon = Icons.person_off_rounded;
     } else if (item.isConfirmed) {
-      statusBg = const Color(0xFFF59E0B).withValues(alpha: 0.15);
-      statusText = const Color(0xFFFBBF24);
+      statusBg = const Color(0xFFFFFBEB);
+      statusText = const Color(0xFFD97706);
       statusLabel = 'CONFIRMED';
       statusIcon = Icons.schedule_rounded;
     } else if (item.isCancelled) {
-      statusBg = const Color(0xFF64748B).withValues(alpha: 0.15);
-      statusText = const Color(0xFF94A3B8);
+      statusBg = const Color(0xFFF1F5F9);
+      statusText = const Color(0xFF64748B);
       statusLabel = 'CANCELLED';
       statusIcon = Icons.cancel_rounded;
     } else {
-      statusBg = const Color(0xFF38BDF8).withValues(alpha: 0.15);
-      statusText = const Color(0xFF38BDF8);
+      statusBg = const Color(0xFFEFF6FF);
+      statusText = const Color(0xFF2563EB);
       statusLabel = 'PENDING';
       statusIcon = Icons.pending_actions_rounded;
     }
@@ -544,26 +555,33 @@ class _BookingLedgerDocScreenState extends State<BookingLedgerDocScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFF101420),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(
           color: item.isNoShow
-              ? const Color(0xFFEF4444).withValues(alpha: 0.35)
-              : const Color(0xFF222B3D),
+              ? const Color(0xFFDC2626).withValues(alpha: 0.3)
+              : const Color(0xFFE2E8F0),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0F172A).withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Top Row: ID + Date + Status (responsive, non-overflowing)
+          // Top Row: ID + Date + Status
           Row(
             children: [
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF171E2D),
+                  color: const Color(0xFFF1F5F9),
                   borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: const Color(0xFF28344E)),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
                 ),
                 child: Text(
                   '#${item.bookingId.replaceAll('bk_', '')}',
@@ -571,7 +589,7 @@ class _BookingLedgerDocScreenState extends State<BookingLedgerDocScreen> {
                     fontFamily: 'monospace',
                     fontSize: 10.5,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF94A3B8),
+                    color: Color(0xFF475569),
                   ),
                 ),
               ),
@@ -581,7 +599,7 @@ class _BookingLedgerDocScreenState extends State<BookingLedgerDocScreen> {
                   '${item.timeSlot} · ${item.date}',
                   style: const TextStyle(
                     fontSize: 11,
-                    color: Color(0xFFCBD5E1),
+                    color: Color(0xFF334155),
                     fontWeight: FontWeight.w600,
                   ),
                   maxLines: 1,
@@ -594,7 +612,7 @@ class _BookingLedgerDocScreenState extends State<BookingLedgerDocScreen> {
                 decoration: BoxDecoration(
                   color: statusBg,
                   borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: statusText.withValues(alpha: 0.35)),
+                  border: Border.all(color: statusText.withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -621,7 +639,7 @@ class _BookingLedgerDocScreenState extends State<BookingLedgerDocScreen> {
           // Guest Details
           Row(
             children: [
-              const Icon(Icons.person_rounded, size: 16, color: Colors.white),
+              const Icon(Icons.person_rounded, size: 16, color: Color(0xFF0F172A)),
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
@@ -629,7 +647,7 @@ class _BookingLedgerDocScreenState extends State<BookingLedgerDocScreen> {
                   style: const TextStyle(
                     fontWeight: FontWeight.w800,
                     fontSize: 14,
-                    color: Colors.white,
+                    color: Color(0xFF0F172A),
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -639,22 +657,23 @@ class _BookingLedgerDocScreenState extends State<BookingLedgerDocScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
-                  color: const Color(0xFF1E283E),
+                  color: const Color(0xFFEFF6FF),
                   borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: const Color(0xFFBFDBFE)),
                 ),
                 child: Text(
                   '${item.partySize} Guests',
-                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF38BDF8)),
+                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF2563EB)),
                 ),
               ),
             ],
           ),
 
           const SizedBox(height: 10),
-          const Divider(color: Color(0xFF1E283D), height: 1),
+          const Divider(color: Color(0xFFE2E8F0), height: 1),
           const SizedBox(height: 10),
 
-          // Discount & Settlement Row (responsive with Flexible)
+          // Discount & Settlement Row
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -664,18 +683,18 @@ class _BookingLedgerDocScreenState extends State<BookingLedgerDocScreen> {
                   children: [
                     const Text(
                       'Offer: ',
-                      style: TextStyle(fontSize: 10.5, color: Color(0xFF94A3B8), fontWeight: FontWeight.w600),
+                      style: TextStyle(fontSize: 10.5, color: Color(0xFF64748B), fontWeight: FontWeight.w600),
                     ),
                     Flexible(
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                         decoration: BoxDecoration(
                           color: hasDiscount
-                              ? const Color(0xFFF59E0B).withValues(alpha: 0.15)
-                              : const Color(0xFF1E283E),
+                              ? const Color(0xFFFFFBEB)
+                              : const Color(0xFFF1F5F9),
                           borderRadius: BorderRadius.circular(6),
                           border: hasDiscount
-                              ? Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.4))
+                              ? Border.all(color: const Color(0xFFFDE68A))
                               : null,
                         ),
                         child: Text(
@@ -683,7 +702,7 @@ class _BookingLedgerDocScreenState extends State<BookingLedgerDocScreen> {
                           style: TextStyle(
                             fontSize: 10.5,
                             fontWeight: FontWeight.w800,
-                            color: hasDiscount ? const Color(0xFFFBBF24) : const Color(0xFF94A3B8),
+                            color: hasDiscount ? const Color(0xFFD97706) : const Color(0xFF64748B),
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -696,7 +715,7 @@ class _BookingLedgerDocScreenState extends State<BookingLedgerDocScreen> {
               const SizedBox(width: 8),
               Text(
                 hasDiscount ? 'Cover: ₹${item.partySize * 600}' : 'Full Menu Price',
-                style: const TextStyle(fontSize: 11, color: Color(0xFFCBD5E1), fontWeight: FontWeight.w600),
+                style: const TextStyle(fontSize: 11, color: Color(0xFF475569), fontWeight: FontWeight.w600),
               ),
             ],
           ),
@@ -705,7 +724,7 @@ class _BookingLedgerDocScreenState extends State<BookingLedgerDocScreen> {
             const SizedBox(height: 8),
             Text(
               '⚠️ ${item.specialRequests}',
-              style: const TextStyle(fontSize: 10, color: Color(0xFFFCA5A5), fontStyle: FontStyle.italic),
+              style: const TextStyle(fontSize: 10, color: Color(0xFFDC2626), fontStyle: FontStyle.italic),
             ),
           ],
         ],

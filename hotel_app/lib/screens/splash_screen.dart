@@ -87,16 +87,16 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF070B14),
+      backgroundColor: const Color(0xFFF8F9FA),
       body: Container(
         decoration: const BoxDecoration(
           gradient: RadialGradient(
             center: Alignment(0, -0.2),
-            radius: 1.1,
+            radius: 1.2,
             colors: [
-              Color(0xFF1E1B4B), // Luxury imperial indigo glow
-              Color(0xFF0F1524),
-              Color(0xFF070B14),
+              Color(0xFFFFFFFF),
+              Color(0xFFF1F5F9),
+              Color(0xFFF8F9FA),
             ],
           ),
         ),
@@ -125,9 +125,9 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                                   shape: BoxShape.circle,
                                   boxShadow: [
                                     BoxShadow(
-                                      color: const Color(0xFFD4AF37).withOpacity(0.28),
-                                      blurRadius: 48,
-                                      spreadRadius: 8,
+                                      color: const Color(0xFFD4AF37).withValues(alpha: 0.22),
+                                      blurRadius: 40,
+                                      spreadRadius: 6,
                                     ),
                                   ],
                                 ),
@@ -151,10 +151,9 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                             ShaderMask(
                               shaderCallback: (bounds) => const LinearGradient(
                                 colors: [
-                                  Color(0xFFFFFFFF),
-                                  Color(0xFFFDE68A),
-                                  Color(0xFFD4AF37),
-                                  Color(0xFFF59E0B),
+                                  Color(0xFF0F172A),
+                                  Color(0xFF1E293B),
+                                  Color(0xFF334155),
                                 ],
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
@@ -173,9 +172,9 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFD4AF37).withOpacity(0.12),
+                                color: const Color(0xFFECFDF5),
                                 borderRadius: BorderRadius.circular(20),
-                                border: Border.all(color: const Color(0xFFD4AF37).withOpacity(0.35)),
+                                border: Border.all(color: const Color(0xFFA7F3D0)),
                               ),
                               child: const Text(
                                 'PREMIUM RESTAURANT & TABLE ENGINE',
@@ -183,7 +182,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                                   fontSize: 10,
                                   fontWeight: FontWeight.w800,
                                   letterSpacing: 1.2,
-                                  color: Color(0xFFFDE68A),
+                                  color: Color(0xFF059669),
                                 ),
                               ),
                             ),
@@ -206,14 +205,14 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Container(
-                        width: 7,
-                        height: 7,
+                        width: 8,
+                        height: 8,
                         decoration: BoxDecoration(
-                          color: const Color(0xFF10B981),
+                          color: const Color(0xFF059669),
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF10B981).withOpacity(0.6),
+                              color: const Color(0xFF059669).withValues(alpha: 0.4),
                               blurRadius: 8,
                               spreadRadius: 2,
                             ),
@@ -226,7 +225,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
-                          color: Color(0xFF94A3B8),
+                          color: Color(0xFF64748B),
                           letterSpacing: 0.3,
                         ),
                       ),

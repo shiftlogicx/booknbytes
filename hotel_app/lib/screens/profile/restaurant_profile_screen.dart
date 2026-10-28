@@ -205,12 +205,15 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
     final booking = Provider.of<BookingProvider>(context);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF07090E),
+      backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF101420),
+        backgroundColor: Colors.white,
         elevation: 0,
+        shape: const Border(
+          bottom: BorderSide(color: Color(0xFFE2E8F0), width: 1.0),
+        ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: Colors.white),
+          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: Color(0xFF0F172A)),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: const Column(
@@ -221,12 +224,12 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
-                color: Colors.white,
+                color: Color(0xFF0F172A),
               ),
             ),
             Text(
               'Mandatory Merchant Details & Operational Shifts',
-              style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
+              style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
             ),
           ],
         ),
@@ -241,13 +244,16 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
               Container(
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF131726), Color(0xFF0F121C)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+                  color: Colors.white,
                   borderRadius: BorderRadius.circular(22),
-                  border: Border.all(color: const Color(0xFF222B3D), width: 1.2),
+                  border: Border.all(color: const Color(0xFFE2E8F0), width: 1.0),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFF0F172A).withValues(alpha: 0.04),
+                      blurRadius: 14,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
                 child: Row(
                   children: [
@@ -262,33 +268,33 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w800,
-                              color: Colors.white,
+                              color: Color(0xFF0F172A),
                             ),
                           ),
                           const SizedBox(height: 3),
                           Text(
                             'ID: ${auth.currentRestaurantId} · Verified Merchant',
-                            style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8)),
+                            style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
                           ),
                           const SizedBox(height: 8),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF00E599).withValues(alpha: 0.15),
+                              color: const Color(0xFFECFDF5),
                               borderRadius: BorderRadius.circular(6),
-                              border: Border.all(color: const Color(0xFF00E599).withValues(alpha: 0.4)),
+                              border: Border.all(color: const Color(0xFFA7F3D0)),
                             ),
                             child: const Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.verified_rounded, size: 12, color: Color(0xFF00E599)),
+                                Icon(Icons.verified_rounded, size: 12, color: Color(0xFF059669)),
                                 SizedBox(width: 4),
                                 Text(
                                   'GOVT FSSAI COMPLIANT',
                                   style: TextStyle(
                                     fontSize: 9,
                                     fontWeight: FontWeight.w800,
-                                    color: Color(0xFF00E599),
+                                    color: Color(0xFF059669),
                                     letterSpacing: 0.6,
                                   ),
                                 ),
@@ -316,16 +322,12 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF1A2338), Color(0xFF0F172A)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: const Color(0xFF38BDF8).withValues(alpha: 0.4), width: 1.2),
+                    border: Border.all(color: const Color(0xFFE2E8F0), width: 1.0),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF38BDF8).withValues(alpha: 0.1),
+                        color: const Color(0xFF0F172A).withValues(alpha: 0.04),
                         blurRadius: 14,
                         offset: const Offset(0, 4),
                       ),
@@ -336,10 +338,10 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF38BDF8).withValues(alpha: 0.15),
+                          color: const Color(0xFFEFF6FF),
                           borderRadius: BorderRadius.circular(14),
                         ),
-                        child: const Icon(Icons.receipt_long_rounded, color: Color(0xFF38BDF8), size: 24),
+                        child: const Icon(Icons.receipt_long_rounded, color: Color(0xFF2563EB), size: 24),
                       ),
                       const SizedBox(width: 14),
                       Expanded(
@@ -353,19 +355,20 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w800,
-                                    color: Colors.white,
+                                    color: Color(0xFF0F172A),
                                   ),
                                 ),
                                 const SizedBox(width: 6),
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF00E599).withValues(alpha: 0.15),
+                                    color: const Color(0xFFECFDF5),
                                     borderRadius: BorderRadius.circular(4),
+                                    border: Border.all(color: const Color(0xFFA7F3D0)),
                                   ),
                                   child: const Text(
                                     'LIVE AUDIT',
-                                    style: TextStyle(fontSize: 8, fontWeight: FontWeight.w900, color: Color(0xFF00E599)),
+                                    style: TextStyle(fontSize: 8, fontWeight: FontWeight.w900, color: Color(0xFF059669)),
                                   ),
                                 ),
                               ],
@@ -373,17 +376,17 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
                             const SizedBox(height: 3),
                             Text(
                               '${booking.totalCount} Platform Bookings · ${booking.completedCount} Came · ${booking.noShowCount} No-Shows',
-                              style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8), fontWeight: FontWeight.w600),
+                              style: const TextStyle(fontSize: 11, color: Color(0xFF64748B), fontWeight: FontWeight.w600),
                             ),
                             const SizedBox(height: 2),
                             Text(
                               '₹${booking.totalDiscountGiven} Total Discounts Applied · Tap to View',
-                              style: const TextStyle(fontSize: 10, color: Color(0xFF38BDF8), fontWeight: FontWeight.w700),
+                              style: const TextStyle(fontSize: 10, color: Color(0xFF2563EB), fontWeight: FontWeight.w700),
                             ),
                           ],
                         ),
                       ),
-                      const Icon(Icons.arrow_forward_ios_rounded, color: Color(0xFF64748B), size: 14),
+                      const Icon(Icons.arrow_forward_ios_rounded, color: Color(0xFF94A3B8), size: 14),
                     ],
                   ),
                 ),
@@ -488,10 +491,10 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
                         margin: const EdgeInsets.only(right: 8, bottom: 8),
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: isSelected ? const Color(0xFF00E599).withValues(alpha: 0.18) : const Color(0xFF131726),
+                          color: isSelected ? const Color(0xFFECFDF5) : Colors.white,
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
-                            color: isSelected ? const Color(0xFF00E599) : const Color(0xFF222B3D),
+                            color: isSelected ? const Color(0xFFA7F3D0) : const Color(0xFFE2E8F0),
                           ),
                         ),
                         child: Text(
@@ -499,7 +502,7 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
                           style: TextStyle(
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
-                            color: isSelected ? const Color(0xFF00E599) : const Color(0xFF94A3B8),
+                            color: isSelected ? const Color(0xFF059669) : const Color(0xFF475569),
                           ),
                         ),
                       ),
@@ -527,18 +530,18 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
                   return FilterChip(
                     label: Text(cuisine),
                     selected: isSelected,
-                    selectedColor: const Color(0xFF00E599).withValues(alpha: 0.2),
-                    backgroundColor: const Color(0xFF101420),
-                    checkmarkColor: const Color(0xFF00E599),
+                    selectedColor: const Color(0xFFECFDF5),
+                    backgroundColor: Colors.white,
+                    checkmarkColor: const Color(0xFF059669),
                     labelStyle: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
-                      color: isSelected ? const Color(0xFF00E599) : const Color(0xFF94A3B8),
+                      color: isSelected ? const Color(0xFF059669) : const Color(0xFF475569),
                     ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                       side: BorderSide(
-                        color: isSelected ? const Color(0xFF00E599) : const Color(0xFF222B3D),
+                        color: isSelected ? const Color(0xFFA7F3D0) : const Color(0xFFE2E8F0),
                       ),
                     ),
                     onSelected: (selected) {
@@ -565,7 +568,7 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
               _buildTimingCard(
                 title: 'Lunch Service Shift',
                 icon: Icons.wb_sunny_rounded,
-                accentColor: const Color(0xFFF59E0B),
+                accentColor: const Color(0xFFD97706),
                 openTime: _lunchOpen,
                 closeTime: _lunchClose,
                 onOpenTap: () => _pickTime(context, _lunchOpen, (t) => _lunchOpen = t),
@@ -578,7 +581,7 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
               _buildTimingCard(
                 title: 'Dinner Service Shift',
                 icon: Icons.nights_stay_rounded,
-                accentColor: const Color(0xFF818CF8),
+                accentColor: const Color(0xFF4F46E5),
                 openTime: _dinnerOpen,
                 closeTime: _dinnerClose,
                 onOpenTap: () => _pickTime(context, _dinnerOpen, (t) => _dinnerOpen = t),
@@ -631,8 +634,8 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
                 height: 54,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF00E599),
-                    foregroundColor: Colors.black,
+                    backgroundColor: const Color(0xFF0F172A),
+                    foregroundColor: Colors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   ),
@@ -690,29 +693,29 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
         maxLines: maxLines,
         keyboardType: keyboardType,
         validator: validator,
-        style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
+        style: const TextStyle(color: Color(0xFF0F172A), fontSize: 13, fontWeight: FontWeight.w600),
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
+          labelStyle: const TextStyle(color: Color(0xFF475569), fontSize: 12),
           hintText: hint,
-          hintStyle: const TextStyle(color: Color(0xFF475569), fontSize: 12),
+          hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
           helperText: helperText,
-          helperStyle: const TextStyle(color: Color(0xFF00E599), fontSize: 10, fontWeight: FontWeight.w600),
-          prefixIcon: Icon(icon, color: const Color(0xFF00E599), size: 18),
+          helperStyle: const TextStyle(color: Color(0xFF059669), fontSize: 10, fontWeight: FontWeight.w600),
+          prefixIcon: Icon(icon, color: const Color(0xFF059669), size: 18),
           filled: true,
-          fillColor: const Color(0xFF101420),
+          fillColor: const Color(0xFFF8FAFC),
           contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: Color(0xFF222B3D)),
+            borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
           ),
           enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: Color(0xFF222B3D)),
+            borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
           ),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: Color(0xFF00E599), width: 1.4),
+            borderSide: const BorderSide(color: Color(0xFF059669), width: 1.4),
           ),
         ),
       ),
@@ -731,9 +734,16 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFF101420),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF222B3D)),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0F172A).withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -744,7 +754,7 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
               const SizedBox(width: 8),
               Text(
                 title,
-                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Colors.white),
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF0F172A)),
               ),
             ],
           ),
@@ -758,18 +768,18 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF171E2D),
+                      color: const Color(0xFFF8FAFC),
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: const Color(0xFF28344E)),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Opens At', style: TextStyle(fontSize: 10, color: Color(0xFF94A3B8))),
+                        const Text('Opens At', style: TextStyle(fontSize: 10, color: Color(0xFF64748B))),
                         const SizedBox(height: 2),
                         Text(
                           openTime,
-                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.white),
+                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
                         ),
                       ],
                     ),
@@ -784,18 +794,18 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF171E2D),
+                      color: const Color(0xFFF8FAFC),
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: const Color(0xFF28344E)),
+                      border: Border.all(color: const Color(0xFFE2E8F0)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Closes At', style: TextStyle(fontSize: 10, color: Color(0xFF94A3B8))),
+                        const Text('Closes At', style: TextStyle(fontSize: 10, color: Color(0xFF64748B))),
                         const SizedBox(height: 2),
                         Text(
                           closeTime,
-                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.white),
+                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
                         ),
                       ],
                     ),
@@ -820,21 +830,28 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFF101420),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: value ? const Color(0xFF00E599).withValues(alpha: 0.3) : const Color(0xFF222B3D),
+          color: value ? const Color(0xFF059669).withValues(alpha: 0.3) : const Color(0xFFE2E8F0),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF0F172A).withValues(alpha: 0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: (value ? const Color(0xFF00E599) : const Color(0xFF64748B)).withValues(alpha: 0.15),
+              color: (value ? const Color(0xFF059669) : const Color(0xFF64748B)).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(icon, color: value ? const Color(0xFF00E599) : const Color(0xFF64748B), size: 18),
+            child: Icon(icon, color: value ? const Color(0xFF059669) : const Color(0xFF64748B), size: 18),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -843,10 +860,10 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: Colors.white),
+                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: Color(0xFF0F172A)),
                 ),
                 const SizedBox(height: 2),
-                Text(subtitle, style: const TextStyle(fontSize: 11, color: Color(0xFF94A3B8))),
+                Text(subtitle, style: const TextStyle(fontSize: 11, color: Color(0xFF64748B))),
               ],
             ),
           ),
@@ -854,10 +871,7 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
             scale: 0.85,
             child: Switch.adaptive(
               value: value,
-              activeColor: const Color(0xFF00E599),
-              activeTrackColor: const Color(0xFF00E599).withValues(alpha: 0.35),
-              inactiveThumbColor: const Color(0xFF64748B),
-              inactiveTrackColor: const Color(0xFF1A2234),
+              activeColor: const Color(0xFF059669),
               onChanged: onChanged,
             ),
           ),
