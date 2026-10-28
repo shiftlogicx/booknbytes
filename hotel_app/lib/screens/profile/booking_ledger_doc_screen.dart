@@ -209,34 +209,34 @@ class _BookingLedgerDocScreenState extends State<BookingLedgerDocScreen> {
               physics: const NeverScrollableScrollPhysics(),
               crossAxisSpacing: 10,
               mainAxisSpacing: 10,
-              childAspectRatio: 1.5,
+              childAspectRatio: 1.25,
               padding: EdgeInsets.zero,
               children: [
                 _buildKpiCard(
                   title: 'BOOKINGS FROM US',
                   value: '${booking.totalCount}',
-                  subtitle: '100% Platform Generated',
+                  subtitle: 'Platform Generated',
                   icon: Icons.receipt_long_rounded,
                   color: const Color(0xFF38BDF8),
                 ),
                 _buildKpiCard(
                   title: 'ACTUALLY CAME',
                   value: '${booking.completedCount}',
-                  subtitle: '${booking.attendanceRate.toStringAsFixed(1)}% Conversion Rate',
+                  subtitle: '${booking.attendanceRate.toStringAsFixed(1)}% Conversion',
                   icon: Icons.check_circle_rounded,
                   color: const Color(0xFF00E599),
                 ),
                 _buildKpiCard(
                   title: 'MARKED NO-SHOW',
                   value: '${booking.noShowCount}',
-                  subtitle: '${((booking.noShowCount / (booking.totalCount == 0 ? 1 : booking.totalCount)) * 100).toStringAsFixed(1)}% No-Show Rate',
+                  subtitle: '${((booking.noShowCount / (booking.totalCount == 0 ? 1 : booking.totalCount)) * 100).toStringAsFixed(1)}% No-Show',
                   icon: Icons.person_off_rounded,
                   color: const Color(0xFFEF4444),
                 ),
                 _buildKpiCard(
                   title: 'DISCOUNTS APPLIED',
                   value: '₹${booking.totalDiscountGiven}',
-                  subtitle: '${booking.discountedCount} Discounted Bookings',
+                  subtitle: '${booking.discountedCount} Discounted Covers',
                   icon: Icons.percent_rounded,
                   color: const Color(0xFFF59E0B),
                 ),
@@ -404,7 +404,7 @@ class _BookingLedgerDocScreenState extends State<BookingLedgerDocScreen> {
     required Color color,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
       decoration: BoxDecoration(
         color: const Color(0xFF101420),
         borderRadius: BorderRadius.circular(16),
@@ -415,29 +415,51 @@ class _BookingLedgerDocScreenState extends State<BookingLedgerDocScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                title,
-                style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w800, letterSpacing: 0.6, color: Color(0xFF64748B)),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.5,
+                    color: Color(0xFF64748B),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
+              const SizedBox(width: 4),
               Container(
-                padding: const EdgeInsets.all(6),
+                padding: const EdgeInsets.all(5),
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(icon, color: color, size: 14),
+                child: Icon(icon, color: color, size: 13),
               ),
             ],
           ),
-          Text(
-            value,
-            style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: -0.5),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.w900,
+                color: Colors.white,
+                letterSpacing: -0.5,
+              ),
+            ),
           ),
           Text(
             subtitle,
-            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: color),
+            style: TextStyle(
+              fontSize: 9.5,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
@@ -492,27 +514,27 @@ class _BookingLedgerDocScreenState extends State<BookingLedgerDocScreen> {
     if (item.isCompleted) {
       statusBg = const Color(0xFF00E599).withValues(alpha: 0.15);
       statusText = const Color(0xFF00E599);
-      statusLabel = 'ACTUALLY CAME · SEATED';
+      statusLabel = 'SEATED';
       statusIcon = Icons.check_circle_rounded;
     } else if (item.isNoShow) {
       statusBg = const Color(0xFFEF4444).withValues(alpha: 0.15);
       statusText = const Color(0xFFEF4444);
-      statusLabel = 'MARKED NO-SHOW';
+      statusLabel = 'NO-SHOW';
       statusIcon = Icons.person_off_rounded;
     } else if (item.isConfirmed) {
       statusBg = const Color(0xFFF59E0B).withValues(alpha: 0.15);
       statusText = const Color(0xFFFBBF24);
-      statusLabel = 'CONFIRMED · UPCOMING';
+      statusLabel = 'CONFIRMED';
       statusIcon = Icons.schedule_rounded;
     } else if (item.isCancelled) {
       statusBg = const Color(0xFF64748B).withValues(alpha: 0.15);
       statusText = const Color(0xFF94A3B8);
-      statusLabel = 'CANCELLED BY GUEST';
+      statusLabel = 'CANCELLED';
       statusIcon = Icons.cancel_rounded;
     } else {
       statusBg = const Color(0xFF38BDF8).withValues(alpha: 0.15);
       statusText = const Color(0xFF38BDF8);
-      statusLabel = 'PENDING ALARM';
+      statusLabel = 'PENDING';
       statusIcon = Icons.pending_actions_rounded;
     }
 
@@ -520,7 +542,7 @@ class _BookingLedgerDocScreenState extends State<BookingLedgerDocScreen> {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: const Color(0xFF101420),
         borderRadius: BorderRadius.circular(18),
@@ -533,38 +555,42 @@ class _BookingLedgerDocScreenState extends State<BookingLedgerDocScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Top Row: ID + Date + Status
+          // Top Row: ID + Date + Status (responsive, non-overflowing)
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF171E2D),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: const Color(0xFF28344E)),
-                    ),
-                    child: Text(
-                      '#${item.bookingId}',
-                      style: const TextStyle(
-                        fontFamily: 'monospace',
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF94A3B8),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    '${item.date} · ${item.timeSlot}',
-                    style: const TextStyle(fontSize: 11, color: Color(0xFFCBD5E1), fontWeight: FontWeight.w600),
-                  ),
-                ],
-              ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF171E2D),
+                  borderRadius: BorderRadius.circular(6),
+                  border: Border.all(color: const Color(0xFF28344E)),
+                ),
+                child: Text(
+                  '#${item.bookingId.replaceAll('bk_', '')}',
+                  style: const TextStyle(
+                    fontFamily: 'monospace',
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF94A3B8),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  '${item.timeSlot} · ${item.date}',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: Color(0xFFCBD5E1),
+                    fontWeight: FontWeight.w600,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                 decoration: BoxDecoration(
                   color: statusBg,
                   borderRadius: BorderRadius.circular(6),
@@ -597,11 +623,19 @@ class _BookingLedgerDocScreenState extends State<BookingLedgerDocScreen> {
             children: [
               const Icon(Icons.person_rounded, size: 16, color: Colors.white),
               const SizedBox(width: 6),
-              Text(
-                item.customerName ?? 'Guest Diner',
-                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: Colors.white),
+              Expanded(
+                child: Text(
+                  item.customerName ?? 'Guest Diner',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14,
+                    color: Colors.white,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-              const Spacer(),
+              const SizedBox(width: 6),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                 decoration: BoxDecoration(
@@ -620,37 +654,48 @@ class _BookingLedgerDocScreenState extends State<BookingLedgerDocScreen> {
           const Divider(color: Color(0xFF1E283D), height: 1),
           const SizedBox(height: 10),
 
-          // Discount & Settlement Row
+          // Discount & Settlement Row (responsive with Flexible)
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  const Text('Discount: ', style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8))),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: hasDiscount
-                          ? const Color(0xFFF59E0B).withValues(alpha: 0.15)
-                          : const Color(0xFF1E283E),
-                      borderRadius: BorderRadius.circular(6),
-                      border: hasDiscount
-                          ? Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.4))
-                          : null,
+              Expanded(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text(
+                      'Offer: ',
+                      style: TextStyle(fontSize: 10.5, color: Color(0xFF94A3B8), fontWeight: FontWeight.w600),
                     ),
-                    child: Text(
-                      hasDiscount ? '${item.appliedOffer}' : 'Standard (0% OFF)',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w800,
-                        color: hasDiscount ? const Color(0xFFFBBF24) : const Color(0xFF94A3B8),
+                    Flexible(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: hasDiscount
+                              ? const Color(0xFFF59E0B).withValues(alpha: 0.15)
+                              : const Color(0xFF1E283E),
+                          borderRadius: BorderRadius.circular(6),
+                          border: hasDiscount
+                              ? Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.4))
+                              : null,
+                        ),
+                        child: Text(
+                          hasDiscount ? '${item.appliedOffer}' : 'Standard (0% OFF)',
+                          style: TextStyle(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w800,
+                            color: hasDiscount ? const Color(0xFFFBBF24) : const Color(0xFF94A3B8),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
               Text(
-                hasDiscount ? 'Estimated Cover: ₹${item.partySize * 600}' : 'Full Menu Price',
+                hasDiscount ? 'Cover: ₹${item.partySize * 600}' : 'Full Menu Price',
                 style: const TextStyle(fontSize: 11, color: Color(0xFFCBD5E1), fontWeight: FontWeight.w600),
               ),
             ],

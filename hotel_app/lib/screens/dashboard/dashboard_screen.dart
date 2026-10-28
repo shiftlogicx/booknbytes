@@ -8,11 +8,9 @@ import '../../providers/location_provider.dart';
 import '../../providers/notification_provider.dart';
 import '../../widgets/booking_card.dart';
 import '../../widgets/glass_nav_dock.dart';
-import '../../widgets/live_dining_queue.dart';
 import '../../widgets/location_picker_sheet.dart';
 import '../../widgets/shift_pulse_bento.dart';
 import '../alerts/incoming_booking_alert.dart';
-import '../bookings/booking_list_screen.dart';
 import '../profile/restaurant_profile_screen.dart';
 import '../settings/settings_screen.dart';
 import '../slots/slot_management_screen.dart';
@@ -210,10 +208,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _buildCurrentTab() {
     switch (_currentNavIndex) {
       case 1:
-        return const BookingListScreen();
-      case 2:
         return const SlotManagementScreen(isTab: true);
-      case 3:
+      case 2:
         return const SettingsScreen();
       default:
         return _buildFloorView();
@@ -235,19 +231,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 1. UNIFIED COMMAND BAR (Replaces 3 cluttered banners)
+          // 1. Sleek Command Header Bar
           _buildCommandHeader(locationProvider),
 
-          const SizedBox(height: 18),
+          const SizedBox(height: 16),
 
-          // 2. SECTION A: SHIFT RESERVATION PULSE (4 Key Metrics Bento)
-          _buildSectionHeader(
-            badge: 'OVERVIEW',
-            badgeColor: const Color(0xFF6366F1),
-            title: 'Shift Reservation Pulse',
-            subtitle: 'Tap any quadrant to filter incoming guest stream',
-          ),
-          const SizedBox(height: 10),
+          // 2. SHIFT RESERVATION PULSE (Interactive 4-Quadrant Metric Bento)
           ShiftPulseBento(
             todayCount: booking.todayCount,
             confirmedCount: booking.confirmedCount,
@@ -261,19 +250,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
           const SizedBox(height: 20),
 
-          // 3. SECTION B: DINING ROOM & TABLE CAPACITY (Physical Floor & Turnover)
-          _buildSectionHeader(
-            badge: 'CAPACITY',
-            badgeColor: const Color(0xFF00E599),
-            title: 'Dining Room & Table Capacity',
-            subtitle: 'Real-time cover occupancy & table turnover',
-          ),
-          const SizedBox(height: 10),
-          const LiveDiningQueueTracker(),
-
-          const SizedBox(height: 22),
-
-          // 4. SECTION C: GUEST RESERVATION FEED (Live Chronological Diner Actions)
+          // 3. LIVE RESERVATION FEED (Direct Diner Action Stream)
           _buildSectionHeader(
             badge: 'GUEST FEED',
             badgeColor: const Color(0xFFF59E0B),
@@ -484,7 +461,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: InkWell(
                   onTap: () {
                     HapticFeedback.lightImpact();
-                    setState(() => _currentNavIndex = 2);
+                    setState(() => _currentNavIndex = 1);
                   },
                   borderRadius: BorderRadius.circular(10),
                   child: Container(

@@ -15,9 +15,8 @@ class GlassNavDock extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tabs = [
-      _DockTab(icon: Icons.dashboard_rounded, activeIcon: Icons.dashboard_rounded, label: 'Floor'),
       _DockTab(icon: Icons.calendar_month_rounded, activeIcon: Icons.calendar_month_rounded, label: 'Bookings', badgeCount: 3),
-      _DockTab(icon: Icons.percent_rounded, activeIcon: Icons.percent_rounded, label: 'Slots'),
+      _DockTab(icon: Icons.percent_rounded, activeIcon: Icons.percent_rounded, label: 'Slots & %'),
       _DockTab(icon: Icons.tune_rounded, activeIcon: Icons.tune_rounded, label: 'Settings'),
     ];
 
