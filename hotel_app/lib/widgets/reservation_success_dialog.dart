@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/booking_model.dart';
+import '../services/notification_service.dart';
 import 'emoji_burst_animation.dart';
 
 class ReservationSuccessDialog extends StatefulWidget {
@@ -51,6 +52,7 @@ class _ReservationSuccessDialogState extends State<ReservationSuccessDialog>
 
     _controller.forward();
     HapticFeedback.heavyImpact();
+    NotificationService().playAcceptChime();
   }
 
   @override

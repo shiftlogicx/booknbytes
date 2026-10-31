@@ -105,11 +105,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
         SnackBar(
           content: Row(
             children: [
-              const Text('🙏 ', style: TextStyle(fontSize: 16)),
-              Text('Reservation #${mockBooking.bookingId} Declined • Table Released'),
+              const Icon(Icons.cancel_outlined, color: Colors.white, size: 18),
+              const SizedBox(width: 10),
+              Text('Reservation #${mockBooking.bookingId} Declined · Table Released'),
             ],
           ),
-          backgroundColor: const Color(0xFFEF4444),
+          backgroundColor: const Color(0xFF0F172A),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
@@ -119,15 +120,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
         SnackBar(
           content: Row(
             children: [
-              const Text('👨‍🍳✨ ', style: TextStyle(fontSize: 16)),
+              const Icon(Icons.check_circle_rounded, color: Color(0xFF00E599), size: 18),
+              const SizedBox(width: 10),
               Text('Table #${mockBooking.bookingId.replaceAll('bk_', '')} Confirmed · Diner Notified'),
             ],
           ),
-          backgroundColor: const Color(0xFF101420),
+          backgroundColor: const Color(0xFF0F172A),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
-            side: const BorderSide(color: Color(0xFF00E599), width: 1.2),
+            side: const BorderSide(color: Color(0xFF00E599), width: 1.0),
           ),
           duration: const Duration(milliseconds: 2500),
         ),
@@ -429,11 +431,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       SnackBar(
                         content: Row(
                           children: [
-                            Text(val ? '👨‍🍳✨ ' : '☕😴 ', style: const TextStyle(fontSize: 16)),
+                            Icon(
+                              val ? Icons.radio_button_checked_rounded : Icons.pause_circle_outline_rounded,
+                              color: val ? const Color(0xFF00E599) : const Color(0xFF94A3B8),
+                              size: 18,
+                            ),
+                            const SizedBox(width: 10),
                             Expanded(
                               child: Text(
-                                val ? 'Floor is LIVE! Accepting diner table bookings' : 'Floor Paused! Tables temporarily paused',
-                                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: Colors.white),
+                                val ? 'Floor is Live — accepting table reservations' : 'Floor paused — table bookings temporarily paused',
+                                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.white),
                               ),
                             ),
                           ],

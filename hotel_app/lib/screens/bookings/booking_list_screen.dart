@@ -21,28 +21,34 @@ class BookingListScreen extends StatelessWidget {
         backgroundColor: Colors.white,
         elevation: 0,
         shape: const Border(
-          bottom: BorderSide(color: Color(0xFFE2E8F0), width: 1.0),
+          bottom: BorderSide(color: Color(0xFFEAECEF), width: 0.8),
         ),
-        title: const Column(
+        title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            const Text(
               'Table Reservations',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
                 color: Color(0xFF0F172A),
+                letterSpacing: -0.2,
               ),
             ),
             Text(
-              'Live Guest Management',
-              style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+              '${booking.totalCount} Total Entries · Live Floor Console',
+              style: const TextStyle(
+                fontSize: 11,
+                color: Color(0xFF64748B),
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ],
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh_rounded, color: Color(0xFF64748B)),
+            tooltip: 'Refresh Reservations',
+            icon: const Icon(Icons.refresh_rounded, color: Color(0xFF0F172A), size: 20),
             onPressed: () {
               HapticFeedback.lightImpact();
               booking.loadBookings(auth.currentRestaurantId);
@@ -54,20 +60,69 @@ class BookingListScreen extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            // Filter Pills
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+            // Refined Filter Bar
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                border: Border(
+                  bottom: BorderSide(color: Color(0xFFEAECEF), width: 0.8),
+                ),
+              ),
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
                   children: [
-                    _buildFilterPill(context, '⚡ ALL', booking.filterStatus == 'ALL', 'ALL'),
-                    _buildFilterPill(context, '⏳ PENDING', booking.filterStatus == 'PENDING', 'PENDING'),
-                    _buildFilterPill(context, '✅ CONFIRMED', booking.filterStatus == 'CONFIRMED', 'CONFIRMED'),
-                    _buildFilterPill(context, '🚫 NO-SHOW', booking.filterStatus == 'NO_SHOW', 'NO_SHOW'),
-                    _buildFilterPill(context, '🍽️ COMPLETED', booking.filterStatus == 'COMPLETED', 'COMPLETED'),
-                    _buildFilterPill(context, '🕊️ CANCELLED', booking.filterStatus == 'CANCELLED', 'CANCELLED'),
+                    _buildPill(
+                      context,
+                      label: 'All',
+                      count: booking.totalCount,
+                      dotColor: const Color(0xFF0F172A),
+                      isSelected: booking.filterStatus == 'ALL',
+                      filterValue: 'ALL',
+                    ),
+                    _buildPill(
+                      context,
+                      label: 'Pending',
+                      count: booking.pendingCount,
+                      dotColor: const Color(0xFFD97706),
+                      isSelected: booking.filterStatus == 'PENDING',
+                      filterValue: 'PENDING',
+                    ),
+                    _buildPill(
+                      context,
+                      label: 'Confirmed',
+                      count: booking.confirmedCount,
+                      dotColor: const Color(0xFF059669),
+                      isSelected: booking.filterStatus == 'CONFIRMED',
+                      filterValue: 'CONFIRMED',
+                    ),
+                    _buildPill(
+                      context,
+                      label: 'Seated',
+                      count: booking.completedCount,
+                      dotColor: const Color(0xFF4F46E5),
+                      isSelected: booking.filterStatus == 'COMPLETED',
+                      filterValue: 'COMPLETED',
+                    ),
+                    _buildPill(
+                      context,
+                      label: 'No-Show',
+                      count: booking.noShowCount,
+                      dotColor: const Color(0xFFDC2626),
+                      isSelected: booking.filterStatus == 'NO_SHOW',
+                      filterValue: 'NO_SHOW',
+                    ),
+                    _buildPill(
+                      context,
+                      label: 'Cancelled',
+                      count: booking.cancelledCount,
+                      dotColor: const Color(0xFF94A3B8),
+                      isSelected: booking.filterStatus == 'CANCELLED',
+                      filterValue: 'CANCELLED',
+                    ),
                   ],
                 ),
               ),
@@ -77,45 +132,74 @@ class BookingListScreen extends StatelessWidget {
             Expanded(
               child: booking.bookings.isEmpty
                   ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(22),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                              border: Border.all(color: const Color(0xFFE2E8F0), width: 1.5),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: const Color(0xFF0F172A).withValues(alpha: 0.05),
-                                  blurRadius: 16,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 32),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              width: 72,
+                              height: 72,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: const Color(0xFFE2E8F0), width: 1.2),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(0xFF0F172A).withValues(alpha: 0.04),
+                                    blurRadius: 20,
+                                    offset: const Offset(0, 6),
+                                  ),
+                                ],
+                              ),
+                              child: const Icon(
+                                Icons.table_restaurant_rounded,
+                                size: 32,
+                                color: Color(0xFF64748B),
+                              ),
                             ),
-                            child: const Text('👨‍🍳', style: TextStyle(fontSize: 44)),
-                          ),
-                          const SizedBox(height: 16),
-                          const Text(
-                            'Dining Floor is Sparkling Clean! ✨',
-                            style: TextStyle(
-                              color: Color(0xFF0F172A),
-                              fontSize: 16,
-                              fontWeight: FontWeight.w800,
+                            const SizedBox(height: 18),
+                            const Text(
+                              'No Reservations in this Queue',
+                              style: TextStyle(
+                                color: Color(0xFF0F172A),
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -0.2,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 6),
-                          const Text(
-                            'Tables prepped and ready for incoming reservations 🍽️',
-                            style: TextStyle(color: Color(0xFF64748B), fontSize: 12),
-                          ),
-                        ],
+                            const SizedBox(height: 6),
+                            const Text(
+                              'Incoming bookings will automatically populate here via real-time floor sync.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Color(0xFF64748B),
+                                fontSize: 12.5,
+                                height: 1.4,
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            OutlinedButton.icon(
+                              style: OutlinedButton.styleFrom(
+                                foregroundColor: const Color(0xFF0F172A),
+                                side: const BorderSide(color: Color(0xFFCBD5E1)),
+                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              ),
+                              onPressed: () {
+                                HapticFeedback.lightImpact();
+                                booking.loadBookings(auth.currentRestaurantId);
+                              },
+                              icon: const Icon(Icons.refresh_rounded, size: 16),
+                              label: const Text('Refresh Floor Feed', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
+                            ),
+                          ],
+                        ),
                       ),
                     )
                   : ListView.builder(
                       physics: const BouncingScrollPhysics(),
-                      padding: const EdgeInsets.fromLTRB(16, 6, 16, 95),
+                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
                       itemCount: booking.bookings.length,
                       itemBuilder: (context, idx) {
                         final b = booking.bookings[idx];
@@ -136,35 +220,84 @@ class BookingListScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildFilterPill(BuildContext context, String label, bool isSelected, String filterValue) {
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.selectionClick();
-        Provider.of<BookingProvider>(context, listen: false).setFilter(filterValue);
-      },
-      child: Container(
-        margin: const EdgeInsets.only(right: 8),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-        decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF0F172A) : Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: isSelected ? const Color(0xFF0F172A) : const Color(0xFFE2E8F0),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF0F172A).withValues(alpha: isSelected ? 0.12 : 0.03),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
+  Widget _buildPill(
+    BuildContext context, {
+    required String label,
+    required int count,
+    required Color dotColor,
+    required bool isSelected,
+    required String filterValue,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            HapticFeedback.selectionClick();
+            Provider.of<BookingProvider>(context, listen: false).setFilter(filterValue);
+          },
+          borderRadius: BorderRadius.circular(22),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
+            decoration: BoxDecoration(
+              color: isSelected ? const Color(0xFF0F172A) : const Color(0xFFF8F9FA),
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(
+                color: isSelected ? const Color(0xFF0F172A) : const Color(0xFFE2E8F0),
+                width: 1.0,
+              ),
+              boxShadow: isSelected
+                  ? [
+                      BoxShadow(
+                        color: const Color(0xFF0F172A).withValues(alpha: 0.16),
+                        blurRadius: 8,
+                        offset: const Offset(0, 3),
+                      ),
+                    ]
+                  : null,
             ),
-          ],
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 11,
-            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-            color: isSelected ? Colors.white : const Color(0xFF475569),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: isSelected ? Colors.white : dotColor,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 7),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                    color: isSelected ? Colors.white : const Color(0xFF334155),
+                  ),
+                ),
+                const SizedBox(width: 5),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? Colors.white.withValues(alpha: 0.18)
+                        : const Color(0xFFE2E8F0),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '$count',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      color: isSelected ? Colors.white : const Color(0xFF64748B),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

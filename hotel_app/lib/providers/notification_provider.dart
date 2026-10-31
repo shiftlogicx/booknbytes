@@ -33,9 +33,14 @@ class NotificationProvider extends ChangeNotifier {
 
   void acceptBooking() {
     _notificationService.stopRinging();
+    _notificationService.playAcceptChime();
     _isAlertVisible = false;
     _activeAlertBooking = null;
     notifyListeners();
+  }
+
+  void playAcceptChime() {
+    _notificationService.playAcceptChime();
   }
 
   void snoozeAlert() {

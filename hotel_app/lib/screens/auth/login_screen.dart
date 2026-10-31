@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/booking_provider.dart';
 import '../../providers/slots_provider.dart';
+import '../../utils/validators.dart';
 import '../dashboard/dashboard_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -19,7 +20,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   // Sign In Role Toggle: true = Restaurant Owner, false = Manager / Employee
   bool _isOwnerMode = true;
 
-  // Login Controllers (clean empty state for production)
+  // Login Controllers
   final _loginEmailController = TextEditingController();
   final _loginPasswordController = TextEditingController();
   bool _obscureLoginPassword = true;
@@ -52,6 +53,12 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    _signupPasswordController.addListener(() {
+      if (mounted) setState(() {});
+    });
+    _signupEmailController.addListener(() {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
@@ -75,8 +82,14 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     final email = _loginEmailController.text.trim();
     final password = _loginPasswordController.text.trim();
 
-    if (email.isEmpty || password.isEmpty) {
-      _showErrorSnackBar('Please enter both email and password.');
+    final emailErr = FormValidators.validateEmail(email);
+    if (emailErr != null) {
+      _showErrorSnackBar(emailErr);
+      return;
+    }
+
+    if (password.isEmpty) {
+      _showErrorSnackBar('Please enter your password.');
       return;
     }
 
@@ -110,20 +123,27 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     final ownerName = _ownerNameController.text.trim();
     final email = _signupEmailController.text.trim();
     final phone = _phoneController.text.trim();
-    final password = _signupPasswordController.text.trim();
+    final password = _signupPasswordController.text;
     final restName = _restaurantNameController.text.trim();
     final address = _addressController.text.trim();
     final fssai = _fssaiController.text.trim();
     final upi = _upiController.text.trim();
     final cost = int.tryParse(_costForTwoController.text.trim()) ?? 1200;
 
-    if (ownerName.isEmpty || email.isEmpty || password.isEmpty || restName.isEmpty) {
-      _showErrorSnackBar('Please fill in all required fields (Name, Email, Password, Restaurant).');
+    if (ownerName.isEmpty || restName.isEmpty) {
+      _showErrorSnackBar('Please fill in Owner Name and Restaurant Name.');
       return;
     }
 
-    if (password.length < 6) {
-      _showErrorSnackBar('Password must be at least 6 characters.');
+    final emailErr = FormValidators.validateEmail(email);
+    if (emailErr != null) {
+      _showErrorSnackBar(emailErr);
+      return;
+    }
+
+    final passwordErr = FormValidators.validatePassword(password);
+    if (passwordErr != null) {
+      _showErrorSnackBar(passwordErr);
       return;
     }
 
@@ -151,7 +171,6 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       bookingProvider.initForRestaurant(authProvider.currentRestaurantId);
       slotsProvider.loadSlots(authProvider.currentRestaurantId);
 
-      // Show dialog with generated credentials if available
       final creds = authProvider.generatedManagerCredentials;
       if (creds != null) {
         await _showCredentialsDialog(creds);
@@ -176,11 +195,11 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: const Row(
           children: [
-            Icon(Icons.verified_rounded, color: Color(0xFF059669), size: 28),
+            Icon(Icons.check_circle_rounded, color: Color(0xFF059669), size: 26),
             SizedBox(width: 10),
             Text(
-              'Restaurant Activated! 🚀',
-              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18, color: Color(0xFF0F172A)),
+              'Restaurant Activated',
+              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17, color: Color(0xFF0F172A)),
             ),
           ],
         ),
@@ -253,49 +272,58 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       body: SafeArea(
         child: Column(
           children: [
-            const SizedBox(height: 16),
-            // Brand Logo & Header
+            const SizedBox(height: 20),
+            // Bespoke Brand Header
             Center(
               child: Column(
                 children: [
                   Container(
-                    width: 58,
-                    height: 58,
+                    width: 54,
+                    height: 54,
                     decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF059669), Color(0xFF047857)],
-                      ),
-                      shape: BoxShape.circle,
+                      color: const Color(0xFF0F172A),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: const Color(0xFF1E293B)),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF059669).withValues(alpha: 0.25),
-                          blurRadius: 16,
-                          offset: const Offset(0, 4),
+                          color: const Color(0xFF0F172A).withValues(alpha: 0.12),
+                          blurRadius: 18,
+                          offset: const Offset(0, 6),
                         ),
                       ],
                     ),
-                    child: const Icon(Icons.restaurant_rounded, color: Colors.white, size: 30),
+                    child: const Center(
+                      child: Icon(
+                        Icons.table_restaurant_rounded,
+                        color: Color(0xFF00E599),
+                        size: 26,
+                      ),
+                    ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 12),
                   const Text(
                     'BookNBytes Restaurant',
                     style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w900,
+                      fontSize: 21,
+                      fontWeight: FontWeight.w800,
                       color: Color(0xFF0F172A),
-                      letterSpacing: -0.5,
+                      letterSpacing: -0.4,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: 3),
                   const Text(
-                    'Shift Reservation & Table Floor Operations',
-                    style: TextStyle(fontSize: 11, color: Color(0xFF64748B), fontWeight: FontWeight.w600),
+                    'Dining Operations & Table Console',
+                    style: TextStyle(
+                      fontSize: 11.5,
+                      color: Color(0xFF64748B),
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ],
               ),
             ),
 
-            const SizedBox(height: 18),
+            const SizedBox(height: 20),
 
             // Tab Bar (Sign In / Register)
             Container(
@@ -312,7 +340,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: const [
                     BoxShadow(
-                      color: Color(0x0A0F172A),
+                      color: Color(0x0C0F172A),
                       blurRadius: 8,
                       offset: Offset(0, 2),
                     ),
@@ -350,9 +378,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
 
   Widget _buildSignInTab(AuthProvider auth) {
     return ListView(
-      padding: const EdgeInsets.fromLTRB(24, 10, 24, 30),
+      padding: const EdgeInsets.fromLTRB(24, 8, 24, 30),
       children: [
-        // Role Segmented Switch (Owner vs Manager / Staff)
+        // Role Segmented Switch
         Container(
           margin: const EdgeInsets.only(bottom: 14),
           padding: const EdgeInsets.all(4),
@@ -390,7 +418,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                         Icon(
                           Icons.admin_panel_settings_rounded,
                           size: 16,
-                          color: _isOwnerMode ? const Color(0xFF059669) : const Color(0xFF64748B),
+                          color: _isOwnerMode ? const Color(0xFF0F172A) : const Color(0xFF64748B),
                         ),
                         const SizedBox(width: 6),
                         Text(
@@ -433,11 +461,11 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                         Icon(
                           Icons.badge_rounded,
                           size: 16,
-                          color: !_isOwnerMode ? const Color(0xFF2563EB) : const Color(0xFF64748B),
+                          color: !_isOwnerMode ? const Color(0xFF0F172A) : const Color(0xFF64748B),
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          'Manager / Staff',
+                          'Floor Manager',
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: !_isOwnerMode ? FontWeight.w800 : FontWeight.w600,
@@ -455,139 +483,85 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
 
         // Sign In Card
         Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(22),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: const Color(0xFFE2E8F0)),
             boxShadow: const [
               BoxShadow(
-                color: Color(0x080F172A),
-                blurRadius: 14,
-                offset: Offset(0, 4),
+                color: Color(0x060F172A),
+                blurRadius: 16,
+                offset: Offset(0, 5),
               ),
             ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Role Badge & Description
-              if (_isOwnerMode) ...[
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFECFDF5),
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: const Color(0xFFA7F3D0)),
+              Row(
+                children: [
+                  Container(
+                    width: 7,
+                    height: 7,
+                    decoration: BoxDecoration(
+                      color: _isOwnerMode ? const Color(0xFF059669) : const Color(0xFF2563EB),
+                      shape: BoxShape.circle,
+                    ),
                   ),
-                  child: const Text(
-                    '👑 OWNER ACCESS · FINANCIALS & AUDIT DOCS',
-                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: Color(0xFF059669), letterSpacing: 0.5),
+                  const SizedBox(width: 6),
+                  Text(
+                    _isOwnerMode ? 'EXECUTIVE ACCESS' : 'FLOOR OPERATIONS',
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.8,
+                      color: _isOwnerMode ? const Color(0xFF059669) : const Color(0xFF2563EB),
+                    ),
                   ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                _isOwnerMode ? 'Restaurant Owner Sign In' : 'Floor Manager Sign In',
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF0F172A),
+                  letterSpacing: -0.2,
                 ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Restaurant Owner Sign In',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  'Full access: Shift Reservations, Slots, Discounts, UPI Settlement & Audit Documents.',
-                  style: TextStyle(fontSize: 12, color: Color(0xFF64748B), height: 1.3),
-                ),
-              ] else ...[
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEFF6FF),
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: const Color(0xFFBFDBFE)),
-                  ),
-                  child: const Text(
-                    '👔 FLOOR OPERATIONS · SEATING & LIVE SLOTS',
-                    style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: Color(0xFF2563EB), letterSpacing: 0.5),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Manager / Staff Sign In',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  'Floor management access: Shift Reservations, Turnarounds, Seating & Live Slots.',
-                  style: TextStyle(fontSize: 12, color: Color(0xFF64748B), height: 1.3),
-                ),
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
-                  ),
-                  child: const Row(
-                    children: [
-                      Icon(Icons.shield_outlined, size: 14, color: Color(0xFF64748B)),
-                      SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          'Manager credentials are generated by the restaurant owner. Sensitive UPI details and financial audit docs are hidden in this view.',
-                          style: TextStyle(fontSize: 10, color: Color(0xFF64748B), height: 1.3),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                _isOwnerMode
+                    ? 'Complete access to table reservations, slots, promo offers, UPI settlement & audit documents.'
+                    : 'Operational floor console: manage guest turnarounds, table reservations, and live seating.',
+                style: const TextStyle(fontSize: 12, color: Color(0xFF64748B), height: 1.4),
+              ),
 
-              const SizedBox(height: 18),
+              const SizedBox(height: 20),
 
               // Email Input
-              Text(
-                _isOwnerMode ? 'OWNER BUSINESS EMAIL' : 'MANAGER / STAFF EMAIL OR ID',
-                style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFF64748B), letterSpacing: 0.5),
-              ),
-              const SizedBox(height: 6),
+              _buildFieldLabel(_isOwnerMode ? 'OWNER EMAIL *' : 'MANAGER EMAIL OR ID *'),
               TextField(
                 controller: _loginEmailController,
                 keyboardType: TextInputType.emailAddress,
                 style: const TextStyle(color: Color(0xFF0F172A), fontSize: 13, fontWeight: FontWeight.w600),
-                decoration: InputDecoration(
-                  prefixIcon: Icon(
-                    _isOwnerMode ? Icons.email_outlined : Icons.badge_outlined,
-                    color: _isOwnerMode ? const Color(0xFF059669) : const Color(0xFF2563EB),
-                    size: 18,
-                  ),
-                  hintText: _isOwnerMode ? 'owner@restaurant.com' : 'manager.restaurant@booknbytes.app',
-                  hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
-                  filled: true,
-                  fillColor: const Color(0xFFF8FAFC),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: _isOwnerMode ? const Color(0xFF059669) : const Color(0xFF2563EB), width: 1.5),
-                  ),
+                decoration: _inputDecoration(
+                  _isOwnerMode ? 'owner@restaurant.com' : 'manager.outlet@booknbytes.app',
+                  Icons.alternate_email_rounded,
                 ),
               ),
 
               const SizedBox(height: 16),
 
               // Password Input
-              const Text('PASSWORD',
-                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFF64748B), letterSpacing: 0.5)),
-              const SizedBox(height: 6),
+              _buildFieldLabel('PASSWORD *'),
               TextField(
                 controller: _loginPasswordController,
                 obscureText: _obscureLoginPassword,
                 style: const TextStyle(color: Color(0xFF0F172A), fontSize: 13, fontWeight: FontWeight.w600),
-                decoration: InputDecoration(
-                  prefixIcon: Icon(
-                    Icons.lock_outline_rounded,
-                    color: _isOwnerMode ? const Color(0xFF059669) : const Color(0xFF2563EB),
-                    size: 18,
-                  ),
+                decoration: _inputDecoration('Enter your password', Icons.lock_outline_rounded).copyWith(
                   suffixIcon: IconButton(
                     icon: Icon(
                       _obscureLoginPassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
@@ -595,16 +569,6 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                       size: 18,
                     ),
                     onPressed: () => setState(() => _obscureLoginPassword = !_obscureLoginPassword),
-                  ),
-                  hintText: 'Enter your password',
-                  hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 13),
-                  filled: true,
-                  fillColor: const Color(0xFFF8FAFC),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                  enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: _isOwnerMode ? const Color(0xFF059669) : const Color(0xFF2563EB), width: 1.5),
                   ),
                 ),
               ),
@@ -614,26 +578,26 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
               // Sign In Button
               SizedBox(
                 width: double.infinity,
-                height: 50,
+                height: 48,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _isOwnerMode ? const Color(0xFF059669) : const Color(0xFF2563EB),
+                    backgroundColor: const Color(0xFF0F172A),
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     elevation: 0,
                   ),
                   onPressed: auth.isLoading ? null : _handleLogin,
                   child: auth.isLoading
-                      ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
+                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.2))
                       : Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              _isOwnerMode ? 'Sign In as Owner' : 'Sign In as Floor Manager',
-                              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+                              _isOwnerMode ? 'Sign In as Owner' : 'Sign In as Manager',
+                              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5),
                             ),
                             const SizedBox(width: 8),
-                            const Icon(Icons.arrow_forward_rounded, size: 18),
+                            const Icon(Icons.arrow_forward_rounded, size: 16),
                           ],
                         ),
                 ),
@@ -646,20 +610,30 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   }
 
   Widget _buildSignUpTab(AuthProvider auth) {
+    final passwordVal = _signupPasswordController.text;
+    final hasLen = FormValidators.hasMinLength(passwordVal);
+    final hasUpper = FormValidators.hasUppercase(passwordVal);
+    final hasLower = FormValidators.hasLowercase(passwordVal);
+    final hasSpecial = FormValidators.hasSpecialChar(passwordVal);
+
+    final emailVal = _signupEmailController.text;
+    final emailHasAt = emailVal.contains('@');
+    final emailValid = FormValidators.isEmailValid(emailVal);
+
     return ListView(
-      padding: const EdgeInsets.fromLTRB(24, 10, 24, 40),
+      padding: const EdgeInsets.fromLTRB(24, 8, 24, 40),
       children: [
         Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(22),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: const Color(0xFFE2E8F0)),
             boxShadow: const [
               BoxShadow(
-                color: Color(0x080F172A),
-                blurRadius: 14,
-                offset: Offset(0, 4),
+                color: Color(0x060F172A),
+                blurRadius: 16,
+                offset: Offset(0, 5),
               ),
             ],
           ),
@@ -669,28 +643,31 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFECFDF5),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: const Color(0xFFA7F3D0)),
+                    width: 7,
+                    height: 7,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF059669),
+                      shape: BoxShape.circle,
                     ),
-                    child: const Text('OFFICIAL RESTAURANT ONBOARDING',
-                        style: TextStyle(fontSize: 9, fontWeight: FontWeight.w900, color: Color(0xFF059669), letterSpacing: 0.5)),
+                  ),
+                  const SizedBox(width: 6),
+                  const Text(
+                    'RESTAURANT ONBOARDING',
+                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFF059669), letterSpacing: 0.8),
                   ),
                 ],
               ),
               const SizedBox(height: 8),
               const Text(
                 'Register New Restaurant',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF0F172A), letterSpacing: -0.2),
               ),
               const SizedBox(height: 4),
               const Text(
-                'Creates owner account & automatically generates manager credentials',
-                style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                'Establishes owner access and creates manager credentials for your floor team.',
+                style: TextStyle(fontSize: 12, color: Color(0xFF64748B), height: 1.4),
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 20),
 
               // Owner Full Name
               _buildFieldLabel('OWNER FULL NAME *'),
@@ -702,17 +679,33 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
               const SizedBox(height: 14),
 
               // Email
-              _buildFieldLabel('OWNER EMAIL *'),
+              _buildFieldLabel('BUSINESS EMAIL * (MUST CONTAIN @)'),
               TextField(
                 controller: _signupEmailController,
                 keyboardType: TextInputType.emailAddress,
                 style: const TextStyle(color: Color(0xFF0F172A), fontSize: 13, fontWeight: FontWeight.w600),
-                decoration: _inputDecoration('e.g. owner@myrestaurant.com', Icons.email_outlined),
+                decoration: _inputDecoration('e.g. owner@myrestaurant.com', Icons.alternate_email_rounded).copyWith(
+                  suffixIcon: emailVal.isNotEmpty
+                      ? Icon(
+                          emailValid ? Icons.check_circle_rounded : Icons.info_outline_rounded,
+                          size: 18,
+                          color: emailValid ? const Color(0xFF059669) : const Color(0xFFD97706),
+                        )
+                      : null,
+                ),
               ),
+              if (emailVal.isNotEmpty && !emailHasAt)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4, left: 4),
+                  child: Text(
+                    'Must include "@" (e.g. name@domain.com)',
+                    style: TextStyle(fontSize: 10.5, color: Colors.red.shade700, fontWeight: FontWeight.w600),
+                  ),
+                ),
               const SizedBox(height: 14),
 
               // Phone
-              _buildFieldLabel('OWNER MOBILE NUMBER *'),
+              _buildFieldLabel('CONTACT MOBILE NUMBER *'),
               TextField(
                 controller: _phoneController,
                 keyboardType: TextInputType.phone,
@@ -722,7 +715,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
               const SizedBox(height: 14),
 
               // Password
-              _buildFieldLabel('PASSWORD * (MIN 6 CHARS)'),
+              _buildFieldLabel('PASSWORD *'),
               TextField(
                 controller: _signupPasswordController,
                 obscureText: _obscureSignupPassword,
@@ -738,8 +731,39 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
 
+              // Interactive Password Criteria Bar
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'PASSWORD REQUIREMENTS',
+                      style: TextStyle(fontSize: 9.5, fontWeight: FontWeight.w800, color: Color(0xFF64748B), letterSpacing: 0.6),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 6,
+                      children: [
+                        _buildRequirementChip('At least 6 chars', hasLen),
+                        _buildRequirementChip('Uppercase (A-Z)', hasUpper),
+                        _buildRequirementChip('Lowercase (a-z)', hasLower),
+                        _buildRequirementChip('Special char (!@#...)', hasSpecial),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 20),
               const Divider(color: Color(0xFFE2E8F0)),
               const SizedBox(height: 14),
 
@@ -748,7 +772,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
               TextField(
                 controller: _restaurantNameController,
                 style: const TextStyle(color: Color(0xFF0F172A), fontSize: 13, fontWeight: FontWeight.w600),
-                decoration: _inputDecoration('e.g. The Coastal Curry House', Icons.restaurant_rounded),
+                decoration: _inputDecoration('e.g. The Coastal Curry House', Icons.storefront_rounded),
               ),
               const SizedBox(height: 14),
 
@@ -762,7 +786,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
               const SizedBox(height: 14),
 
               // FSSAI
-              _buildFieldLabel('14-DIGIT FSSAI LICENSE NUMBER'),
+              _buildFieldLabel('14-DIGIT FSSAI NUMBER'),
               TextField(
                 controller: _fssaiController,
                 keyboardType: TextInputType.number,
@@ -827,23 +851,23 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
               // Signup Button
               SizedBox(
                 width: double.infinity,
-                height: 52,
+                height: 50,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF059669),
+                    backgroundColor: const Color(0xFF0F172A),
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     elevation: 0,
                   ),
                   onPressed: auth.isLoading ? null : _handleSignup,
                   child: auth.isLoading
-                      ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
+                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.2))
                       : const Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text('Register & Generate Credentials', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
+                            Text('Register & Generate Credentials', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5)),
                             SizedBox(width: 8),
-                            Icon(Icons.check_circle_outline_rounded, size: 18),
+                            Icon(Icons.check_circle_outline_rounded, size: 16),
                           ],
                         ),
                 ),
@@ -855,27 +879,62 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     );
   }
 
+  Widget _buildRequirementChip(String label, bool isSatisfied) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: isSatisfied ? const Color(0xFFECFDF5) : Colors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: isSatisfied ? const Color(0xFFA7F3D0) : const Color(0xFFE2E8F0),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isSatisfied ? Icons.check_circle_rounded : Icons.circle_outlined,
+            size: 12,
+            color: isSatisfied ? const Color(0xFF059669) : const Color(0xFF94A3B8),
+          ),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10.5,
+              fontWeight: FontWeight.w600,
+              color: isSatisfied ? const Color(0xFF065F46) : const Color(0xFF64748B),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildFieldLabel(String label) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
       child: Text(
         label,
-        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFF64748B), letterSpacing: 0.5),
+        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFF64748B), letterSpacing: 0.6),
       ),
     );
   }
 
   InputDecoration _inputDecoration(String hint, IconData icon) {
     return InputDecoration(
-      prefixIcon: Icon(icon, color: const Color(0xFF059669), size: 18),
+      prefixIcon: Icon(icon, color: const Color(0xFF64748B), size: 18),
       hintText: hint,
-      hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
+      hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12.5),
       filled: true,
       fillColor: const Color(0xFFF8FAFC),
       contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
       enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFF059669), width: 1.5)),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: const BorderSide(color: Color(0xFF0F172A), width: 1.5),
+      ),
     );
   }
 }

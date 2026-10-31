@@ -156,6 +156,21 @@ class NotificationService {
     }
   }
 
+  /// Play high-definition acceptance confirmation ringtone / chime
+  Future<void> playAcceptChime() async {
+    try {
+      final chimePlayer = AudioPlayer();
+      await chimePlayer.setVolume(1.0);
+      try {
+        await chimePlayer.play(AssetSource('sounds/accept_chime.wav'));
+      } catch (_) {
+        await chimePlayer.play(AssetSource('sounds/accept_chime.m4a'));
+      }
+    } catch (e) {
+      debugPrint('[NotificationService] Error playing accept chime: $e');
+    }
+  }
+
   /// Snooze the alert for a specified duration (default 2 minutes)
   void snooze(BookingModel booking, {Duration duration = const Duration(minutes: 2)}) {
     stopRinging();

@@ -71,7 +71,8 @@ class BookingCard extends StatelessWidget {
                 ),
                 child: const Row(
                   children: [
-                    Text('⏱️ ', style: TextStyle(fontSize: 20)),
+                    Icon(Icons.timer_outlined, size: 18, color: Color(0xFF64748B)),
+                    SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         '15-minute grace window expired. Marking as No-Show immediately releases the reserved table for walk-ins and logs this entry in your restaurant audit documents.',
@@ -113,10 +114,11 @@ class BookingCard extends StatelessWidget {
                           SnackBar(
                             content: Row(
                               children: [
-                                const Text('🚫 ', style: TextStyle(fontSize: 16)),
+                                const Icon(Icons.person_off_rounded, color: Color(0xFFF87171), size: 18),
+                                const SizedBox(width: 10),
                                 Expanded(
                                   child: Text(
-                                    'Booking #${booking.bookingId} marked as No-Show • Table capacity released!',
+                                    'Booking #${booking.bookingId} marked as No-Show · Table released',
                                     style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.white),
                                   ),
                                 ),
@@ -156,11 +158,12 @@ class BookingCard extends StatelessWidget {
       SnackBar(
         content: Row(
           children: [
-            const Text('🍽️ ✨ ', style: TextStyle(fontSize: 16)),
+            const Icon(Icons.check_circle_rounded, color: Color(0xFF00E599), size: 18),
+            const SizedBox(width: 10),
             Expanded(
               child: Text(
-                '${booking.customerName ?? "Diner"} Seated at Table • Enjoy service!',
-                style: const TextStyle(fontWeight: FontWeight.w700, color: Colors.white),
+                '${booking.customerName ?? "Diner"} Seated at Table · Service active',
+                style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.white),
               ),
             ),
           ],
