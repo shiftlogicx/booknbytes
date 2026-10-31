@@ -15,11 +15,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <title>Book & Bite — Admin & Merchant Operations</title>
+        <title>BookNBytes Console — Merchant & Reservation Operations</title>
         <meta name="description" content="Table reservation and restaurant onboarding dashboard" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
       </head>
-      <body className="bg-slate-50 text-slate-900 antialiased font-sans">
+      <body className="bg-[#F8F9FA] text-[#0F172A] antialiased font-sans">
         <div className="min-h-screen flex">
           {/* Main Sidebar */}
           <Sidebar 

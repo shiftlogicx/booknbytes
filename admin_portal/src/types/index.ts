@@ -1,12 +1,21 @@
+export type BookingStatus =
+  | 'PENDING'
+  | 'CONFIRMED'
+  | 'COMPLETED'
+  | 'CANCELLED'
+  | 'NO_SHOW'
+  | 'REJECTED';
+
 export interface UserProfile {
   user_id: string;
   name: string;
   phone_number: string;
   email: string;
-  auth_provider: 'google' | 'phone' | 'email';
-  preferences: string[];
+  preferences?: string[];
   total_bookings: number;
   created_at: string;
+  updated_at?: string;
+  role?: 'diner' | 'owner' | 'manager' | 'admin';
 }
 
 export interface Offer {
@@ -28,62 +37,89 @@ export interface RestaurantVisuals {
 }
 
 export interface RestaurantAttributes {
-  is_veg_only: boolean;
-  has_bar: boolean;
-  is_ac: boolean;
-  parking_available: boolean;
+  pure_veg: boolean;
+  serves_alcohol: boolean;
+  has_ac: boolean;
+  has_parking: boolean;
 }
 
-export interface RestaurantLocation {
-  address: string;
-  geo_coordinates: [number, number]; // [lat, lng]
+export interface ManagerCredentials {
+  manager_id?: string;
+  email?: string;
+  default_password?: string;
 }
 
-export interface DailySlots {
-  [date: string]: {
-    [timeSlot: string]: number; // available table count
-  };
+export interface OwnerDetails {
+  owner_id?: string;
+  name?: string;
+  email?: string;
+  phone?: string;
+  manager_credentials?: ManagerCredentials;
 }
 
 export interface Restaurant {
   restaurant_id: string;
   name: string;
-  upi_id: string;
+  upi_id?: string;
   fssai_number: string;
-  location: RestaurantLocation;
+  address: string;
   cost_for_two: number;
-  timings: RestaurantTimings;
-  visuals: RestaurantVisuals;
-  attributes: RestaurantAttributes;
+  timings?: RestaurantTimings;
+  visuals?: RestaurantVisuals;
+  attributes?: RestaurantAttributes;
   cuisines: string[];
-  active_offers: Offer[];
-  daily_slots: DailySlots;
-  rating: {
+  active_offers?: Offer[];
+  rating?: {
     average: number;
     total_reviews: number;
   };
   status: 'ACTIVE' | 'INACTIVE' | 'PENDING_APPROVAL';
   created_at?: string;
-  owner_uid?: string;
+  owners_details?: OwnerDetails;
+  gst_num?: string;
 }
-
-export type BookingStatus = 'PENDING' | 'CONFIRMED' | 'SEATED' | 'COMPLETED' | 'CANCELLED';
 
 export interface Booking {
   booking_id: string;
   user_id: string;
-  user_name?: string;
-  user_phone?: string;
   restaurant_id: string;
   restaurant_name: string;
   party_size: number;
-  date: string; // YYYY-MM-DD
-  time_slot: string; // HH:mm
+  booking_date: string; // YYYY-MM-DD
+  time_slot: string; // HH:mm or e.g. 19:30
+  applied_offer?: string | null;
+  payment_id?: string | null;
   status: BookingStatus;
-  applied_offer?: string;
-  special_requests?: string;
   created_at: string;
-  notification_sent?: boolean;
+  slot_id?: string | null;
+  users?: {
+    name?: string;
+    phone_number?: string;
+    email?: string;
+  };
+}
+
+export interface DailySlot {
+  slot_id: string;
+  restaurant_id: string;
+  start_datetime: string;
+  end_datetime: string;
+  discount_percentage: number;
+  capacity: number;
+  restaurant_name?: string;
+}
+
+export interface Review {
+  review_id: string;
+  restaurant_id: string;
+  user_id: string;
+  rating: number;
+  comment?: string;
+  created_at: string;
+  updated_at?: string;
+  restaurant_name?: string;
+  user_name?: string;
+  user_email?: string;
 }
 
 export interface DashboardStats {
@@ -93,4 +129,6 @@ export interface DashboardStats {
   confirmedBookings: number;
   totalUsers: number;
   todayBookings: number;
+  totalReviews: number;
+  averageRating: number;
 }
