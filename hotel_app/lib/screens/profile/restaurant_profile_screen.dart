@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/booking_provider.dart';
 import '../../widgets/brand_logo.dart';
+import '../auth/login_screen.dart';
 import 'booking_audit_doc_screen.dart';
 
 class RestaurantProfileScreen extends StatefulWidget {
@@ -199,6 +200,59 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
     Navigator.of(context).pop();
   }
 
+  Future<void> _confirmSignOut(BuildContext context) async {
+    HapticFeedback.mediumImpact();
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    final shouldLogout = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        title: const Row(
+          children: [
+            Icon(Icons.logout_rounded, color: Color(0xFFDC2626), size: 22),
+            SizedBox(width: 10),
+            Text(
+              'Sign Out',
+              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17, color: Color(0xFF0F172A)),
+            ),
+          ],
+        ),
+        content: Text(
+          'Are you sure you want to sign out from ${auth.currentRestaurantName}? You will need your credentials to log back in.',
+          style: const TextStyle(fontSize: 13, color: Color(0xFF475569), height: 1.4),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFDC2626),
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Sign Out', style: TextStyle(fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    );
+
+    if (shouldLogout == true && context.mounted) {
+      await auth.logout();
+      if (context.mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+          (route) => false,
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthProvider>(context);
@@ -233,6 +287,14 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
             ),
           ],
         ),
+        actions: [
+          IconButton(
+            tooltip: 'Sign Out',
+            icon: const Icon(Icons.logout_rounded, size: 20, color: Color(0xFFDC2626)),
+            onPressed: () => _confirmSignOut(context),
+          ),
+          const SizedBox(width: 4),
+        ],
       ),
       body: SafeArea(
         child: Form(
@@ -654,6 +716,72 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
                         ),
                       ),
                     ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+
+              // Sign Out Option Card
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFFEE2E2), width: 1.2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFDC2626).withValues(alpha: 0.04),
+                      blurRadius: 10,
+                      offset: const Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => _confirmSignOut(context),
+                    borderRadius: BorderRadius.circular(16),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFEF2F2),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(Icons.logout_rounded, color: Color(0xFFDC2626), size: 20),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Sign Out of Restaurant Account',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w800,
+                                    color: Color(0xFFDC2626),
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Disconnect session for ${auth.currentRestaurantName}',
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: Color(0xFF94A3B8),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Icon(Icons.chevron_right_rounded, color: Color(0xFFF87171), size: 20),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),
