@@ -11,10 +11,13 @@ import {
   Plus, 
   RefreshCw,
   User,
-  Users
+  Users,
+  BellRing,
+  Phone
 } from 'lucide-react';
 import { getBookings, updateBookingStatus, deleteBooking, createBooking, getRestaurants } from '@/lib/data-service';
 import { Booking, BookingStatus, Restaurant } from '@/types';
+import { supabase } from '@/lib/supabase';
 
 export default function BookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -26,9 +29,13 @@ export default function BookingsPage() {
   // New Booking Modal State
   const [showAddModal, setShowAddModal] = useState(false);
   const [selectedRestId, setSelectedRestId] = useState('');
-  const [partySize, setPartySize] = useState('2');
+  const [customerName, setCustomerName] = useState('Rahul Sharma');
+  const [customerPhone, setCustomerPhone] = useState('+91 98230 45678');
+  const [partySize, setPartySize] = useState('4');
   const [bookingDate, setBookingDate] = useState('');
-  const [timeSlot, setTimeSlot] = useState('19:30');
+  const [timeSlot, setTimeSlot] = useState('20:00');
+  const [bookingStatus, setBookingStatus] = useState<BookingStatus>('PENDING');
+  const [appliedOffer, setAppliedOffer] = useState('FLAT20');
   const [creating, setCreating] = useState(false);
 
   const loadData = async () => {
@@ -53,6 +60,29 @@ export default function BookingsPage() {
 
   useEffect(() => {
     loadData();
+
+    // Subscribe to live Realtime changes so when the restaurant accepts on their phone,
+    // the status updates in real-time in front of the admin's eyes!
+    const channel = supabase
+      .channel('admin-bookings-live-sync')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'bookings' }, (payload) => {
+        if (payload.eventType === 'INSERT') {
+          loadData();
+        } else if (payload.eventType === 'UPDATE') {
+          setBookings(prev => prev.map(b => 
+            b.booking_id === payload.new.booking_id 
+              ? { ...b, ...payload.new } 
+              : b
+          ));
+        } else if (payload.eventType === 'DELETE') {
+          setBookings(prev => prev.filter(b => b.booking_id !== payload.old.booking_id));
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const handleStatusChange = async (id: string, newStatus: BookingStatus) => {
@@ -90,9 +120,12 @@ export default function BookingsPage() {
         party_size: parseInt(partySize, 10) || 2,
         booking_date: bookingDate,
         time_slot: timeSlot,
-        status: 'CONFIRMED',
+        status: bookingStatus,
+        customer_name: customerName,
+        customer_phone: customerPhone,
+        applied_offer: appliedOffer || undefined,
       });
-      setBookings(prev => [newB, ...prev]);
+      setBookings(prev => [newB, ...prev.filter(b => b.booking_id !== newB.booking_id)]);
       setShowAddModal(false);
     } catch (err: any) {
       alert('Failed to create booking: ' + (err.message || err));
@@ -278,13 +311,21 @@ export default function BookingsPage() {
 
       {/* Manual Booking Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-xl border border-slate-200">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl border border-slate-200">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-bold text-sm text-slate-900">Create Table Reservation</h3>
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-600 flex items-center justify-center">
+                  <BellRing className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-sm text-slate-900">Create & Dispatch Reservation</h3>
+                  <p className="text-[11px] text-slate-500">Triggers live ringing alert on the restaurant manager's device</p>
+                </div>
+              </div>
               <button
                 onClick={() => setShowAddModal(false)}
-                className="text-slate-400 hover:text-slate-600 text-xs font-bold"
+                className="text-slate-400 hover:text-slate-600 text-xs font-bold p-1"
               >
                 ✕
               </button>
@@ -292,21 +333,48 @@ export default function BookingsPage() {
 
             <form onSubmit={handleCreateBooking} className="space-y-3.5 text-xs">
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Select Restaurant</label>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Target Restaurant</label>
                 <select
                   value={selectedRestId}
                   onChange={e => setSelectedRestId(e.target.value)}
-                  className="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-900"
                 >
                   {restaurants.map(r => (
                     <option key={r.restaurant_id} value={r.restaurant_id}>
-                      {r.name}
+                      {r.name} ({r.address || 'Active Outlet'})
                     </option>
                   ))}
                 </select>
               </div>
 
+              {/* Guest Details */}
               <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Guest Full Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={customerName}
+                    onChange={e => setCustomerName(e.target.value)}
+                    placeholder="e.g. Vikram Malhotra"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium focus:outline-none focus:ring-2 focus:ring-slate-900"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Guest Phone Number</label>
+                  <input
+                    type="text"
+                    required
+                    value={customerPhone}
+                    onChange={e => setCustomerPhone(e.target.value)}
+                    placeholder="+91 98200 12345"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium focus:outline-none focus:ring-2 focus:ring-slate-900"
+                  />
+                </div>
+              </div>
+
+              {/* Date, Time, Covers */}
+              <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Date</label>
                   <input
@@ -314,7 +382,7 @@ export default function BookingsPage() {
                     required
                     value={bookingDate}
                     onChange={e => setBookingDate(e.target.value)}
-                    className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs"
+                    className="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-slate-900"
                   />
                 </div>
                 <div>
@@ -324,39 +392,71 @@ export default function BookingsPage() {
                     required
                     value={timeSlot}
                     onChange={e => setTimeSlot(e.target.value)}
-                    placeholder="19:30"
-                    className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs"
+                    placeholder="20:00"
+                    className="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-slate-900"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Guests / Covers</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="20"
+                    required
+                    value={partySize}
+                    onChange={e => setPartySize(e.target.value)}
+                    className="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-slate-900"
                   />
                 </div>
               </div>
 
-              <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Covers / Party Size</label>
-                <input
-                  type="number"
-                  min="1"
-                  max="20"
-                  required
-                  value={partySize}
-                  onChange={e => setPartySize(e.target.value)}
-                  className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs"
-                />
+              {/* Status and Offer */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Initial Status</label>
+                  <select
+                    value={bookingStatus}
+                    onChange={e => setBookingStatus(e.target.value as BookingStatus)}
+                    className="w-full px-2.5 py-2 bg-amber-50/50 border border-amber-300 rounded-lg text-xs font-bold text-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  >
+                    <option value="PENDING">PENDING (Trigger Instant Ring Alert)</option>
+                    <option value="CONFIRMED">CONFIRMED (Direct Pre-approved)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Applied Offer (Optional)</label>
+                  <input
+                    type="text"
+                    value={appliedOffer}
+                    onChange={e => setAppliedOffer(e.target.value)}
+                    placeholder="FLAT20 or 15% OFF"
+                    className="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-slate-900"
+                  />
+                </div>
               </div>
 
-              <div className="flex justify-end gap-2 pt-2">
+              <div className="p-3 bg-amber-500/10 rounded-xl border border-amber-500/20 text-[11px] text-amber-800 flex items-start gap-2">
+                <BellRing className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                <span>
+                  <strong>Live Ring Alert:</strong> When created with <strong>PENDING</strong>, the restaurant's phone will immediately ring with high-volume alarm and display the MyGate-style full-screen accept dialog.
+                </span>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="px-3 py-1.5 rounded-lg border border-slate-200 text-slate-600 font-bold"
+                  className="px-3.5 py-2 rounded-lg border border-slate-200 text-slate-600 font-bold hover:bg-slate-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={creating}
-                  className="px-4 py-1.5 rounded-lg bg-slate-900 text-white font-bold disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-slate-950 hover:bg-slate-800 text-white font-bold shadow-md shadow-slate-900/20 disabled:opacity-50"
                 >
-                  {creating ? 'Saving...' : 'Confirm Reservation'}
+                  <BellRing className="w-3.5 h-3.5 text-amber-400" />
+                  {creating ? 'Dispatching...' : 'Dispatch & Trigger Alert'}
                 </button>
               </div>
             </form>

@@ -277,11 +277,25 @@ export async function createBooking(payload: {
   time_slot: string;
   status?: BookingStatus;
   user_id?: string;
+  customer_name?: string;
+  customer_phone?: string;
   applied_offer?: string;
 }): Promise<Booking> {
-  // Resolve or pick default diner
-  const userId = payload.user_id || '6d03741d-db04-4370-bc49-bbb1149a5c33';
+  // Select or fall back to primary active diner
+  const userId = payload.user_id || 'cf8d9da9-9620-49a3-8c97-7f876400dbc1';
   const bookingId = `bk_${Date.now().toString().slice(-6)}`;
+
+  // If customer name or phone is provided, enrich user profile
+  if (payload.customer_name || payload.customer_phone) {
+    try {
+      await supabaseAdmin.from('users').update({
+        ...(payload.customer_name ? { name: payload.customer_name } : {}),
+        ...(payload.customer_phone ? { phone_number: payload.customer_phone } : {}),
+      }).eq('user_id', userId);
+    } catch (e) {
+      console.warn('Could not update user record:', e);
+    }
+  }
 
   const { data, error } = await supabaseAdmin
     .from('bookings')
@@ -293,7 +307,7 @@ export async function createBooking(payload: {
       party_size: payload.party_size,
       booking_date: payload.booking_date,
       time_slot: payload.time_slot,
-      status: payload.status || 'CONFIRMED',
+      status: payload.status || 'PENDING',
       applied_offer: payload.applied_offer || null,
       created_at: new Date().toISOString(),
     })

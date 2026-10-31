@@ -1,7 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/booking_model.dart';
 import '../services/supabase_service.dart';
+import '../services/fcm_service.dart';
+import '../services/notification_service.dart';
 
 class BookingProvider extends ChangeNotifier {
   final SupabaseService _supabaseService = SupabaseService();
@@ -12,6 +15,13 @@ class BookingProvider extends ChangeNotifier {
   String _filterStatus = 'ALL';
   String _currentRestaurantId = '';
   StreamSubscription<List<BookingModel>>? _streamSubscription;
+  RealtimeChannel? _realtimeChannel;
+
+  /// Callback when a new pending booking arrives to trigger priority ringing alert
+  void Function(BookingModel booking)? onNewBookingAlert;
+
+  final Set<String> _knownBookingIds = {};
+  bool _initialLoadCompleted = false;
 
   List<BookingModel> get bookings => _filterStatus == 'ALL'
       ? _bookings
@@ -79,6 +89,9 @@ class BookingProvider extends ChangeNotifier {
     try {
       final fetched = await _supabaseService.fetchBookings(restaurantId);
       _bookings = fetched;
+      _knownBookingIds.clear();
+      _knownBookingIds.addAll(fetched.map((b) => b.bookingId));
+      _initialLoadCompleted = true;
       _isLoading = false;
       notifyListeners();
     } catch (e) {
@@ -91,9 +104,46 @@ class BookingProvider extends ChangeNotifier {
 
   void _subscribeToBookings(String restaurantId) {
     _streamSubscription?.cancel();
+    _realtimeChannel?.unsubscribe();
+
+    // 1. Direct Realtime Channel on postgres_changes for immediate push
+    try {
+      _realtimeChannel = _supabaseService.client.channel('restaurant-bookings-live-$restaurantId');
+      _realtimeChannel!.onPostgresChanges(
+        event: PostgresChangeEvent.all,
+        schema: 'public',
+        table: 'bookings',
+        filter: PostgresChangeFilter(
+          type: PostgresChangeFilterType.eq,
+          column: 'restaurant_id',
+          value: restaurantId,
+        ),
+        callback: (payload) {
+          _handlePostgresChange(payload);
+        },
+      ).subscribe((status, [error]) {
+        debugPrint('[BookingProvider] Realtime channel status: $status (error: $error)');
+      });
+    } catch (e) {
+      debugPrint('[BookingProvider] Realtime channel subscription note: $e');
+    }
+
+    // 2. Stream backup for guaranteed consistency
     try {
       _streamSubscription = _supabaseService.streamBookings(restaurantId).listen((list) {
         if (list.isNotEmpty) {
+          if (_initialLoadCompleted) {
+            for (final b in list) {
+              if (!_knownBookingIds.contains(b.bookingId)) {
+                _knownBookingIds.add(b.bookingId);
+                if (b.status == BookingStatus.pending) {
+                  debugPrint('[BookingProvider] New PENDING booking detected via stream: ${b.bookingId}');
+                  onNewBookingAlert?.call(b);
+                  NotificationService().showBookingNotification(b);
+                }
+              }
+            }
+          }
           _bookings = list;
           notifyListeners();
         }
@@ -102,6 +152,89 @@ class BookingProvider extends ChangeNotifier {
       });
     } catch (e) {
       debugPrint('Error setting up bookings stream: $e');
+    }
+
+    // 3. Connect FCM Service trigger for end-to-end coverage
+    FCMService().onBookingReceived = (booking) {
+      if (booking.restaurantId == _currentRestaurantId || _currentRestaurantId.isEmpty) {
+        if (!_knownBookingIds.contains(booking.bookingId)) {
+          _knownBookingIds.add(booking.bookingId);
+          _bookings.insert(0, booking);
+          notifyListeners();
+          if (booking.status == BookingStatus.pending) {
+            debugPrint('[BookingProvider] New PENDING booking received via FCM: ${booking.bookingId}');
+            onNewBookingAlert?.call(booking);
+            NotificationService().showBookingNotification(booking);
+          }
+        }
+      }
+    };
+  }
+
+  void _handlePostgresChange(PostgresChangePayload payload) {
+    if (payload.eventType == PostgresChangeEvent.insert) {
+      try {
+        final record = Map<String, dynamic>.from(payload.newRecord);
+        final booking = BookingModel.fromMap(record);
+        if (!_knownBookingIds.contains(booking.bookingId)) {
+          _knownBookingIds.add(booking.bookingId);
+          _bookings.insert(0, booking);
+          notifyListeners();
+
+          // If customer name was not joined in raw change, enrich asynchronously
+          if ((booking.customerName == 'Guest Diner' || booking.customerName == null) && booking.userId.isNotEmpty) {
+            _supabaseService.client
+                .from('users')
+                .select('name, phone_number')
+                .eq('user_id', booking.userId)
+                .maybeSingle()
+                .then((uData) {
+                  if (uData != null) {
+                    final enriched = booking.copyWith(
+                      customerName: uData['name'] ?? booking.customerName,
+                      customerPhone: uData['phone_number'] ?? booking.customerPhone,
+                    );
+                    final idx = _bookings.indexWhere((b) => b.bookingId == booking.bookingId);
+                    if (idx != -1) {
+                      _bookings[idx] = enriched;
+                      notifyListeners();
+                    }
+                  }
+                });
+          }
+
+          if (booking.status == BookingStatus.pending) {
+            debugPrint('[BookingProvider] Realtime alert triggered for booking #${booking.bookingId}');
+            onNewBookingAlert?.call(booking);
+            NotificationService().showBookingNotification(booking);
+          }
+        }
+      } catch (e) {
+        debugPrint('Error handling insert postgres change: $e');
+      }
+    } else if (payload.eventType == PostgresChangeEvent.update) {
+      try {
+        final record = Map<String, dynamic>.from(payload.newRecord);
+        final updated = BookingModel.fromMap(record);
+        final idx = _bookings.indexWhere((b) => b.bookingId == updated.bookingId);
+        if (idx != -1) {
+          _bookings[idx] = updated;
+          notifyListeners();
+        }
+      } catch (e) {
+        debugPrint('Error handling update postgres change: $e');
+      }
+    } else if (payload.eventType == PostgresChangeEvent.delete) {
+      try {
+        final deletedId = payload.oldRecord['booking_id']?.toString();
+        if (deletedId != null) {
+          _bookings.removeWhere((b) => b.bookingId == deletedId);
+          _knownBookingIds.remove(deletedId);
+          notifyListeners();
+        }
+      } catch (e) {
+        debugPrint('Error handling delete postgres change: $e');
+      }
     }
   }
 
@@ -201,6 +334,7 @@ class BookingProvider extends ChangeNotifier {
   @override
   void dispose() {
     _streamSubscription?.cancel();
+    _realtimeChannel?.unsubscribe();
     super.dispose();
   }
 }
