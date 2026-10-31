@@ -45,14 +45,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
       // Automatically detect real device GPS coordinates on launch
       Provider.of<LocationProvider>(context, listen: false).detectCurrentLocation();
 
-      // Show interactive first-time restaurant walkthrough if not yet seen
-      if (!auth.hasSeenTutorial) {
-        Future.delayed(const Duration(milliseconds: 600), () {
-          if (mounted) {
-            RestaurantWalkthroughModal.show(context);
-          }
-        });
-      }
+      // Show interactive first-time restaurant walkthrough ONLY during first login
+      auth.checkTutorialStatus().then((hasSeen) {
+        if (!hasSeen && mounted) {
+          Future.delayed(const Duration(milliseconds: 600), () {
+            if (mounted && !auth.hasSeenTutorial) {
+              RestaurantWalkthroughModal.show(context);
+            }
+          });
+        }
+      });
     });
   }
 

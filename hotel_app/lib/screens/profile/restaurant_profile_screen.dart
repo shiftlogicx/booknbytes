@@ -157,7 +157,7 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
       ownerName: _ownerNameController.text.trim(),
       phone: _phoneController.text.trim(),
       email: _emailController.text.trim(),
-      upiId: _upiIdController.text.trim(),
+      upiId: authProvider.canViewUpi ? _upiIdController.text.trim() : authProvider.profile.upiId,
       fssaiNumber: _fssaiController.text.trim(),
       address: _addressController.text.trim(),
       costForTwo: int.tryParse(_costForTwoController.text.trim()) ?? 1200,
@@ -372,87 +372,88 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
 
               const SizedBox(height: 16),
 
-              // Merchant Booking Audit Documents Banner
-              InkWell(
-                onTap: () {
-                  HapticFeedback.lightImpact();
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const BookingAuditDocScreen()),
-                  );
-                },
-                borderRadius: BorderRadius.circular(18),
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: const Color(0xFFE2E8F0), width: 1.0),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF0F172A).withValues(alpha: 0.04),
-                        blurRadius: 14,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFEFF6FF),
-                          borderRadius: BorderRadius.circular(14),
+              // Merchant Booking Audit Documents Banner (Owner Access Only)
+              if (auth.canAccessAuditDocs)
+                InkWell(
+                  onTap: () {
+                    HapticFeedback.lightImpact();
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const BookingAuditDocScreen()),
+                    );
+                  },
+                  borderRadius: BorderRadius.circular(18),
+                  child: Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: const Color(0xFFE2E8F0), width: 1.0),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF0F172A).withValues(alpha: 0.04),
+                          blurRadius: 14,
+                          offset: const Offset(0, 4),
                         ),
-                        child: const Icon(Icons.receipt_long_rounded, color: Color(0xFF2563EB), size: 24),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                const Text(
-                                  'Booking Audit Documents',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w800,
-                                    color: Color(0xFF0F172A),
-                                  ),
-                                ),
-                                const SizedBox(width: 6),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFECFDF5),
-                                    borderRadius: BorderRadius.circular(4),
-                                    border: Border.all(color: const Color(0xFFA7F3D0)),
-                                  ),
-                                  child: const Text(
-                                    'LIVE AUDIT',
-                                    style: TextStyle(fontSize: 8, fontWeight: FontWeight.w900, color: Color(0xFF059669)),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 3),
-                            Text(
-                              '${booking.totalCount} Platform Bookings · ${booking.completedCount} Came · ${booking.noShowCount} No-Shows',
-                              style: const TextStyle(fontSize: 11, color: Color(0xFF64748B), fontWeight: FontWeight.w600),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              '₹${booking.totalDiscountGiven} Total Discounts Applied · Tap to View',
-                              style: const TextStyle(fontSize: 10, color: Color(0xFF2563EB), fontWeight: FontWeight.w700),
-                            ),
-                          ],
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEFF6FF),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: const Icon(Icons.receipt_long_rounded, color: Color(0xFF2563EB), size: 24),
                         ),
-                      ),
-                      const Icon(Icons.arrow_forward_ios_rounded, color: Color(0xFF94A3B8), size: 14),
-                    ],
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  const Text(
+                                    'Booking Audit Documents',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w800,
+                                      color: Color(0xFF0F172A),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFECFDF5),
+                                      borderRadius: BorderRadius.circular(4),
+                                      border: Border.all(color: const Color(0xFFA7F3D0)),
+                                    ),
+                                    child: const Text(
+                                      'LIVE AUDIT',
+                                      style: TextStyle(fontSize: 8, fontWeight: FontWeight.w900, color: Color(0xFF059669)),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 3),
+                              Text(
+                                '${booking.totalCount} Platform Bookings · ${booking.completedCount} Came · ${booking.noShowCount} No-Shows',
+                                style: const TextStyle(fontSize: 11, color: Color(0xFF64748B), fontWeight: FontWeight.w600),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                '₹${booking.totalDiscountGiven} Total Discounts Applied · Tap to View',
+                                style: const TextStyle(fontSize: 10, color: Color(0xFF2563EB), fontWeight: FontWeight.w700),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Icon(Icons.arrow_forward_ios_rounded, color: Color(0xFF94A3B8), size: 14),
+                      ],
+                    ),
                   ),
                 ),
-              ),
 
               const SizedBox(height: 22),
 
@@ -494,14 +495,37 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
                 validator: (val) => val == null || !val.contains('@') ? 'Valid email required' : null,
               ),
 
-              _buildTextField(
-                controller: _upiIdController,
-                label: 'Direct UPI Merchant VPA ID *',
-                hint: 'e.g. maheshlunch@sbi',
-                icon: Icons.account_balance_rounded,
-                helperText: 'Instant 0% fee diner UPI settlement directly into your bank',
-                validator: (val) => val == null || !val.contains('@') ? 'Valid UPI ID required (e.g. name@bank)' : null,
-              ),
+              if (auth.canViewUpi)
+                _buildTextField(
+                  controller: _upiIdController,
+                  label: 'Direct UPI Merchant VPA ID *',
+                  hint: 'e.g. maheshlunch@sbi',
+                  icon: Icons.account_balance_rounded,
+                  helperText: 'Instant 0% fee diner UPI settlement directly into your bank',
+                  validator: (val) => val == null || !val.contains('@') ? 'Valid UPI ID required (e.g. name@bank)' : null,
+                )
+              else
+                Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.shield_outlined, color: Color(0xFF94A3B8), size: 18),
+                      SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          'Direct UPI Merchant Settlement VPA: Restricted (Owner Access Only)',
+                          style: TextStyle(color: Color(0xFF64748B), fontSize: 12, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
 
               _buildTextField(
                 controller: _fssaiController,

@@ -52,6 +52,60 @@ class _BookingAuditDocScreenState extends State<BookingAuditDocScreen> {
     final auth = Provider.of<AuthProvider>(context);
     final booking = Provider.of<BookingProvider>(context);
 
+    if (!auth.canAccessAuditDocs) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF8F9FA),
+        appBar: AppBar(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 18, color: Color(0xFF0F172A)),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+          title: const Text('Access Restricted', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: Color(0xFF0F172A))),
+        ),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(28.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFFEF2F2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.lock_rounded, size: 48, color: Color(0xFFDC2626)),
+                ),
+                const SizedBox(height: 18),
+                const Text(
+                  'Owner Access Required',
+                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18, color: Color(0xFF0F172A)),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Audit Documents and financial settlements contain sensitive merchant transaction data accessible solely to verified Restaurant Owners.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 13, color: Color(0xFF64748B), height: 1.5),
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF0F172A),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Return to Dashboard', style: TextStyle(fontWeight: FontWeight.w700)),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     // Apply Filter & Search to Bookings
     final allBookings = booking.bookings;
     final filteredBookings = allBookings.where((b) {

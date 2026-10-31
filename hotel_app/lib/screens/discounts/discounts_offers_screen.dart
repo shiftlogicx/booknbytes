@@ -14,33 +14,50 @@ class DiscountsOffersScreen extends StatefulWidget {
 class _DiscountsOffersScreenState extends State<DiscountsOffersScreen> {
   String _activeTab = 'SLOTS'; // 'SLOTS' or 'PROMOS'
 
-  // Presets
-  bool _earlyBirdActive = true;
-  bool _lateNightActive = true;
+  // Presets start clean slate (0% until owner enables)
+  bool _earlyBirdActive = false;
+  bool _lateNightActive = false;
   bool _happyHourActive = false;
+  bool _initialized = false;
 
   final List<_SlotDiscountConfig> _slotDiscounts = [
-    _SlotDiscountConfig(time: '12:00 PM', shift: 'LUNCH', discount: 25, tag: 'Early Bird'),
-    _SlotDiscountConfig(time: '12:30 PM', shift: 'LUNCH', discount: 20),
-    _SlotDiscountConfig(time: '01:00 PM', shift: 'LUNCH', discount: 10),
-    _SlotDiscountConfig(time: '01:30 PM', shift: 'LUNCH', discount: 10),
-    _SlotDiscountConfig(time: '02:00 PM', shift: 'LUNCH', discount: 20, tag: 'Happy Hour'),
-    _SlotDiscountConfig(time: '02:30 PM', shift: 'LUNCH', discount: 30, tag: 'Happy Hour'),
-    _SlotDiscountConfig(time: '07:00 PM', shift: 'DINNER', discount: 25, tag: 'Early Bird'),
-    _SlotDiscountConfig(time: '07:30 PM', shift: 'DINNER', discount: 15),
+    _SlotDiscountConfig(time: '12:00 PM', shift: 'LUNCH', discount: 0, tag: 'Early Bird'),
+    _SlotDiscountConfig(time: '12:30 PM', shift: 'LUNCH', discount: 0),
+    _SlotDiscountConfig(time: '01:00 PM', shift: 'LUNCH', discount: 0),
+    _SlotDiscountConfig(time: '01:30 PM', shift: 'LUNCH', discount: 0),
+    _SlotDiscountConfig(time: '02:00 PM', shift: 'LUNCH', discount: 0, tag: 'Happy Hour'),
+    _SlotDiscountConfig(time: '02:30 PM', shift: 'LUNCH', discount: 0, tag: 'Happy Hour'),
+    _SlotDiscountConfig(time: '07:00 PM', shift: 'DINNER', discount: 0, tag: 'Early Bird'),
+    _SlotDiscountConfig(time: '07:30 PM', shift: 'DINNER', discount: 0),
     _SlotDiscountConfig(time: '08:00 PM', shift: 'DINNER', discount: 0),
     _SlotDiscountConfig(time: '08:30 PM', shift: 'DINNER', discount: 0),
-    _SlotDiscountConfig(time: '09:00 PM', shift: 'DINNER', discount: 10),
-    _SlotDiscountConfig(time: '09:30 PM', shift: 'DINNER', discount: 20),
-    _SlotDiscountConfig(time: '10:00 PM', shift: 'DINNER', discount: 30, tag: 'Late Night Deal'),
+    _SlotDiscountConfig(time: '09:00 PM', shift: 'DINNER', discount: 0),
+    _SlotDiscountConfig(time: '09:30 PM', shift: 'DINNER', discount: 0),
+    _SlotDiscountConfig(time: '10:00 PM', shift: 'DINNER', discount: 0, tag: 'Late Night Deal'),
   ];
 
-  final List<_PromoCodeItem> _promoCodes = [
-    _PromoCodeItem(code: 'WELCOME20', discount: '20% OFF', description: 'New Guest First Booking Deal', isActive: true, usageCount: 42),
-    _PromoCodeItem(code: 'WEEKEND30', discount: '30% OFF', description: 'Saturday & Sunday Table Surge', isActive: true, usageCount: 78),
-    _PromoCodeItem(code: 'CORPORATE15', discount: '15% OFF', description: 'Tech Park Team Lunch Deal', isActive: false, usageCount: 19),
-    _PromoCodeItem(code: 'VIPDINER40', discount: '40% OFF', description: 'Loyalty Reward for 5+ Bookings', isActive: true, usageCount: 11),
-  ];
+  final List<_PromoCodeItem> _promoCodes = [];
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_initialized) {
+      final auth = Provider.of<AuthProvider>(context, listen: false);
+      _promoCodes.clear();
+      for (final o in auth.profile.activeOffers) {
+        _promoCodes.add(
+          _PromoCodeItem(
+            code: o['code']?.toString() ?? 'PROMO',
+            discount: '${o['discount_percent'] ?? 20}% OFF',
+            description: o['description']?.toString() ?? 'Promotional table reservation deal',
+            isActive: true,
+            usageCount: 0,
+          ),
+        );
+      }
+      _initialized = true;
+    }
+  }
 
   void _showAddPromoSheet() {
     final codeController = TextEditingController();
@@ -347,7 +364,44 @@ class _DiscountsOffersScreenState extends State<DiscountsOffersScreen> {
               ),
               const SizedBox(height: 8),
 
-              ..._promoCodes.map((promo) => _buildPromoCodeCard(promo)),
+              if (_promoCodes.isEmpty)
+                Container(
+                  padding: const EdgeInsets.all(28),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                  ),
+                  child: Column(
+                    children: [
+                      const Icon(Icons.local_offer_outlined, size: 40, color: Color(0xFF94A3B8)),
+                      const SizedBox(height: 12),
+                      const Text(
+                        'No promotional offers created yet',
+                        style: TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF64748B), fontSize: 13),
+                      ),
+                      const SizedBox(height: 6),
+                      const Text(
+                        'Start with a clean slate. Tap "+ Add Offer" to publish custom promo discount codes for your diners.',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8), height: 1.4),
+                      ),
+                      const SizedBox(height: 16),
+                      ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF0F172A),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                        onPressed: _showAddPromoSheet,
+                        icon: const Icon(Icons.add, size: 16),
+                        label: const Text('Create First Promo Code', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12)),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                ..._promoCodes.map((promo) => _buildPromoCodeCard(promo)),
             ],
           ],
         ),

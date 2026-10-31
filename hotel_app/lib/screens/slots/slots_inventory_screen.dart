@@ -68,7 +68,7 @@ class _TableSlotsScreenState extends State<TableSlotsScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text(
-                          'Publish Live Slot to Supabase',
+                          'Publish Table Slots',
                           style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
                         ),
                         IconButton(
@@ -302,7 +302,7 @@ class _TableSlotsScreenState extends State<TableSlotsScreen> {
                               SnackBar(
                                 content: Text(
                                   success
-                                      ? 'Live slot successfully published to Supabase!'
+                                      ? 'Table slot successfully published!'
                                       : 'Failed to publish slot: ${slotsProvider.errorMessage}',
                                   style: const TextStyle(fontWeight: FontWeight.w700),
                                 ),
@@ -313,7 +313,7 @@ class _TableSlotsScreenState extends State<TableSlotsScreen> {
                             );
                           }
                         },
-                        child: const Text('Publish Slot to Database', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
+                        child: const Text('Publish the Slots', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
                       ),
                     ),
                   ],
@@ -352,7 +352,7 @@ class _TableSlotsScreenState extends State<TableSlotsScreen> {
               ),
             ),
             Text(
-              'Live Supabase Table Inventory & Shift Management',
+              'Live Floor Inventory & Shift Management',
               style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
             ),
           ],

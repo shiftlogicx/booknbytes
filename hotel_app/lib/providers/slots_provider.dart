@@ -58,12 +58,6 @@ class SlotsProvider extends ChangeNotifier {
     try {
       final fetched = await _supabaseService.fetchDailySlots(restaurantId);
       _slots = fetched;
-
-      // If restaurant has no slots yet, seed standard daily operational slots
-      if (_slots.isEmpty) {
-        await _seedDefaultSlots(restaurantId);
-      }
-
       _isLoading = false;
       notifyListeners();
     } catch (e) {
@@ -74,45 +68,8 @@ class SlotsProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> _seedDefaultSlots(String restaurantId) async {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-
-    final standardTimes = [
-      {'startH': 12, 'startM': 0, 'endH': 14, 'endM': 0, 'disc': 20.0, 'cap': 25},
-      {'startH': 12, 'startM': 30, 'endH': 14, 'endM': 30, 'disc': 15.0, 'cap': 30},
-      {'startH': 13, 'startM': 0, 'endH': 15, 'endM': 0, 'disc': 10.0, 'cap': 35},
-      {'startH': 19, 'startM': 0, 'endH': 21, 'endM': 0, 'disc': 25.0, 'cap': 40},
-      {'startH': 19, 'startM': 30, 'endH': 21, 'endM': 30, 'disc': 20.0, 'cap': 40},
-      {'startH': 20, 'startM': 0, 'endH': 22, 'endM': 0, 'disc': 15.0, 'cap': 45},
-      {'startH': 21, 'startM': 0, 'endH': 23, 'endM': 0, 'disc': 30.0, 'cap': 30},
-    ];
-
-    for (int dayOffset = 0; dayOffset < 3; dayOffset++) {
-      final day = today.add(Duration(days: dayOffset));
-      for (final t in standardTimes) {
-        try {
-          final start = DateTime(day.year, day.month, day.day, t['startH'] as int, t['startM'] as int);
-          final end = DateTime(day.year, day.month, day.day, t['endH'] as int, t['endM'] as int);
-          final slot = DailySlotModel(
-            slotId: '',
-            restaurantId: restaurantId,
-            startDatetime: start,
-            endDatetime: end,
-            discountPercentage: t['disc'] as double,
-            capacity: t['cap'] as int,
-          );
-          final created = await _supabaseService.insertDailySlot(slot);
-          _slots.add(created);
-        } catch (e) {
-          debugPrint('Slot seeding item note: $e');
-        }
-      }
-    }
-  }
-
   // ==========================================
-  // PUBLISH NEW SLOT TO SUPABASE DB
+  // PUBLISH NEW SLOT
   // ==========================================
   Future<bool> publishSlot({
     required String restaurantId,

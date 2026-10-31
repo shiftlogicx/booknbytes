@@ -174,30 +174,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               const SizedBox(height: 8),
                               Row(
                                 children: [
+                              Row(
+                                children: [
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFFECFDF5),
+                                      color: auth.isOwner ? const Color(0xFFECFDF5) : const Color(0xFFEFF6FF),
                                       borderRadius: BorderRadius.circular(6),
-                                      border: Border.all(color: const Color(0xFFA7F3D0)),
+                                      border: Border.all(color: auth.isOwner ? const Color(0xFFA7F3D0) : const Color(0xFFBFDBFE)),
                                     ),
-                                    child: const Row(
+                                    child: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        Icon(Icons.verified_rounded, size: 11, color: Color(0xFF059669)),
-                                        SizedBox(width: 4),
+                                        Icon(
+                                          auth.isOwner ? Icons.verified_rounded : Icons.badge_rounded,
+                                          size: 11,
+                                          color: auth.isOwner ? const Color(0xFF059669) : const Color(0xFF2563EB),
+                                        ),
+                                        const SizedBox(width: 4),
                                         Text(
-                                          'ACTIVE RESTAURANT',
+                                          auth.isOwner ? '👑 RESTAURANT OWNER' : '👔 FLOOR MANAGER',
                                           style: TextStyle(
                                             fontSize: 9,
                                             fontWeight: FontWeight.w800,
-                                            color: Color(0xFF059669),
+                                            color: auth.isOwner ? const Color(0xFF059669) : const Color(0xFF2563EB),
                                             letterSpacing: 0.6,
                                           ),
                                         ),
                                       ],
                                     ),
                                   ),
+                                ],
+                              ),
                                 ],
                               ),
                             ],
@@ -457,30 +465,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             const SizedBox(height: 6),
 
-            _buildActionTile(
-              icon: Icons.account_balance_rounded,
-              title: 'Direct UPI Settlement VPA',
-              subtitle: '${profile.upiId} · 0% fee diner UPI settlement',
-              onTap: _openProfile,
-            ),
+            if (auth.canViewUpi)
+              _buildActionTile(
+                icon: Icons.account_balance_rounded,
+                title: 'Direct UPI Settlement VPA',
+                subtitle: '${profile.upiId} · 0% fee diner UPI settlement',
+                onTap: _openProfile,
+              ),
             _buildActionTile(
               icon: Icons.verified_user_rounded,
               title: 'FSSAI License Number',
               subtitle: '${profile.fssaiNumber} · Verified & Compliant',
               onTap: _openProfile,
             ),
-            _buildActionTile(
-              icon: Icons.receipt_long_rounded,
-              title: 'Booking Audit Documents',
-              subtitle: 'Statement of platform arrivals, no-shows & discounts applied',
-              onTap: () {
-                HapticFeedback.lightImpact();
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const BookingAuditDocScreen()),
-                );
-              },
-              accentColor: const Color(0xFF2563EB),
-            ),
+            if (auth.canAccessAuditDocs)
+              _buildActionTile(
+                icon: Icons.receipt_long_rounded,
+                title: 'Booking Audit Documents',
+                subtitle: 'Statement of platform arrivals, no-shows & discounts applied',
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const BookingAuditDocScreen()),
+                  );
+                },
+                accentColor: const Color(0xFF2563EB),
+              ),
             _buildActionTile(
               icon: Icons.currency_rupee_rounded,
               title: 'Cost for Two Diners',

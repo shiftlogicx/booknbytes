@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/supabase_service.dart';
+
+enum UserRole { owner, manager }
 
 class RestaurantProfileData {
   String restaurantId;
@@ -49,31 +52,25 @@ class RestaurantProfileData {
 
   factory RestaurantProfileData.defaults() {
     return RestaurantProfileData(
-      restaurantId: 'res_bombay_brasserie_01',
-      name: 'The Bombay Brasserie',
-      ownerName: 'Vikram Malhotra',
-      phone: '+91 98765 43210',
-      email: 'owner@bombaybrasserie.com',
-      upiId: 'bombaybrasserie@okaxis',
-      fssaiNumber: '11521012000456',
-      address: 'Plot 12, Indiranagar 100ft Road, Bengaluru',
+      restaurantId: '',
+      name: 'BookNBytes Restaurant',
+      ownerName: 'Restaurant Owner',
+      phone: '',
+      email: '',
+      upiId: '',
+      fssaiNumber: '',
+      address: '',
       costForTwo: 1200,
-      cuisines: ['North Indian', 'Mughlai', 'Biryani'],
-      lunchOpen: '11:00 AM',
+      cuisines: const ['North Indian'],
+      lunchOpen: '11:30 AM',
       lunchClose: '03:30 PM',
       dinnerOpen: '07:00 PM',
       dinnerClose: '11:30 PM',
       isVegOnly: false,
-      hasBar: true,
+      hasBar: false,
       isAc: true,
       parkingAvailable: true,
-      activeOffers: [
-        {
-          'code': 'FLAT20',
-          'description': 'Flat 20% off on all table reservations',
-          'discount_percent': 20,
-        }
-      ],
+      activeOffers: const [], // Clean slate on new restaurant
     );
   }
 
@@ -207,6 +204,7 @@ class AuthProvider extends ChangeNotifier {
   bool _isLoading = false;
   String? _errorMessage;
   bool _hasSeenTutorial = false;
+  UserRole _role = UserRole.owner;
   late RestaurantProfileData _profile;
   Map<String, dynamic>? _generatedManagerCredentials;
 
@@ -215,12 +213,35 @@ class AuthProvider extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   bool get hasSeenTutorial => _hasSeenTutorial;
+  UserRole get role => _role;
+  bool get isOwner => _role == UserRole.owner;
+  bool get isManager => _role == UserRole.manager;
+  bool get canAccessFinancials => isOwner;
+  bool get canAccessAuditDocs => isOwner;
+  bool get canViewUpi => isOwner;
   RestaurantProfileData get profile => _profile;
   Map<String, dynamic>? get generatedManagerCredentials => _generatedManagerCredentials;
 
-  void markTutorialSeen() {
+  Future<bool> checkTutorialStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    final key = currentRestaurantId.isNotEmpty ? 'has_seen_tutorial_$currentRestaurantId' : 'has_seen_tutorial_default';
+    _hasSeenTutorial = (prefs.getBool(key) ?? false) || (prefs.getBool('has_seen_tutorial_global') ?? false);
+    notifyListeners();
+    return _hasSeenTutorial;
+  }
+
+  Future<void> markTutorialSeen() async {
     _hasSeenTutorial = true;
     notifyListeners();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (currentRestaurantId.isNotEmpty) {
+        await prefs.setBool('has_seen_tutorial_$currentRestaurantId', true);
+      }
+      await prefs.setBool('has_seen_tutorial_global', true);
+    } catch (e) {
+      debugPrint('Error saving tutorial state: $e');
+    }
   }
 
   String get currentRestaurantId => _profile.restaurantId;
@@ -235,14 +256,26 @@ class AuthProvider extends ChangeNotifier {
   Future<void> _checkInitialAuth() async {
     _currentUser = _supabaseService.currentUser;
     if (_currentUser != null) {
+      final prefs = await SharedPreferences.getInstance();
+      final savedRole = prefs.getString('user_role');
+      if (savedRole == 'manager' || (_currentUser?.email?.startsWith('manager.') ?? false)) {
+        _role = UserRole.manager;
+      } else {
+        _role = UserRole.owner;
+      }
       await refreshRestaurantData();
+      await checkTutorialStatus();
     }
   }
 
   // ==========================================
   // 1. SIGN IN WITH EMAIL & PASSWORD
   // ==========================================
-  Future<bool> login(String email, String password) async {
+  Future<bool> login(
+    String email,
+    String password, {
+    UserRole intendedRole = UserRole.owner,
+  }) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
@@ -254,7 +287,18 @@ class AuthProvider extends ChangeNotifier {
       );
       _currentUser = res.user;
 
+      final trimmedEmail = email.trim().toLowerCase();
+      if (intendedRole == UserRole.manager || trimmedEmail.startsWith('manager.')) {
+        _role = UserRole.manager;
+      } else {
+        _role = UserRole.owner;
+      }
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('user_role', _role == UserRole.manager ? 'manager' : 'owner');
+
       await refreshRestaurantData();
+      await checkTutorialStatus();
 
       _isLoading = false;
       notifyListeners();
@@ -329,13 +373,7 @@ class AuthProvider extends ChangeNotifier {
           'serves_alcohol': true,
           'outdoor_seating': true,
         },
-        'active_offers': [
-          {
-            'code': 'WELCOME20',
-            'description': 'Flat 20% off for first bookings',
-            'discount_percent': 20,
-          }
-        ],
+        'active_offers': <Map<String, dynamic>>[], // Start clean slate
         'rating': {'average': 4.8, 'total_reviews': 0},
         'status': 'ACTIVE',
         'owners_details': {
@@ -347,6 +385,10 @@ class AuthProvider extends ChangeNotifier {
       };
 
       await _supabaseService.createRestaurant(newRestData);
+
+      _role = UserRole.owner;
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('user_role', 'owner');
 
       // Step 4: Call activate-restaurant Edge Function to ensure Manager Credentials generate
       try {
@@ -445,6 +487,10 @@ class AuthProvider extends ChangeNotifier {
     await _supabaseService.signOut();
     _currentUser = null;
     _generatedManagerCredentials = null;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('user_role');
+    } catch (_) {}
     notifyListeners();
   }
 }
