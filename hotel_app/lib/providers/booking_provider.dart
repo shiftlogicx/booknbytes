@@ -5,6 +5,7 @@ import '../models/booking_model.dart';
 import '../services/supabase_service.dart';
 import '../services/fcm_service.dart';
 import '../services/notification_service.dart';
+import '../services/onesignal_service.dart';
 
 class BookingProvider extends ChangeNotifier {
   final SupabaseService _supabaseService = SupabaseService();
@@ -158,6 +159,22 @@ class BookingProvider extends ChangeNotifier {
           notifyListeners();
           if (booking.status == BookingStatus.pending) {
             debugPrint('[BookingProvider] New PENDING booking received via FCM: ${booking.bookingId}');
+            onNewBookingAlert?.call(booking);
+            NotificationService().showBookingNotification(booking);
+          }
+        }
+      }
+    };
+
+    // 4. Connect OneSignal Push Notification trigger for background cross-platform alerts
+    OneSignalService().onBookingReceived = (booking) {
+      if (booking.restaurantId == _currentRestaurantId || _currentRestaurantId.isEmpty) {
+        if (!_knownBookingIds.contains(booking.bookingId)) {
+          _knownBookingIds.add(booking.bookingId);
+          _bookings.insert(0, booking);
+          notifyListeners();
+          if (booking.status == BookingStatus.pending) {
+            debugPrint('[BookingProvider] New PENDING booking received via OneSignal: ${booking.bookingId}');
             onNewBookingAlert?.call(booking);
             NotificationService().showBookingNotification(booking);
           }

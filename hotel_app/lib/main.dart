@@ -11,6 +11,7 @@ import 'providers/notification_provider.dart';
 import 'providers/slots_provider.dart';
 import 'services/fcm_service.dart';
 import 'services/notification_service.dart';
+import 'services/onesignal_service.dart';
 import 'screens/splash_screen.dart';
 
 final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
@@ -41,8 +42,9 @@ void main() async {
   // Initialize notification and ringing audio systems
   try {
     await NotificationService().initialize();
+    await OneSignalService().initialize();
   } catch (e) {
-    debugPrint('Notification service initialization notice: $e');
+    debugPrint('Notification & OneSignal initialization notice: $e');
   }
 
   runApp(const BookAndBiteHotelApp());

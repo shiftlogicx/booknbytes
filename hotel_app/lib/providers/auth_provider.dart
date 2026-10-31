@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/supabase_service.dart';
+import '../services/onesignal_service.dart';
 
 enum UserRole { owner, manager }
 
@@ -429,6 +430,7 @@ class AuthProvider extends ChangeNotifier {
         if (_profile.managerCredentials != null) {
           _generatedManagerCredentials ??= _profile.managerCredentials;
         }
+        OneSignalService().loginRestaurant(_profile.restaurantId);
         notifyListeners();
       }
     } catch (e) {
@@ -484,6 +486,7 @@ class AuthProvider extends ChangeNotifier {
   // 6. LOGOUT
   // ==========================================
   Future<void> logout() async {
+    await OneSignalService().logout();
     await _supabaseService.signOut();
     _currentUser = null;
     _generatedManagerCredentials = null;
