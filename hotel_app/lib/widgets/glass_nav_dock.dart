@@ -1,6 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import '../providers/booking_provider.dart';
 
 class GlassNavDock extends StatelessWidget {
   final int currentIndex;
@@ -14,9 +16,17 @@ class GlassNavDock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bookingProvider = Provider.of<BookingProvider>(context);
+    final pendingCount = bookingProvider.pendingCount;
+
     final tabs = [
       _DockTab(icon: Icons.insights_rounded, activeIcon: Icons.insights_rounded, label: 'Pulse'),
-      _DockTab(icon: Icons.calendar_month_rounded, activeIcon: Icons.calendar_month_rounded, label: 'Bookings', badgeCount: 3),
+      _DockTab(
+        icon: Icons.calendar_month_rounded,
+        activeIcon: Icons.calendar_month_rounded,
+        label: 'Bookings',
+        badgeCount: pendingCount > 0 ? pendingCount : null,
+      ),
       _DockTab(icon: Icons.table_restaurant_rounded, activeIcon: Icons.table_restaurant_rounded, label: 'Slots'),
       _DockTab(icon: Icons.local_offer_rounded, activeIcon: Icons.local_offer_rounded, label: 'Discounts'),
       _DockTab(icon: Icons.tune_rounded, activeIcon: Icons.tune_rounded, label: 'Settings'),
@@ -95,7 +105,7 @@ class GlassNavDock extends StatelessWidget {
                                     ? const Color(0xFF10B981) // High-contrast emerald
                                     : const Color(0xFF64748B),
                               ),
-                              if (tab.badgeCount != null)
+                              if (tab.badgeCount != null && tab.badgeCount! > 0)
                                 Positioned(
                                   top: -4,
                                   right: -8,

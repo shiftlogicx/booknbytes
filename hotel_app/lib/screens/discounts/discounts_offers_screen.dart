@@ -1,7 +1,11 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/slots_provider.dart';
 import '../../services/supabase_service.dart';
 
 class DiscountsOffersScreen extends StatefulWidget {
@@ -37,6 +41,7 @@ class _DiscountsOffersScreenState extends State<DiscountsOffersScreen> {
   ];
 
   final List<_PromoCodeItem> _promoCodes = [];
+  bool _isPublishing = false;
 
   @override
   void didChangeDependencies() {
@@ -55,7 +60,123 @@ class _DiscountsOffersScreenState extends State<DiscountsOffersScreen> {
           ),
         );
       }
+      _loadSavedHourlyDiscounts();
       _initialized = true;
+    }
+  }
+
+  Future<void> _loadSavedHourlyDiscounts() async {
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    final restId = auth.currentRestaurantId;
+    if (restId.isEmpty) return;
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedStr = prefs.getString('hourly_discounts_$restId');
+      if (savedStr != null) {
+        final decoded = jsonDecode(savedStr) as Map<String, dynamic>;
+        setState(() {
+          _earlyBirdActive = decoded['early_bird'] == true;
+          _lateNightActive = decoded['late_night'] == true;
+          _happyHourActive = decoded['happy_hour'] == true;
+          final discountsMap = decoded['discounts'] as Map<String, dynamic>?;
+          if (discountsMap != null) {
+            for (var s in _slotDiscounts) {
+              if (discountsMap.containsKey(s.time)) {
+                s.discount = (discountsMap[s.time] as num).toInt();
+              }
+            }
+          }
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading saved hourly discounts: $e');
+    }
+  }
+
+  Future<void> _publishHourlyDiscounts() async {
+    HapticFeedback.heavyImpact();
+    setState(() => _isPublishing = true);
+
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    final slotsProvider = Provider.of<SlotsProvider>(context, listen: false);
+    final restId = auth.currentRestaurantId;
+
+    try {
+      // 1. Save configuration to device persistent storage so it never vanishes
+      final prefs = await SharedPreferences.getInstance();
+      final discountsMap = {for (var s in _slotDiscounts) s.time: s.discount};
+      final dataToSave = {
+        'early_bird': _earlyBirdActive,
+        'late_night': _lateNightActive,
+        'happy_hour': _happyHourActive,
+        'discounts': discountsMap,
+      };
+      await prefs.setString('hourly_discounts_$restId', jsonEncode(dataToSave));
+
+      // 2. Apply to existing table slots in database
+      int updatedCount = 0;
+      for (final slot in slotsProvider.slots) {
+        if (slot.startDatetime != null && slot.slotId.isNotEmpty) {
+          final timeStr = DateFormat('hh:mm a').format(slot.startDatetime!);
+          final matchingConfig = _slotDiscounts.firstWhere(
+            (c) => c.time == timeStr,
+            orElse: () => _SlotDiscountConfig(time: '', shift: '', discount: -1),
+          );
+          if (matchingConfig.discount >= 0) {
+            try {
+              await SupabaseService().updateDailySlot(slot.slotId, {
+                'discount_percentage': matchingConfig.discount.toDouble(),
+              });
+              updatedCount++;
+            } catch (e) {
+              debugPrint('Failed to update slot ${slot.slotId}: $e');
+            }
+          }
+        }
+      }
+
+      // Reload live slots
+      if (restId.isNotEmpty) {
+        await slotsProvider.loadSlots(restId);
+      }
+
+      setState(() => _isPublishing = false);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle_rounded, color: Color(0xFF00E599), size: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    updatedCount > 0
+                        ? 'Hourly discounts published! Applied to $updatedCount live floor slots.'
+                        : 'Hourly discounts published and saved successfully!',
+                    style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: Colors.white),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: const Color(0xFF0F172A),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() => _isPublishing = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to publish hourly discounts: $e'),
+            backgroundColor: const Color(0xFFDC2626),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     }
   }
 
@@ -250,12 +371,32 @@ class _DiscountsOffersScreenState extends State<DiscountsOffersScreen> {
           ],
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.add_circle_rounded, color: Color(0xFFD97706)),
-            tooltip: 'Add Promo Code',
-            onPressed: _showAddPromoSheet,
-          ),
-          const SizedBox(width: 6),
+          if (_activeTab == 'SLOTS')
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: TextButton.icon(
+                style: TextButton.styleFrom(
+                  backgroundColor: const Color(0xFFECFDF5),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                ),
+                onPressed: _isPublishing ? null : _publishHourlyDiscounts,
+                icon: _isPublishing
+                    ? const SizedBox(width: 12, height: 12, child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF059669)))
+                    : const Icon(Icons.cloud_upload_rounded, size: 16, color: Color(0xFF059669)),
+                label: Text(
+                  _isPublishing ? 'Publishing...' : 'Publish',
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF059669)),
+                ),
+              ),
+            )
+          else
+            IconButton(
+              icon: const Icon(Icons.add_circle_rounded, color: Color(0xFFD97706)),
+              tooltip: 'Add Promo Code',
+              onPressed: _showAddPromoSheet,
+            ),
+          const SizedBox(width: 4),
         ],
       ),
       body: SafeArea(
@@ -346,6 +487,66 @@ class _DiscountsOffersScreenState extends State<DiscountsOffersScreen> {
               const SizedBox(height: 10),
 
               ..._slotDiscounts.map((slot) => _buildHourlyDiscountCard(slot)),
+
+              const SizedBox(height: 16),
+
+              // Publish Hourly Discounts Action Card & Button
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x060F172A),
+                      blurRadius: 10,
+                      offset: Offset(0, 3),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Row(
+                      children: [
+                        Icon(Icons.save_rounded, size: 18, color: Color(0xFF059669)),
+                        SizedBox(width: 8),
+                        Text(
+                          'Apply & Publish Configuration',
+                          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: Color(0xFF0F172A)),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Publishes and preserves your hourly discount settings across all active floor table slots.',
+                      style: TextStyle(fontSize: 11, color: Color(0xFF64748B), height: 1.3),
+                    ),
+                    const SizedBox(height: 14),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF059669),
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        ),
+                        onPressed: _isPublishing ? null : _publishHourlyDiscounts,
+                        icon: _isPublishing
+                            ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                            : const Icon(Icons.cloud_upload_rounded, size: 18),
+                        label: Text(
+                          _isPublishing ? 'Publishing Hourly Discounts...' : 'Publish Hourly Discounts',
+                          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ] else ...[
               // Promo Codes View
               Row(
