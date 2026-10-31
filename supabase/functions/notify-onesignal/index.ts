@@ -119,7 +119,6 @@ Deno.serve(async (req: Request) => {
       priority: 10, // Maximum delivery priority
       ios_sound: "alert_tone.wav",
       android_sound: "alert_tone",
-      android_channel_id: "booking_alerts",
       content_available: true, // Wakes iOS app in background
     };
 
@@ -132,7 +131,38 @@ Deno.serve(async (req: Request) => {
       body: JSON.stringify(oneSignalPayload),
     });
 
-    const osResult = await osResponse.json();
+    let osResult = await osResponse.json();
+
+    // If alias targeting encounters an issue, fallback to restaurant_id tag filter
+    if (!osResponse.ok || osResult?.errors?.invalid_aliases) {
+      console.log(`[notify-onesignal] Trying fallback tag filter for restaurant ${restaurantId}`);
+      const fallbackPayload = {
+        app_id: onesignalAppId,
+        filters: [
+          { field: "tag", key: "restaurant_id", relation: "=", value: restaurantId },
+        ],
+        headings: oneSignalPayload.headings,
+        contents: oneSignalPayload.contents,
+        data: oneSignalPayload.data,
+        priority: 10,
+        ios_sound: "alert_tone.wav",
+        android_sound: "alert_tone",
+        content_available: true,
+      };
+
+      const fallbackResponse = await fetch("https://onesignal.com/api/v1/notifications", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Basic ${onesignalApiKey}`,
+        },
+        body: JSON.stringify(fallbackPayload),
+      });
+
+      if (fallbackResponse.ok) {
+        osResult = await fallbackResponse.json();
+      }
+    }
 
     return new Response(
       JSON.stringify({
