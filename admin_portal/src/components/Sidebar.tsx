@@ -89,9 +89,11 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
               <Link
                 key={item.href}
                 href={item.href}
-                onClick={onClose}
+                onClick={() => {
+                  if (isOpen && onClose) onClose();
+                }}
                 className={`
-                  flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold transition-all
+                  flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold transition-colors duration-150
                   ${isActive 
                     ? 'bg-slate-900 text-white border border-slate-700/80 shadow-sm' 
                     : item.highlight
