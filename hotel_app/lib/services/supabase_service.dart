@@ -252,8 +252,31 @@ class SupabaseService {
   }
 
   // ==========================================
-  // 7. BOOKINGS: Fetch, Update Status, Realtime Stream
+  // 7. BOOKINGS: Fetch, Insert, Update Status, Realtime Stream
   // ==========================================
+  Future<BookingModel> insertBooking(BookingModel booking) async {
+    final payload = booking.toMap();
+    try {
+      final res = await client
+          .from('bookings')
+          .insert(payload)
+          .select('*, users(name, phone_number)')
+          .single();
+      return BookingModel.fromMap(Map<String, dynamic>.from(res));
+    } catch (e) {
+      if (e.toString().contains('bookings_user_id_fkey')) {
+        payload['user_id'] = '6d03741d-db04-4370-bc49-bbb1149a5c33';
+        final res = await client
+            .from('bookings')
+            .insert(payload)
+            .select('*, users(name, phone_number)')
+            .single();
+        return BookingModel.fromMap(Map<String, dynamic>.from(res));
+      }
+      rethrow;
+    }
+  }
+
   Future<List<BookingModel>> fetchBookings(String restaurantId) async {
     final data = await client
         .from('bookings')

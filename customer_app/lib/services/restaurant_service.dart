@@ -8,7 +8,7 @@ class RestaurantService {
   /// Get all active restaurants
   Future<List<RestaurantModel>> getRestaurants() async {
     if (!FirebaseConfig.isConfigured) {
-      return _getMockRestaurants();
+      return [];
     }
     final snapshot = await _firestore
         .collection('restaurants')

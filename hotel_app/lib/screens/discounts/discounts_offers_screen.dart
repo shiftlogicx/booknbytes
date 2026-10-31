@@ -329,7 +329,9 @@ class _DiscountsOffersScreenState extends State<DiscountsOffersScreen> {
                           debugPrint('Error syncing offer to Supabase: $e');
                         }
 
-                        Navigator.of(context).pop();
+                        if (context.mounted) {
+                          Navigator.of(context).pop();
+                        }
                       },
                       child: const Text('Publish Promo Offer', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),
                     ),

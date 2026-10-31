@@ -62,12 +62,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
     HapticFeedback.heavyImpact();
     final notifProvider = Provider.of<NotificationProvider>(context, listen: false);
     final bookingProvider = Provider.of<BookingProvider>(context, listen: false);
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+
+    final currentRestId = auth.currentRestaurantId.isNotEmpty
+        ? auth.currentRestaurantId
+        : 'res_royal_biryani_house';
+    final currentRestName = auth.currentRestaurantName.isNotEmpty
+        ? auth.currentRestaurantName
+        : 'Royal Biryani House';
+    final currentUserId = auth.currentUser?.id ?? '6d03741d-db04-4370-bc49-bbb1149a5c33';
 
     final mockBooking = BookingModel(
-      bookingId: 'bk_${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}',
-      userId: 'usr_vip_guest',
-      restaurantId: 'res_12345xyz',
-      restaurantName: 'The Royal Heritage',
+      bookingId: 'bk_${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}',
+      userId: currentUserId,
+      restaurantId: currentRestId,
+      restaurantName: currentRestName,
       customerName: 'Aditya & Ananya Roy',
       customerPhone: '+91 98230 45678',
       partySize: 4,
@@ -78,7 +87,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       createdAt: DateTime.now(),
     );
 
-    bookingProvider.addNewIncomingBooking(mockBooking);
+    await bookingProvider.addNewIncomingBooking(mockBooking);
+    if (!mounted) return;
     notifProvider.triggerIncomingBookingAlert(mockBooking);
 
     final result = await Navigator.of(context).push<bool>(

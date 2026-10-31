@@ -603,10 +603,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                 if (shouldLogout == true && context.mounted) {
                   await auth.logout();
-                  Navigator.of(context).pushAndRemoveUntil(
-                    MaterialPageRoute(builder: (_) => const LoginScreen()),
-                    (route) => false,
-                  );
+                  if (context.mounted) {
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (_) => const LoginScreen()),
+                      (route) => false,
+                    );
+                  }
                 }
               },
               accentColor: const Color(0xFFDC2626),

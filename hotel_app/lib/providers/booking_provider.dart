@@ -105,9 +105,22 @@ class BookingProvider extends ChangeNotifier {
     }
   }
 
-  void addNewIncomingBooking(BookingModel booking) {
+  Future<void> addNewIncomingBooking(BookingModel booking) async {
     _bookings.insert(0, booking);
     notifyListeners();
+    try {
+      final inserted = await _supabaseService.insertBooking(booking);
+      final idx = _bookings.indexWhere((b) => b.bookingId == booking.bookingId);
+      if (idx != -1) {
+        _bookings[idx] = inserted.copyWith(
+          customerName: booking.customerName,
+          customerPhone: booking.customerPhone,
+        );
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Error inserting booking to Supabase: $e');
+    }
   }
 
   // ==========================================
