@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/booking_provider.dart';
+import '../../providers/slots_provider.dart';
 import '../../widgets/brand_logo.dart';
+import 'auth/login_screen.dart';
 import 'dashboard/dashboard_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -67,13 +72,27 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
   }
 
   void _navigate() async {
-    await Future.delayed(const Duration(milliseconds: 2000));
+    await Future.delayed(const Duration(milliseconds: 1800));
     if (!mounted) return;
+
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    final booking = Provider.of<BookingProvider>(context, listen: false);
+    final slots = Provider.of<SlotsProvider>(context, listen: false);
+
+    final Widget targetScreen;
+    if (auth.isAuthenticated) {
+      booking.initForRestaurant(auth.currentRestaurantId);
+      slots.loadSlots(auth.currentRestaurantId);
+      targetScreen = const DashboardScreen();
+    } else {
+      targetScreen = const LoginScreen();
+    }
+
     Navigator.pushReplacement(
       context,
       PageRouteBuilder(
         transitionDuration: const Duration(milliseconds: 650),
-        pageBuilder: (_, __, ___) => const DashboardScreen(),
+        pageBuilder: (_, __, ___) => targetScreen,
         transitionsBuilder: (_, animation, __, child) {
           return FadeTransition(
             opacity: CurvedAnimation(parent: animation, curve: Curves.easeInOut),

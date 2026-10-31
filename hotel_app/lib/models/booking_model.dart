@@ -1,5 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-
 enum BookingStatus {
   pending('PENDING'),
   confirmed('CONFIRMED'),
@@ -30,6 +28,8 @@ class BookingModel {
   final String timeSlot;
   final BookingStatus status;
   final String? appliedOffer;
+  final String? paymentId;
+  final String? slotId;
   final DateTime createdAt;
   final String? customerName;
   final String? customerPhone;
@@ -45,6 +45,8 @@ class BookingModel {
     required this.timeSlot,
     required this.status,
     this.appliedOffer,
+    this.paymentId,
+    this.slotId,
     required this.createdAt,
     this.customerName,
     this.customerPhone,
@@ -58,7 +60,7 @@ class BookingModel {
   bool get isCompleted => status == BookingStatus.completed;
   bool get isNoShow => status == BookingStatus.noShow;
 
-  factory BookingModel.fromFirestore(DocumentSnapshot doc) {
+  factory BookingModel.fromFirestore(dynamic doc) {
     final data = doc.data() as Map<String, dynamic>;
     return BookingModel.fromMap(data);
   }
@@ -66,28 +68,37 @@ class BookingModel {
   factory BookingModel.fromMap(Map<String, dynamic> map) {
     DateTime parsedCreatedAt;
     final rawCreatedAt = map['created_at'];
-    if (rawCreatedAt is Timestamp) {
-      parsedCreatedAt = rawCreatedAt.toDate();
-    } else if (rawCreatedAt is String) {
+    if (rawCreatedAt is String) {
       parsedCreatedAt = DateTime.tryParse(rawCreatedAt) ?? DateTime.now();
     } else {
       parsedCreatedAt = DateTime.now();
     }
 
+    // Resolve customer info: can come directly, or via joined users table
+    String? resolvedName = map['customer_name'];
+    String? resolvedPhone = map['customer_phone'];
+    if (map['users'] is Map<String, dynamic>) {
+      final userMap = map['users'] as Map<String, dynamic>;
+      resolvedName ??= userMap['name'];
+      resolvedPhone ??= userMap['phone_number'];
+    }
+
     return BookingModel(
-      bookingId: map['booking_id'] ?? '',
-      userId: map['user_id'] ?? '',
-      restaurantId: map['restaurant_id'] ?? '',
-      restaurantName: map['restaurant_name'] ?? '',
-      partySize: (map['party_size'] ?? 1).toInt(),
-      date: map['date'] ?? '',
-      timeSlot: map['time_slot'] ?? '',
-      status: BookingStatus.fromString(map['status'] ?? 'PENDING'),
-      appliedOffer: map['applied_offer'],
+      bookingId: map['booking_id']?.toString() ?? '',
+      userId: map['user_id']?.toString() ?? '',
+      restaurantId: map['restaurant_id']?.toString() ?? '',
+      restaurantName: map['restaurant_name']?.toString() ?? 'BookNBytes Restaurant',
+      partySize: (map['party_size'] as num?)?.toInt() ?? 2,
+      date: map['booking_date']?.toString() ?? map['date']?.toString() ?? '',
+      timeSlot: map['time_slot']?.toString() ?? '07:30 PM',
+      status: BookingStatus.fromString(map['status']?.toString() ?? 'CONFIRMED'),
+      appliedOffer: map['applied_offer']?.toString(),
+      paymentId: map['payment_id']?.toString(),
+      slotId: map['slot_id']?.toString(),
       createdAt: parsedCreatedAt,
-      customerName: map['customer_name'],
-      customerPhone: map['customer_phone'],
-      specialRequests: map['special_requests'],
+      customerName: resolvedName ?? 'Guest Diner',
+      customerPhone: resolvedPhone ?? '+91 98765 43210',
+      specialRequests: map['special_requests']?.toString(),
     );
   }
 
@@ -98,14 +109,13 @@ class BookingModel {
       'restaurant_id': restaurantId,
       'restaurant_name': restaurantName,
       'party_size': partySize,
-      'date': date,
+      'booking_date': date,
       'time_slot': timeSlot,
       'status': status.value,
-      'applied_offer': appliedOffer,
+      if (appliedOffer != null) 'applied_offer': appliedOffer,
+      if (paymentId != null) 'payment_id': paymentId,
+      if (slotId != null) 'slot_id': slotId,
       'created_at': createdAt.toIso8601String(),
-      'customer_name': customerName,
-      'customer_phone': customerPhone,
-      'special_requests': specialRequests,
     };
   }
 
@@ -119,6 +129,8 @@ class BookingModel {
     String? timeSlot,
     BookingStatus? status,
     String? appliedOffer,
+    String? paymentId,
+    String? slotId,
     DateTime? createdAt,
     String? customerName,
     String? customerPhone,
@@ -134,6 +146,8 @@ class BookingModel {
       timeSlot: timeSlot ?? this.timeSlot,
       status: status ?? this.status,
       appliedOffer: appliedOffer ?? this.appliedOffer,
+      paymentId: paymentId ?? this.paymentId,
+      slotId: slotId ?? this.slotId,
       createdAt: createdAt ?? this.createdAt,
       customerName: customerName ?? this.customerName,
       customerPhone: customerPhone ?? this.customerPhone,

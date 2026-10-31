@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../../models/booking_model.dart';
+import '../../providers/auth_provider.dart';
 import '../../providers/booking_provider.dart';
 import '../../widgets/booking_card.dart';
 import '../../widgets/reservation_success_dialog.dart';
@@ -11,6 +12,7 @@ class BookingListScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final auth = Provider.of<AuthProvider>(context);
     final booking = Provider.of<BookingProvider>(context);
 
     return Scaffold(
@@ -43,7 +45,7 @@ class BookingListScreen extends StatelessWidget {
             icon: const Icon(Icons.refresh_rounded, color: Color(0xFF64748B)),
             onPressed: () {
               HapticFeedback.lightImpact();
-              booking.fetchBookings('res_12345xyz');
+              booking.loadBookings(auth.currentRestaurantId);
             },
           ),
           const SizedBox(width: 8),

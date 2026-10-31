@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import '../../providers/auth_provider.dart';
+import '../../services/supabase_service.dart';
 
 class DiscountsOffersScreen extends StatefulWidget {
   const DiscountsOffersScreen({super.key});
@@ -152,23 +155,42 @@ class _DiscountsOffersScreenState extends State<DiscountsOffersScreen> {
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                       ),
-                      onPressed: () {
+                      onPressed: () async {
                         if (codeController.text.trim().isEmpty) return;
                         HapticFeedback.mediumImpact();
+                        final newCode = codeController.text.trim().toUpperCase();
+                        final newDesc = descController.text.trim().isEmpty
+                            ? 'Flat $selectedDiscount% Off'
+                            : descController.text.trim();
+
                         setState(() {
                           _promoCodes.insert(
                             0,
                             _PromoCodeItem(
-                              code: codeController.text.trim().toUpperCase(),
+                              code: newCode,
                               discount: '$selectedDiscount% OFF',
-                              description: descController.text.trim().isEmpty
-                                  ? 'Flat $selectedDiscount% Off'
-                                  : descController.text.trim(),
+                              description: newDesc,
                               isActive: true,
                               usageCount: 0,
                             ),
                           );
                         });
+
+                        // Sync to Supabase active_offers
+                        try {
+                          final auth = Provider.of<AuthProvider>(context, listen: false);
+                          final offers = List<Map<String, dynamic>>.from(auth.profile.activeOffers);
+                          offers.add({
+                            'code': newCode,
+                            'description': newDesc,
+                            'discount_percent': selectedDiscount,
+                          });
+                          await SupabaseService().updateActiveOffers(auth.currentRestaurantId, offers);
+                          auth.refreshRestaurantData();
+                        } catch (e) {
+                          debugPrint('Error syncing offer to Supabase: $e');
+                        }
+
                         Navigator.of(context).pop();
                       },
                       child: const Text('Publish Promo Offer', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13)),

@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../models/booking_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/booking_provider.dart';
+import '../../providers/slots_provider.dart';
 import '../../providers/location_provider.dart';
 import '../../providers/notification_provider.dart';
 import '../../widgets/glass_nav_dock.dart';
@@ -35,8 +36,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final auth = Provider.of<AuthProvider>(context, listen: false);
-      Provider.of<BookingProvider>(context, listen: false)
-          .fetchBookings(auth.currentRestaurantId);
+      if (auth.currentRestaurantId.isNotEmpty) {
+        Provider.of<BookingProvider>(context, listen: false)
+            .initForRestaurant(auth.currentRestaurantId);
+        Provider.of<SlotsProvider>(context, listen: false)
+            .loadSlots(auth.currentRestaurantId);
+      }
       // Automatically detect real device GPS coordinates on launch
       Provider.of<LocationProvider>(context, listen: false).detectCurrentLocation();
 

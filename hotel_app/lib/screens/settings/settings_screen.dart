@@ -10,6 +10,7 @@ import '../../widgets/restaurant_walkthrough_modal.dart';
 import '../profile/restaurant_profile_screen.dart';
 import '../profile/booking_audit_doc_screen.dart';
 import '../support/support_screen.dart';
+import '../auth/login_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -543,6 +544,62 @@ class _SettingsScreenState extends State<SettingsScreen> {
               subtitle: 'Explore priority alarms, 1-touch swipe and dynamic slots',
               onTap: _replayTutorial,
               accentColor: const Color(0xFF4F46E5),
+            ),
+
+            const SizedBox(height: 24),
+
+            // Account & Session
+            const Text(
+              'ACCOUNT & SESSION',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.8,
+                color: Color(0xFF64748B),
+              ),
+            ),
+            const SizedBox(height: 10),
+
+            _buildActionTile(
+              icon: Icons.logout_rounded,
+              title: 'Sign Out / Switch Account',
+              subtitle: 'Logout from ${auth.profile.name}',
+              onTap: () async {
+                HapticFeedback.mediumImpact();
+                final shouldLogout = await showDialog<bool>(
+                  context: context,
+                  builder: (ctx) => AlertDialog(
+                    backgroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    title: const Text('Sign Out', style: TextStyle(fontWeight: FontWeight.w800, color: Color(0xFF0F172A))),
+                    content: const Text('Are you sure you want to log out from this restaurant dashboard?'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(ctx).pop(false),
+                        child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B))),
+                      ),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFDC2626),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        ),
+                        onPressed: () => Navigator.of(ctx).pop(true),
+                        child: const Text('Sign Out'),
+                      ),
+                    ],
+                  ),
+                );
+
+                if (shouldLogout == true && context.mounted) {
+                  await auth.logout();
+                  Navigator.of(context).pushAndRemoveUntil(
+                    MaterialPageRoute(builder: (_) => const LoginScreen()),
+                    (route) => false,
+                  );
+                }
+              },
+              accentColor: const Color(0xFFDC2626),
             ),
           ],
         ),

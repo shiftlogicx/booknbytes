@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import '../../models/slot_model.dart';
+import '../../providers/auth_provider.dart';
+import '../../providers/slots_provider.dart';
 
 class TableSlotsScreen extends StatefulWidget {
   const TableSlotsScreen({super.key});
@@ -10,41 +14,323 @@ class TableSlotsScreen extends StatefulWidget {
 }
 
 class _TableSlotsScreenState extends State<TableSlotsScreen> {
-  int _selectedDateIndex = 0;
-  String _shiftFilter = 'ALL';
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final auth = Provider.of<AuthProvider>(context, listen: false);
+      final slots = Provider.of<SlotsProvider>(context, listen: false);
+      if (auth.currentRestaurantId.isNotEmpty) {
+        slots.loadSlots(auth.currentRestaurantId);
+      }
+    });
+  }
 
-  final List<DateTime> _dates = List.generate(
-    7,
-    (index) => DateTime.now().add(Duration(days: index)),
-  );
+  void _showPublishSlotSheet(BuildContext context) {
+    HapticFeedback.mediumImpact();
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    final slotsProvider = Provider.of<SlotsProvider>(context, listen: false);
 
-  final List<_SlotCapacityItem> _slots = [
-    _SlotCapacityItem(time: '12:00 PM', shift: 'LUNCH', totalTables: 12, bookedTables: 8, isOpen: true),
-    _SlotCapacityItem(time: '12:30 PM', shift: 'LUNCH', totalTables: 12, bookedTables: 10, isOpen: true),
-    _SlotCapacityItem(time: '01:00 PM', shift: 'LUNCH', totalTables: 14, bookedTables: 14, isOpen: true),
-    _SlotCapacityItem(time: '01:30 PM', shift: 'LUNCH', totalTables: 14, bookedTables: 11, isOpen: true),
-    _SlotCapacityItem(time: '02:00 PM', shift: 'LUNCH', totalTables: 10, bookedTables: 5, isOpen: true),
-    _SlotCapacityItem(time: '02:30 PM', shift: 'LUNCH', totalTables: 10, bookedTables: 2, isOpen: true),
-    _SlotCapacityItem(time: '07:00 PM', shift: 'DINNER', totalTables: 16, bookedTables: 12, isOpen: true),
-    _SlotCapacityItem(time: '07:30 PM', shift: 'DINNER', totalTables: 18, bookedTables: 16, isOpen: true),
-    _SlotCapacityItem(time: '08:00 PM', shift: 'DINNER', totalTables: 20, bookedTables: 20, isOpen: true),
-    _SlotCapacityItem(time: '08:30 PM', shift: 'DINNER', totalTables: 20, bookedTables: 19, isOpen: true),
-    _SlotCapacityItem(time: '09:00 PM', shift: 'DINNER', totalTables: 18, bookedTables: 14, isOpen: true),
-    _SlotCapacityItem(time: '09:30 PM', shift: 'DINNER', totalTables: 14, bookedTables: 7, isOpen: true),
-    _SlotCapacityItem(time: '10:00 PM', shift: 'DINNER', totalTables: 10, bookedTables: 3, isOpen: false),
-  ];
+    TimeOfDay selectedStartTime = const TimeOfDay(hour: 13, minute: 0);
+    TimeOfDay selectedEndTime = const TimeOfDay(hour: 15, minute: 0);
+    int capacity = 30;
+    double discount = 20.0;
+    String shift = 'LUNCH';
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setModalState) {
+            final selDate = slotsProvider.selectedDate;
+
+            return Padding(
+              padding: EdgeInsets.fromLTRB(20, 20, 20, MediaQuery.of(ctx).viewInsets.bottom + 20),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(color: const Color(0xFFCBD5E1), borderRadius: BorderRadius.circular(2)),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Publish Live Slot to Supabase',
+                          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close_rounded, size: 20, color: Color(0xFF94A3B8)),
+                          onPressed: () => Navigator.of(ctx).pop(),
+                        ),
+                      ],
+                    ),
+                    Text(
+                      'Date: ${DateFormat('EEE, dd MMM yyyy').format(selDate)}',
+                      style: const TextStyle(fontSize: 12, color: Color(0xFF64748B), fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 18),
+
+                    // Shift Selector
+                    const Text('OPERATING SHIFT',
+                        style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFF64748B), letterSpacing: 0.5)),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ChoiceChip(
+                            label: const Center(child: Text('LUNCH (11 AM - 4 PM)')),
+                            selected: shift == 'LUNCH',
+                            selectedColor: const Color(0xFFECFDF5),
+                            backgroundColor: const Color(0xFFF1F5F9),
+                            labelStyle: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              color: shift == 'LUNCH' ? const Color(0xFF059669) : const Color(0xFF475569),
+                            ),
+                            onSelected: (val) {
+                              if (val) {
+                                setModalState(() {
+                                  shift = 'LUNCH';
+                                  selectedStartTime = const TimeOfDay(hour: 12, minute: 30);
+                                  selectedEndTime = const TimeOfDay(hour: 14, minute: 30);
+                                });
+                              }
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: ChoiceChip(
+                            label: const Center(child: Text('DINNER (7 PM - 11 PM)')),
+                            selected: shift == 'DINNER',
+                            selectedColor: const Color(0xFFEEF2FF),
+                            backgroundColor: const Color(0xFFF1F5F9),
+                            labelStyle: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              color: shift == 'DINNER' ? const Color(0xFF2563EB) : const Color(0xFF475569),
+                            ),
+                            onSelected: (val) {
+                              if (val) {
+                                setModalState(() {
+                                  shift = 'DINNER';
+                                  selectedStartTime = const TimeOfDay(hour: 19, minute: 30);
+                                  selectedEndTime = const TimeOfDay(hour: 21, minute: 30);
+                                });
+                              }
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Time Range Selector
+                    const Text('TIME WINDOW',
+                        style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFF64748B), letterSpacing: 0.5)),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: InkWell(
+                            onTap: () async {
+                              final picked = await showTimePicker(context: ctx, initialTime: selectedStartTime);
+                              if (picked != null) setModalState(() => selectedStartTime = picked);
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF8FAFC),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: const Color(0xFFE2E8F0)),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text('START TIME', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: Color(0xFF64748B))),
+                                  const SizedBox(height: 4),
+                                  Text(selectedStartTime.format(ctx),
+                                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF0F172A))),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 10),
+                          child: Icon(Icons.arrow_forward_rounded, size: 16, color: Color(0xFF94A3B8)),
+                        ),
+                        Expanded(
+                          child: InkWell(
+                            onTap: () async {
+                              final picked = await showTimePicker(context: ctx, initialTime: selectedEndTime);
+                              if (picked != null) setModalState(() => selectedEndTime = picked);
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF8FAFC),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: const Color(0xFFE2E8F0)),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text('END TIME', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: Color(0xFF64748B))),
+                                  const SizedBox(height: 4),
+                                  Text(selectedEndTime.format(ctx),
+                                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF0F172A))),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 18),
+
+                    // Table Capacity
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('TABLE CAPACITY',
+                                style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFF64748B), letterSpacing: 0.5)),
+                            SizedBox(height: 2),
+                            Text('Max covers allowed in this slot', style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8))),
+                          ],
+                        ),
+                        Row(
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.remove_circle_outline_rounded, color: Color(0xFF94A3B8), size: 24),
+                              onPressed: capacity > 5 ? () => setModalState(() => capacity -= 5) : null,
+                            ),
+                            Text('$capacity', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Color(0xFF0F172A))),
+                            IconButton(
+                              icon: const Icon(Icons.add_circle_outline_rounded, color: Color(0xFF059669), size: 24),
+                              onPressed: capacity < 150 ? () => setModalState(() => capacity += 5) : null,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    // Discount Percentage
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('DYNAMIC DISCOUNT',
+                                style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFF64748B), letterSpacing: 0.5)),
+                            SizedBox(height: 2),
+                            Text('Incentive to attract off-peak footfall', style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8))),
+                          ],
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFFBEB),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(color: const Color(0xFFFDE68A)),
+                          ),
+                          child: Text('${discount.toInt()}% OFF',
+                              style: const TextStyle(fontWeight: FontWeight.w900, color: Color(0xFFD97706), fontSize: 13)),
+                        ),
+                      ],
+                    ),
+                    Slider(
+                      value: discount,
+                      min: 0,
+                      max: 50,
+                      divisions: 10,
+                      activeColor: const Color(0xFF059669),
+                      inactiveColor: const Color(0xFFE2E8F0),
+                      label: '${discount.toInt()}% OFF',
+                      onChanged: (val) => setModalState(() => discount = val),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // Submit Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF059669),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          elevation: 0,
+                        ),
+                        onPressed: () async {
+                          Navigator.of(ctx).pop();
+                          final startDt = DateTime(selDate.year, selDate.month, selDate.day, selectedStartTime.hour, selectedStartTime.minute);
+                          final endDt = DateTime(selDate.year, selDate.month, selDate.day, selectedEndTime.hour, selectedEndTime.minute);
+
+                          final success = await slotsProvider.publishSlot(
+                            restaurantId: auth.currentRestaurantId,
+                            startDatetime: startDt,
+                            endDatetime: endDt,
+                            discountPercentage: discount,
+                            capacity: capacity,
+                          );
+
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  success
+                                      ? 'Live slot successfully published to Supabase!'
+                                      : 'Failed to publish slot: ${slotsProvider.errorMessage}',
+                                  style: const TextStyle(fontWeight: FontWeight.w700),
+                                ),
+                                backgroundColor: success ? const Color(0xFF059669) : const Color(0xFFDC2626),
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                            );
+                          }
+                        },
+                        child: const Text('Publish Slot to Database', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    final filteredSlots = _slots.where((s) {
-      if (_shiftFilter == 'LUNCH') return s.shift == 'LUNCH';
-      if (_shiftFilter == 'DINNER') return s.shift == 'DINNER';
-      return true;
-    }).toList();
-
-    final totalTables = _slots.fold<int>(0, (sum, s) => sum + s.totalTables);
-    final bookedTables = _slots.fold<int>(0, (sum, s) => sum + s.bookedTables);
-    final openTables = totalTables - bookedTables;
+    final slotsProvider = Provider.of<SlotsProvider>(context);
+    final filtered = slotsProvider.filteredSlots;
+    final totalCapacity = filtered.fold<int>(0, (sum, s) => sum + s.capacity);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
@@ -66,11 +352,18 @@ class _TableSlotsScreenState extends State<TableSlotsScreen> {
               ),
             ),
             Text(
-              'Manage Table Inventory & Hourly Availability',
+              'Live Supabase Table Inventory & Shift Management',
               style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
             ),
           ],
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.add_circle_outline_rounded, color: Color(0xFF059669)),
+            tooltip: 'Publish New Slot',
+            onPressed: () => _showPublishSlotSheet(context),
+          ),
+        ],
       ),
       body: SafeArea(
         child: ListView(
@@ -82,16 +375,16 @@ class _TableSlotsScreenState extends State<TableSlotsScreen> {
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 physics: const BouncingScrollPhysics(),
-                itemCount: _dates.length,
+                itemCount: slotsProvider.dates.length,
                 itemBuilder: (context, idx) {
-                  final date = _dates[idx];
-                  final isSelected = _selectedDateIndex == idx;
+                  final date = slotsProvider.dates[idx];
+                  final isSelected = slotsProvider.selectedDateIndex == idx;
                   final isToday = idx == 0;
 
                   return GestureDetector(
                     onTap: () {
                       HapticFeedback.selectionClick();
-                      setState(() => _selectedDateIndex = idx);
+                      slotsProvider.setSelectedDateIndex(idx);
                     },
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
@@ -100,32 +393,42 @@ class _TableSlotsScreenState extends State<TableSlotsScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       decoration: BoxDecoration(
                         color: isSelected ? const Color(0xFF0F172A) : Colors.white,
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(14),
                         border: Border.all(
                           color: isSelected ? const Color(0xFF0F172A) : const Color(0xFFE2E8F0),
                         ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF0F172A).withValues(alpha: isSelected ? 0.12 : 0.03),
-                            blurRadius: 6,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
+                        boxShadow: isSelected
+                            ? [
+                                BoxShadow(
+                                  color: const Color(0xFF0F172A).withValues(alpha: 0.15),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ]
+                            : const [
+                                BoxShadow(
+                                  color: Color(0x060F172A),
+                                  blurRadius: 4,
+                                  offset: Offset(0, 1),
+                                ),
+                              ],
                       ),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            isToday ? 'TODAY' : DateFormat('E').format(date).toUpperCase(),
+                            isToday ? 'TODAY' : DateFormat('EEE').format(date).toUpperCase(),
                             style: TextStyle(
-                              fontSize: 9.5,
+                              fontSize: 9,
                               fontWeight: FontWeight.w800,
-                              color: isSelected ? Colors.white70 : const Color(0xFF64748B),
+                              color: isSelected
+                                  ? const Color(0xFF059669)
+                                  : (isToday ? const Color(0xFF059669) : const Color(0xFF64748B)),
                             ),
                           ),
-                          const SizedBox(height: 3),
+                          const SizedBox(height: 2),
                           Text(
-                            DateFormat('d').format(date),
+                            DateFormat('dd').format(date),
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w900,
@@ -140,49 +443,46 @@ class _TableSlotsScreenState extends State<TableSlotsScreen> {
               ),
             ),
 
-            const SizedBox(height: 14),
+            const SizedBox(height: 16),
 
             // Capacity Overview Hero Card
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(18),
                 border: Border.all(color: const Color(0xFFE2E8F0)),
-                boxShadow: [
+                boxShadow: const [
                   BoxShadow(
-                    color: const Color(0xFF0F172A).withValues(alpha: 0.04),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
+                    color: Color(0x060F172A),
+                    blurRadius: 10,
+                    offset: Offset(0, 3),
                   ),
                 ],
               ),
               child: Row(
                 children: [
                   Expanded(
-                    child: _buildMetric(
-                      label: 'TOTAL CAPACITY',
-                      value: '$totalTables Tables',
-                      color: const Color(0xFF2563EB),
-                      icon: Icons.table_restaurant_rounded,
+                    child: _buildMetricCol(
+                      label: 'TOTAL SLOTS',
+                      value: '${filtered.length}',
+                      color: const Color(0xFF0F172A),
                     ),
                   ),
-                  Container(width: 1, height: 38, color: const Color(0xFFE2E8F0)),
+                  Container(width: 1, height: 36, color: const Color(0xFFE2E8F0)),
                   Expanded(
-                    child: _buildMetric(
-                      label: 'BOOKED TODAY',
-                      value: '$bookedTables Tables',
-                      color: const Color(0xFFD97706),
-                      icon: Icons.check_circle_outline_rounded,
-                    ),
-                  ),
-                  Container(width: 1, height: 38, color: const Color(0xFFE2E8F0)),
-                  Expanded(
-                    child: _buildMetric(
-                      label: 'AVAILABLE FREE',
-                      value: '$openTables Tables',
+                    child: _buildMetricCol(
+                      label: 'TOTAL COVERS',
+                      value: '$totalCapacity',
                       color: const Color(0xFF059669),
-                      icon: Icons.event_available_rounded,
+                    ),
+                  ),
+                  Container(width: 1, height: 36, color: const Color(0xFFE2E8F0)),
+                  Expanded(
+                    child: _buildMetricCol(
+                      label: 'ACTIVE SHIFTS',
+                      value: '2 (L/D)',
+                      color: const Color(0xFF2563EB),
                     ),
                   ),
                 ],
@@ -191,257 +491,229 @@ class _TableSlotsScreenState extends State<TableSlotsScreen> {
 
             const SizedBox(height: 16),
 
-            // Shift Filter Chips
+            // Shift Filter Pills
             Row(
-              children: ['ALL', 'LUNCH', 'DINNER'].map((shift) {
-                final isSel = _shiftFilter == shift;
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: InkWell(
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      setState(() => _shiftFilter = shift);
-                    },
-                    borderRadius: BorderRadius.circular(20),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-                      decoration: BoxDecoration(
-                        color: isSel ? const Color(0xFF0F172A) : Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: isSel ? const Color(0xFF0F172A) : const Color(0xFFE2E8F0),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: const Color(0xFF0F172A).withValues(alpha: isSel ? 0.1 : 0.03),
-                            blurRadius: 6,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Text(
-                        shift == 'ALL' ? 'ALL SHIFTS' : (shift == 'LUNCH' ? 'LUNCH (12–3 PM)' : 'DINNER (7–11 PM)'),
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: isSel ? FontWeight.w900 : FontWeight.w700,
-                          color: isSel ? Colors.white : const Color(0xFF475569),
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              }).toList(),
+              children: [
+                _buildShiftChip('ALL', 'All Shifts (${slotsProvider.slots.length})', slotsProvider),
+                const SizedBox(width: 8),
+                _buildShiftChip('LUNCH', 'Lunch', slotsProvider),
+                const SizedBox(width: 8),
+                _buildShiftChip('DINNER', 'Dinner', slotsProvider),
+                const Spacer(),
+                TextButton.icon(
+                  onPressed: () => _showPublishSlotSheet(context),
+                  icon: const Icon(Icons.add, size: 16, color: Color(0xFF059669)),
+                  label: const Text('Add Slot', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12, color: Color(0xFF059669))),
+                ),
+              ],
             ),
 
             const SizedBox(height: 14),
 
-            // Slots List
-            ...filteredSlots.map((slot) => _buildSlotCard(slot)),
+            if (slotsProvider.isLoading)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(40),
+                  child: CircularProgressIndicator(color: Color(0xFF059669)),
+                ),
+              )
+            else if (filtered.isEmpty)
+              Container(
+                padding: const EdgeInsets.all(32),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: Column(
+                  children: [
+                    const Icon(Icons.event_busy_rounded, size: 40, color: Color(0xFF94A3B8)),
+                    const SizedBox(height: 12),
+                    const Text('No slots scheduled for this shift/date',
+                        style: TextStyle(fontWeight: FontWeight.w700, color: Color(0xFF64748B), fontSize: 13)),
+                    const SizedBox(height: 14),
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF059669),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      onPressed: () => _showPublishSlotSheet(context),
+                      icon: const Icon(Icons.add, size: 16),
+                      label: const Text('Publish First Slot', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12)),
+                    ),
+                  ],
+                ),
+              )
+            else
+              ...filtered.map((slot) => _buildLiveSlotCard(slot, slotsProvider)),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildMetric({
+  Widget _buildMetricCol({
     required String label,
     required String value,
     required Color color,
-    required IconData icon,
   }) {
     return Column(
       children: [
-        Icon(icon, size: 16, color: color),
-        const SizedBox(height: 4),
         Text(
-          label,
-          style: const TextStyle(
-            fontSize: 8.5,
-            fontWeight: FontWeight.w800,
-            color: Color(0xFF64748B),
-            letterSpacing: 0.5,
+          value,
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w900,
+            color: color,
+            letterSpacing: -0.5,
           ),
         ),
         const SizedBox(height: 2),
         Text(
-          value,
+          label,
           style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w900,
-            color: Color(0xFF0F172A),
+            fontSize: 9,
+            fontWeight: FontWeight.w800,
+            color: Color(0xFF64748B),
+            letterSpacing: 0.5,
           ),
         ),
       ],
     );
   }
 
-  Widget _buildSlotCard(_SlotCapacityItem slot) {
-    final occupancy = (slot.bookedTables / (slot.totalTables == 0 ? 1 : slot.totalTables));
-    final available = slot.totalTables - slot.bookedTables;
+  Widget _buildShiftChip(String key, String label, SlotsProvider provider) {
+    final isSelected = provider.shiftFilter == key;
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        provider.setShiftFilter(key);
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF0F172A) : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: isSelected ? const Color(0xFF0F172A) : const Color(0xFFE2E8F0)),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w800,
+            color: isSelected ? Colors.white : const Color(0xFF475569),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLiveSlotCard(DailySlotModel slot, SlotsProvider provider) {
+    final isLunch = slot.shift == 'LUNCH';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: slot.isOpen ? const Color(0xFFE2E8F0) : const Color(0xFFF1F5F9),
-        ),
-        boxShadow: [
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+        boxShadow: const [
           BoxShadow(
-            color: const Color(0xFF0F172A).withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
+            color: Color(0x060F172A),
+            blurRadius: 8,
+            offset: Offset(0, 2),
           ),
         ],
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF1F5F9),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
-                    ),
-                    child: Text(
-                      slot.time,
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w900,
-                        color: slot.isOpen ? const Color(0xFF0F172A) : const Color(0xFF94A3B8),
-                      ),
-                    ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: isLunch ? const Color(0xFFECFDF5) : const Color(0xFFEEF2FF),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  slot.shift,
+                  style: TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w800,
+                    color: isLunch ? const Color(0xFF059669) : const Color(0xFF2563EB),
+                    letterSpacing: 0.5,
                   ),
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: slot.shift == 'LUNCH'
-                          ? const Color(0xFFFFFBEB)
-                          : const Color(0xFFEEF2FF),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(
-                        color: slot.shift == 'LUNCH'
-                            ? const Color(0xFFFDE68A)
-                            : const Color(0xFFC7D2FE),
-                      ),
-                    ),
-                    child: Text(
-                      slot.shift,
-                      style: TextStyle(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w900,
-                        color: slot.shift == 'LUNCH' ? const Color(0xFFD97706) : const Color(0xFF4F46E5),
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
-
-              // Open / Close Switch
-              Row(
-                children: [
-                  Text(
-                    slot.isOpen ? 'OPEN' : 'PAUSED',
-                    style: TextStyle(
+              const SizedBox(width: 8),
+              Text(
+                slot.timeFormatted,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                  color: Color(0xFF0F172A),
+                ),
+              ),
+              const Spacer(),
+              if (slot.discountPercentage > 0)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFFBEB),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: const Color(0xFFFDE68A)),
+                  ),
+                  child: Text(
+                    '${slot.discountPercentage.toInt()}% OFF',
+                    style: const TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w900,
-                      color: slot.isOpen ? const Color(0xFF059669) : const Color(0xFF94A3B8),
+                      color: Color(0xFFD97706),
                     ),
                   ),
-                  const SizedBox(width: 4),
-                  Switch.adaptive(
-                    value: slot.isOpen,
-                    activeColor: const Color(0xFF059669),
-                    onChanged: (val) {
-                      HapticFeedback.selectionClick();
-                      setState(() => slot.isOpen = val);
-                      ScaffoldMessenger.of(context).clearSnackBars();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text(
-                            val
-                                ? '${slot.time} slot is now OPEN for diner bookings'
-                                : '${slot.time} slot is now PAUSED (no bookings)',
-                            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: Colors.white),
-                          ),
-                          backgroundColor: const Color(0xFF0F172A),
-                          behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          duration: const Duration(milliseconds: 1500),
-                        ),
-                      );
-                    },
-                  ),
-                ],
+                ),
+              IconButton(
+                icon: const Icon(Icons.delete_outline_rounded, size: 18, color: Color(0xFF94A3B8)),
+                onPressed: () async {
+                  HapticFeedback.lightImpact();
+                  await provider.deleteSlot(slot.slotId);
+                },
               ),
             ],
           ),
-
-          const SizedBox(height: 10),
-
-          // Utilization Bar
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: occupancy.clamp(0.0, 1.0),
-              backgroundColor: const Color(0xFFF1F5F9),
-              valueColor: AlwaysStoppedAnimation<Color>(
-                occupancy > 0.85
-                    ? const Color(0xFFDC2626)
-                    : (occupancy > 0.5 ? const Color(0xFFD97706) : const Color(0xFF059669)),
-              ),
-              minHeight: 6,
-            ),
-          ),
-
-          const SizedBox(height: 10),
-
-          // Table Adjust Controls
+          const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '${slot.bookedTables} of ${slot.totalTables} Tables Booked ($available Available)',
-                style: const TextStyle(fontSize: 11, color: Color(0xFF64748B), fontWeight: FontWeight.w600),
+                'Capacity: ${slot.capacity} covers registered',
+                style: const TextStyle(fontSize: 12, color: Color(0xFF475569), fontWeight: FontWeight.w600),
               ),
-
-              // +/- Table capacity
               Row(
                 children: [
                   IconButton(
                     icon: const Icon(Icons.remove_circle_outline_rounded, size: 20, color: Color(0xFF94A3B8)),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
-                    onPressed: slot.totalTables > slot.bookedTables
-                        ? () {
-                            HapticFeedback.lightImpact();
-                            setState(() => slot.totalTables--);
-                          }
+                    onPressed: slot.capacity > 5
+                        ? () => provider.updateSlot(slot.slotId, capacity: slot.capacity - 5)
                         : null,
                   ),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 8),
                     child: Text(
-                      '${slot.totalTables}',
+                      '${slot.capacity}',
                       style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: Color(0xFF0F172A)),
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.add_circle_outline_rounded, size: 20, color: Color(0xFF2563EB)),
+                    icon: const Icon(Icons.add_circle_outline_rounded, size: 20, color: Color(0xFF059669)),
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
-                    onPressed: () {
-                      HapticFeedback.lightImpact();
-                      setState(() => slot.totalTables++);
-                    },
+                    onPressed: () => provider.updateSlot(slot.slotId, capacity: slot.capacity + 5),
                   ),
                 ],
               ),
@@ -451,20 +723,4 @@ class _TableSlotsScreenState extends State<TableSlotsScreen> {
       ),
     );
   }
-}
-
-class _SlotCapacityItem {
-  final String time;
-  final String shift;
-  int totalTables;
-  final int bookedTables;
-  bool isOpen;
-
-  _SlotCapacityItem({
-    required this.time,
-    required this.shift,
-    required this.totalTables,
-    required this.bookedTables,
-    required this.isOpen,
-  });
 }

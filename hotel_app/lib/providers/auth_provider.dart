@@ -1,8 +1,6 @@
-import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:path_provider/path_provider.dart';
-import '../services/auth_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../services/supabase_service.dart';
 
 class RestaurantProfileData {
   String restaurantId;
@@ -23,6 +21,8 @@ class RestaurantProfileData {
   bool hasBar;
   bool isAc;
   bool parkingAvailable;
+  List<Map<String, dynamic>> activeOffers;
+  Map<String, dynamic>? managerCredentials;
 
   RestaurantProfileData({
     required this.restaurantId,
@@ -43,21 +43,23 @@ class RestaurantProfileData {
     required this.hasBar,
     required this.isAc,
     required this.parkingAvailable,
+    this.activeOffers = const [],
+    this.managerCredentials,
   });
 
   factory RestaurantProfileData.defaults() {
     return RestaurantProfileData(
-      restaurantId: 'res_12345xyz',
-      name: 'Mahesh Lunch Home',
-      ownerName: 'Mahesh Shetty',
-      phone: '+91 98200 87654',
-      email: 'mahesh@lunchhome.com',
-      upiId: 'maheshlunch@sbi',
-      fssaiNumber: '11521034000123',
-      address: 'Camp, Pune, Maharashtra - 411001',
+      restaurantId: 'res_bombay_brasserie_01',
+      name: 'The Bombay Brasserie',
+      ownerName: 'Vikram Malhotra',
+      phone: '+91 98765 43210',
+      email: 'owner@bombaybrasserie.com',
+      upiId: 'bombaybrasserie@okaxis',
+      fssaiNumber: '11521012000456',
+      address: 'Plot 12, Indiranagar 100ft Road, Bengaluru',
       costForTwo: 1200,
-      cuisines: ['Seafood', 'Mangalorean', 'North Indian', 'Coastal Curries'],
-      lunchOpen: '11:30 AM',
+      cuisines: ['North Indian', 'Mughlai', 'Biryani'],
+      lunchOpen: '11:00 AM',
       lunchClose: '03:30 PM',
       dinnerOpen: '07:00 PM',
       dinnerClose: '11:30 PM',
@@ -65,52 +67,89 @@ class RestaurantProfileData {
       hasBar: true,
       isAc: true,
       parkingAvailable: true,
+      activeOffers: [
+        {
+          'code': 'FLAT20',
+          'description': 'Flat 20% off on all table reservations',
+          'discount_percent': 20,
+        }
+      ],
     );
   }
 
-  factory RestaurantProfileData.fromJson(Map<String, dynamic> json) {
+  factory RestaurantProfileData.fromSupabase(Map<String, dynamic> json) {
+    final owners = json['owners_details'] is Map ? json['owners_details'] as Map : {};
+    final timings = json['timings'] is Map ? json['timings'] as Map : {};
+    final attrs = json['attributes'] is Map ? json['attributes'] as Map : {};
+
+    String lunchO = '11:30 AM';
+    String lunchC = '03:30 PM';
+    String dinnerO = '07:00 PM';
+    String dinnerC = '11:30 PM';
+
+    if (timings['lunch'] is Map) {
+      lunchO = timings['lunch']['open'] ?? lunchO;
+      lunchC = timings['lunch']['close'] ?? lunchC;
+    }
+    if (timings['dinner'] is Map) {
+      dinnerO = timings['dinner']['open'] ?? dinnerO;
+      dinnerC = timings['dinner']['close'] ?? dinnerC;
+    }
+
+    final cuisinesList = json['cuisines'] is List
+        ? List<String>.from(json['cuisines'].map((e) => e.toString()))
+        : <String>['North Indian'];
+
+    final offersList = json['active_offers'] is List
+        ? List<Map<String, dynamic>>.from(
+            (json['active_offers'] as List).map((e) => Map<String, dynamic>.from(e)))
+        : <Map<String, dynamic>>[];
+
     return RestaurantProfileData(
-      restaurantId: json['restaurant_id'] ?? 'res_12345xyz',
-      name: json['name'] ?? 'Mahesh Lunch Home',
-      ownerName: json['owner_name'] ?? 'Mahesh Shetty',
-      phone: json['phone'] ?? '+91 98200 87654',
-      email: json['email'] ?? 'mahesh@lunchhome.com',
-      upiId: json['upi_id'] ?? 'maheshlunch@sbi',
-      fssaiNumber: json['fssai_number'] ?? '11521034000123',
-      address: json['address'] ?? 'Camp, Pune, Maharashtra - 411001',
+      restaurantId: json['restaurant_id']?.toString() ?? 'res_bombay_brasserie_01',
+      name: json['name']?.toString() ?? 'BookNBytes Restaurant',
+      ownerName: owners['owner_name']?.toString() ?? 'Restaurant Owner',
+      phone: owners['phone']?.toString() ?? '+91 98765 43210',
+      email: owners['email']?.toString() ?? 'owner@booknbytes.app',
+      upiId: json['upi_id']?.toString() ?? 'restaurant@upi',
+      fssaiNumber: json['fssai_number']?.toString() ?? '11521034000123',
+      address: json['address']?.toString() ?? 'Prime High Street, Central District',
       costForTwo: (json['cost_for_two'] as num?)?.toInt() ?? 1200,
-      cuisines: List<String>.from(json['cuisines'] ?? ['Seafood', 'North Indian']),
-      lunchOpen: json['lunch_open'] ?? '11:30 AM',
-      lunchClose: json['lunch_close'] ?? '03:30 PM',
-      dinnerOpen: json['dinner_open'] ?? '07:00 PM',
-      dinnerClose: json['dinner_close'] ?? '11:30 PM',
-      isVegOnly: json['is_veg_only'] ?? false,
-      hasBar: json['has_bar'] ?? true,
-      isAc: json['is_ac'] ?? true,
-      parkingAvailable: json['parking_available'] ?? true,
+      cuisines: cuisinesList,
+      lunchOpen: lunchO,
+      lunchClose: lunchC,
+      dinnerOpen: dinnerO,
+      dinnerClose: dinnerC,
+      isVegOnly: attrs['pure_veg'] == true,
+      hasBar: attrs['serves_alcohol'] == true,
+      isAc: attrs['has_ac'] ?? true,
+      parkingAvailable: attrs['has_parking'] ?? true,
+      activeOffers: offersList,
+      managerCredentials: owners['manager_credentials'] is Map
+          ? Map<String, dynamic>.from(owners['manager_credentials'])
+          : null,
     );
   }
 
-  Map<String, dynamic> toJson() {
+  Map<String, dynamic> toSupabaseUpdate() {
     return {
-      'restaurant_id': restaurantId,
       'name': name,
-      'owner_name': ownerName,
-      'phone': phone,
-      'email': email,
       'upi_id': upiId,
       'fssai_number': fssaiNumber,
       'address': address,
       'cost_for_two': costForTwo,
       'cuisines': cuisines,
-      'lunch_open': lunchOpen,
-      'lunch_close': lunchClose,
-      'dinner_open': dinnerOpen,
-      'dinner_close': dinnerClose,
-      'is_veg_only': isVegOnly,
-      'has_bar': hasBar,
-      'is_ac': isAc,
-      'parking_available': parkingAvailable,
+      'timings': {
+        'lunch': {'open': lunchOpen, 'close': lunchClose},
+        'dinner': {'open': dinnerOpen, 'close': dinnerClose},
+      },
+      'attributes': {
+        'pure_veg': isVegOnly,
+        'serves_alcohol': hasBar,
+        'has_ac': isAc,
+        'has_parking': parkingAvailable,
+      },
+      'active_offers': activeOffers,
     };
   }
 
@@ -133,6 +172,8 @@ class RestaurantProfileData {
     bool? hasBar,
     bool? isAc,
     bool? parkingAvailable,
+    List<Map<String, dynamic>>? activeOffers,
+    Map<String, dynamic>? managerCredentials,
   }) {
     return RestaurantProfileData(
       restaurantId: restaurantId ?? this.restaurantId,
@@ -153,138 +194,257 @@ class RestaurantProfileData {
       hasBar: hasBar ?? this.hasBar,
       isAc: isAc ?? this.isAc,
       parkingAvailable: parkingAvailable ?? this.parkingAvailable,
+      activeOffers: activeOffers ?? List.from(this.activeOffers),
+      managerCredentials: managerCredentials ?? this.managerCredentials,
     );
   }
 }
 
 class AuthProvider extends ChangeNotifier {
-  final AuthService _authService = AuthService();
+  final SupabaseService _supabaseService = SupabaseService();
 
-  Map<String, dynamic>? _currentOwner;
+  User? _currentUser;
   bool _isLoading = false;
   String? _errorMessage;
   bool _hasSeenTutorial = false;
   late RestaurantProfileData _profile;
+  Map<String, dynamic>? _generatedManagerCredentials;
 
-  bool get isAuthenticated => _currentOwner != null;
-  Map<String, dynamic>? get currentOwner => _currentOwner;
+  bool get isAuthenticated => _currentUser != null;
+  User? get currentUser => _currentUser;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
   bool get hasSeenTutorial => _hasSeenTutorial;
   RestaurantProfileData get profile => _profile;
-
-  String get currentRestaurantId => _profile.restaurantId;
-  String get currentRestaurantName => _profile.name;
-
-  AuthProvider() {
-    _profile = RestaurantProfileData.defaults();
-    _initDemoOwner();
-    _loadPersistedData();
-  }
-
-  void _initDemoOwner() {
-    _currentOwner = {
-      'uid': 'owner_123',
-      'email': _profile.email,
-      'restaurant_id': _profile.restaurantId,
-      'name': _profile.name,
-    };
-  }
-
-  Future<void> _loadPersistedData() async {
-    try {
-      final dir = await getApplicationDocumentsDirectory();
-      var file = File('${dir.path}/restaurant_profile.json');
-      if (!await file.exists()) {
-        final legacyFile = File('${dir.path}/partner_profile.json');
-        if (await legacyFile.exists()) {
-          file = legacyFile;
-        }
-      }
-      if (await file.exists()) {
-        final content = await file.readAsString();
-        final Map<String, dynamic> data = jsonDecode(content);
-        if (data.containsKey('profile')) {
-          _profile = RestaurantProfileData.fromJson(data['profile']);
-          _currentOwner?['name'] = _profile.name;
-          _currentOwner?['email'] = _profile.email;
-        }
-        if (data.containsKey('has_seen_tutorial')) {
-          _hasSeenTutorial = data['has_seen_tutorial'] == true;
-        }
-        notifyListeners();
-      }
-    } catch (e) {
-      debugPrint('Error loading persisted restaurant profile: $e');
-    }
-  }
-
-  Future<void> _savePersistedData() async {
-    try {
-      final dir = await getApplicationDocumentsDirectory();
-      final file = File('${dir.path}/restaurant_profile.json');
-      final payload = {
-        'profile': _profile.toJson(),
-        'has_seen_tutorial': _hasSeenTutorial,
-      };
-      await file.writeAsString(jsonEncode(payload));
-    } catch (e) {
-      debugPrint('Error saving restaurant profile: $e');
-    }
-  }
-
-  Future<void> updateProfile(RestaurantProfileData updated) async {
-    _profile = updated;
-    if (_currentOwner != null) {
-      _currentOwner!['name'] = updated.name;
-      _currentOwner!['email'] = updated.email;
-    }
-    notifyListeners();
-    await _savePersistedData();
-  }
+  Map<String, dynamic>? get generatedManagerCredentials => _generatedManagerCredentials;
 
   void markTutorialSeen() {
     _hasSeenTutorial = true;
     notifyListeners();
-    _savePersistedData();
   }
 
-  void resetTutorial() {
-    _hasSeenTutorial = false;
-    notifyListeners();
-    _savePersistedData();
+  String get currentRestaurantId => _profile.restaurantId;
+  String get currentRestaurantName => _profile.name;
+  String get userRole => _currentUser?.appMetadata['role']?.toString() ?? 'restaurant_owner';
+
+  AuthProvider() {
+    _profile = RestaurantProfileData.defaults();
+    _checkInitialAuth();
   }
 
+  Future<void> _checkInitialAuth() async {
+    _currentUser = _supabaseService.currentUser;
+    if (_currentUser != null) {
+      await refreshRestaurantData();
+    }
+  }
+
+  // ==========================================
+  // 1. SIGN IN WITH EMAIL & PASSWORD
+  // ==========================================
   Future<bool> login(String email, String password) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
-      final user = await _authService.signInWithEmail(email, password);
-      if (user != null) {
-        _currentOwner = {
-          'uid': user.uid,
-          'email': email,
-          'restaurant_id': _profile.restaurantId,
-          'name': _profile.name,
-        };
-        _isLoading = false;
-        notifyListeners();
-        return true;
-      }
-    } catch (e) {
-      _errorMessage = e.toString();
-    }
+      final res = await _supabaseService.signInWithEmail(
+        email: email.trim(),
+        password: password,
+      );
+      _currentUser = res.user;
 
-    _isLoading = false;
-    notifyListeners();
-    return false;
+      await refreshRestaurantData();
+
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      notifyListeners();
+      return false;
+    }
   }
 
-  void logout() {
-    _authService.signOut();
-    _currentOwner = null;
+  // ==========================================
+  // 2. SIGN UP OWNER & REGISTER RESTAURANT
+  // ==========================================
+  Future<bool> signupOwnerAndRegisterRestaurant({
+    required String ownerName,
+    required String email,
+    required String password,
+    required String phone,
+    required String restaurantName,
+    required String address,
+    required String fssaiNumber,
+    required String upiId,
+    required int costForTwo,
+    required List<String> cuisines,
+  }) async {
+    _isLoading = true;
+    _errorMessage = null;
+    _generatedManagerCredentials = null;
+    notifyListeners();
+
+    try {
+      // Step 1: Call Edge Function signup-owner
+      final signupResult = await _supabaseService.signupOwner(
+        name: ownerName,
+        email: email,
+        password: password,
+        phone: phone,
+      );
+
+      final ownerUser = signupResult['user'] as Map<String, dynamic>?;
+      final ownerId = ownerUser?['id']?.toString() ?? '';
+
+      // Step 2: Sign in to establish active session
+      final loginRes = await _supabaseService.signInWithEmail(
+        email: email,
+        password: password,
+      );
+      _currentUser = loginRes.user;
+
+      // Step 3: Create Restaurant record in Supabase
+      final cleanSlug = restaurantName.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '_');
+      final restId = 'res_${cleanSlug}_${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}';
+
+      final newRestData = {
+        'restaurant_id': restId,
+        'name': restaurantName,
+        'upi_id': upiId,
+        'fssai_number': fssaiNumber,
+        'address': address,
+        'cost_for_two': costForTwo,
+        'cuisines': cuisines,
+        'timings': {
+          'lunch': {'open': '11:30 AM', 'close': '03:30 PM'},
+          'dinner': {'open': '07:00 PM', 'close': '11:30 PM'},
+        },
+        'attributes': {
+          'has_ac': true,
+          'pure_veg': false,
+          'has_parking': true,
+          'serves_alcohol': true,
+          'outdoor_seating': true,
+        },
+        'active_offers': [
+          {
+            'code': 'WELCOME20',
+            'description': 'Flat 20% off for first bookings',
+            'discount_percent': 20,
+          }
+        ],
+        'rating': {'average': 4.8, 'total_reviews': 0},
+        'status': 'ACTIVE',
+        'owners_details': {
+          'owner_id': ownerId,
+          'owner_name': ownerName,
+          'email': email,
+          'phone': phone,
+        },
+      };
+
+      await _supabaseService.createRestaurant(newRestData);
+
+      // Step 4: Call activate-restaurant Edge Function to ensure Manager Credentials generate
+      try {
+        final actResult = await _supabaseService.activateRestaurant(
+          restaurantId: restId,
+          authToken: loginRes.session?.accessToken,
+        );
+        final restObj = actResult['restaurant'] as Map<String, dynamic>?;
+        if (restObj != null && restObj['manager_credentials'] != null) {
+          _generatedManagerCredentials = Map<String, dynamic>.from(restObj['manager_credentials']);
+        }
+      } catch (e) {
+        debugPrint('Activation edge function notice: $e');
+      }
+
+      // Step 5: Refresh restaurant profile state
+      await refreshRestaurantData();
+
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      notifyListeners();
+      return false;
+    }
+  }
+
+  // ==========================================
+  // 3. REFRESH RESTAURANT DATA FROM DB
+  // ==========================================
+  Future<void> refreshRestaurantData() async {
+    try {
+      final restMap = await _supabaseService.fetchRestaurantForCurrentUser();
+      if (restMap != null) {
+        _profile = RestaurantProfileData.fromSupabase(restMap);
+        if (_profile.managerCredentials != null) {
+          _generatedManagerCredentials ??= _profile.managerCredentials;
+        }
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint('Error fetching restaurant data: $e');
+    }
+  }
+
+  // ==========================================
+  // 4. UPDATE RESTAURANT PROFILE IN DB
+  // ==========================================
+  Future<bool> updateProfile(RestaurantProfileData updated) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      await _supabaseService.updateRestaurant(
+        updated.restaurantId,
+        updated.toSupabaseUpdate(),
+      );
+      _profile = updated;
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      notifyListeners();
+      return false;
+    }
+  }
+
+  // ==========================================
+  // 5. UPDATE MANAGER PASSWORD (EDGE FUNCTION)
+  // ==========================================
+  Future<bool> changePassword(String newPassword) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      await _supabaseService.updateManagerPassword(newPassword: newPassword);
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      notifyListeners();
+      return false;
+    }
+  }
+
+  // ==========================================
+  // 6. LOGOUT
+  // ==========================================
+  Future<void> logout() async {
+    await _supabaseService.signOut();
+    _currentUser = null;
+    _generatedManagerCredentials = null;
     notifyListeners();
   }
 }
