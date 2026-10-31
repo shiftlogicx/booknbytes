@@ -33,7 +33,6 @@ class NotificationService {
             category: AVAudioSessionCategory.playback,
             options: const {
               AVAudioSessionOptions.duckOthers,
-              AVAudioSessionOptions.defaultToSpeaker,
             },
           ),
           android: const AudioContextAndroid(

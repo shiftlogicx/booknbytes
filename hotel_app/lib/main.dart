@@ -13,6 +13,8 @@ import 'services/fcm_service.dart';
 import 'services/notification_service.dart';
 import 'screens/splash_screen.dart';
 
+final GlobalKey<NavigatorState> appNavigatorKey = GlobalKey<NavigatorState>();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -26,16 +28,19 @@ void main() async {
     debugPrint('Supabase initialization note: $e');
   }
 
-  try {
-    await FirebaseConfig.initialize();
-  } catch (e) {
-    debugPrint('Firebase initialization notice: $e (running with local test fallback)');
+  // Only initialize Firebase if valid credentials are present
+  if (FirebaseConfig.isConfigured) {
+    try {
+      await FirebaseConfig.initialize();
+      await FCMService().initialize();
+    } catch (e) {
+      debugPrint('Firebase initialization notice: $e');
+    }
   }
 
-  // Initialize notification and FCM ringing systems
+  // Initialize notification and ringing audio systems
   try {
     await NotificationService().initialize();
-    await FCMService().initialize();
   } catch (e) {
     debugPrint('Notification service initialization notice: $e');
   }
@@ -51,12 +56,22 @@ class BookAndBiteHotelApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
-        ChangeNotifierProvider(create: (_) => BookingProvider()),
-        ChangeNotifierProvider(create: (_) => SlotsProvider()),
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
+        ChangeNotifierProxyProvider<NotificationProvider, BookingProvider>(
+          create: (_) => BookingProvider(),
+          update: (_, notifProvider, bookingProvider) {
+            final bp = bookingProvider ?? BookingProvider();
+            bp.onNewBookingAlert = (booking) {
+              notifProvider.triggerIncomingBookingAlert(booking);
+            };
+            return bp;
+          },
+        ),
+        ChangeNotifierProvider(create: (_) => SlotsProvider()),
         ChangeNotifierProvider(create: (_) => LocationProvider()),
       ],
       child: MaterialApp(
+        navigatorKey: appNavigatorKey,
         title: 'BookNBytes Restaurant',
         debugShowCheckedModeBanner: false,
         theme: AppTheme.lightTheme,

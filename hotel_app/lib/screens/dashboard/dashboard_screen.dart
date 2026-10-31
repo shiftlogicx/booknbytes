@@ -62,36 +62,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
-  void _handleIncomingBookingAlert(BookingModel booking) async {
+  void _handleIncomingBookingAlert(BookingModel booking) {
     if (!mounted) return;
     final notifProvider = Provider.of<NotificationProvider>(context, listen: false);
-
-    // If an alert is already active or showing for this exact booking, avoid double presentation
-    if (notifProvider.activeAlertBooking?.bookingId == booking.bookingId && notifProvider.isAlertVisible) {
-      return;
-    }
-
     HapticFeedback.heavyImpact();
     notifProvider.triggerIncomingBookingAlert(booking);
-
-    final result = await Navigator.of(context).push<bool>(
-      PageRouteBuilder(
-        opaque: false,
-        pageBuilder: (context, _, __) => IncomingBookingAlertScreen(booking: booking),
-      ),
-    );
-
-    if (!mounted) return;
-
-    if (result == true) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Reservation #${booking.bookingId} confirmed & table assigned!'),
-          backgroundColor: const Color(0xFF10B981),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
   }
 
   void _simulateIncomingAlert() async {

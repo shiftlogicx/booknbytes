@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/booking_model.dart';
 import '../services/notification_service.dart';
+import '../screens/alerts/incoming_booking_alert.dart';
+import '../main.dart';
 
 class NotificationProvider extends ChangeNotifier {
   final NotificationService _notificationService = NotificationService();
@@ -25,10 +27,24 @@ class NotificationProvider extends ChangeNotifier {
   }
 
   void triggerIncomingBookingAlert(BookingModel booking) {
+    if (_isAlertVisible && _activeAlertBooking?.bookingId == booking.bookingId) {
+      return;
+    }
     _activeAlertBooking = booking;
     _isAlertVisible = true;
     _notificationService.startRinging();
     notifyListeners();
+
+    // Present the full-screen MyGate-style dialog globally over the active screen
+    final nav = appNavigatorKey.currentState;
+    if (nav != null) {
+      nav.push(
+        PageRouteBuilder(
+          opaque: false,
+          pageBuilder: (context, _, __) => IncomingBookingAlertScreen(booking: booking),
+        ),
+      );
+    }
   }
 
   void acceptBooking() {

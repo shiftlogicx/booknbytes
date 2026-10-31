@@ -108,16 +108,11 @@ class BookingProvider extends ChangeNotifier {
 
     // 1. Direct Realtime Channel on postgres_changes for immediate push
     try {
-      _realtimeChannel = _supabaseService.client.channel('restaurant-bookings-live-$restaurantId');
+      _realtimeChannel = _supabaseService.client.channel('restaurant-bookings-live-all');
       _realtimeChannel!.onPostgresChanges(
         event: PostgresChangeEvent.all,
         schema: 'public',
         table: 'bookings',
-        filter: PostgresChangeFilter(
-          type: PostgresChangeFilterType.eq,
-          column: 'restaurant_id',
-          value: restaurantId,
-        ),
         callback: (payload) {
           _handlePostgresChange(payload);
         },
@@ -176,37 +171,46 @@ class BookingProvider extends ChangeNotifier {
       try {
         final record = Map<String, dynamic>.from(payload.newRecord);
         final booking = BookingModel.fromMap(record);
-        if (!_knownBookingIds.contains(booking.bookingId)) {
-          _knownBookingIds.add(booking.bookingId);
-          _bookings.insert(0, booking);
-          notifyListeners();
 
-          // If customer name was not joined in raw change, enrich asynchronously
-          if ((booking.customerName == 'Guest Diner' || booking.customerName == null) && booking.userId.isNotEmpty) {
-            _supabaseService.client
-                .from('users')
-                .select('name, phone_number')
-                .eq('user_id', booking.userId)
-                .maybeSingle()
-                .then((uData) {
-                  if (uData != null) {
-                    final enriched = booking.copyWith(
-                      customerName: uData['name'] ?? booking.customerName,
-                      customerPhone: uData['phone_number'] ?? booking.customerPhone,
-                    );
-                    final idx = _bookings.indexWhere((b) => b.bookingId == booking.bookingId);
-                    if (idx != -1) {
-                      _bookings[idx] = enriched;
-                      notifyListeners();
+        debugPrint('[BookingProvider] Realtime INSERT event: ID=${booking.bookingId}, Rest=${booking.restaurantId}, Status=${booking.status.value}, currentRest=$_currentRestaurantId');
+
+        final matchesCurrent = _currentRestaurantId.isEmpty ||
+            booking.restaurantId == _currentRestaurantId ||
+            booking.restaurantId.isEmpty;
+
+        if (matchesCurrent) {
+          if (!_knownBookingIds.contains(booking.bookingId)) {
+            _knownBookingIds.add(booking.bookingId);
+            _bookings.insert(0, booking);
+            notifyListeners();
+
+            // If customer name was not joined in raw change, enrich asynchronously
+            if ((booking.customerName == 'Guest Diner' || booking.customerName == null) && booking.userId.isNotEmpty) {
+              _supabaseService.client
+                  .from('users')
+                  .select('name, phone_number')
+                  .eq('user_id', booking.userId)
+                  .maybeSingle()
+                  .then((uData) {
+                    if (uData != null) {
+                      final enriched = booking.copyWith(
+                        customerName: uData['name'] ?? booking.customerName,
+                        customerPhone: uData['phone_number'] ?? booking.customerPhone,
+                      );
+                      final idx = _bookings.indexWhere((b) => b.bookingId == booking.bookingId);
+                      if (idx != -1) {
+                        _bookings[idx] = enriched;
+                        notifyListeners();
+                      }
                     }
-                  }
-                });
-          }
+                  });
+            }
 
-          if (booking.status == BookingStatus.pending) {
-            debugPrint('[BookingProvider] Realtime alert triggered for booking #${booking.bookingId}');
-            onNewBookingAlert?.call(booking);
-            NotificationService().showBookingNotification(booking);
+            if (booking.status == BookingStatus.pending) {
+              debugPrint('[BookingProvider] Realtime alert triggered for booking #${booking.bookingId}');
+              onNewBookingAlert?.call(booking);
+              NotificationService().showBookingNotification(booking);
+            }
           }
         }
       } catch (e) {
