@@ -249,9 +249,11 @@ class AuthProvider extends ChangeNotifier {
   String get currentRestaurantName => _profile.name;
   String get userRole => _currentUser?.appMetadata['role']?.toString() ?? 'restaurant_owner';
 
-  AuthProvider() {
+  AuthProvider({bool checkAuth = true}) {
     _profile = RestaurantProfileData.defaults();
-    _checkInitialAuth();
+    if (checkAuth) {
+      _checkInitialAuth();
+    }
   }
 
   Future<void> _checkInitialAuth() async {
