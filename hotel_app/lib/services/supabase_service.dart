@@ -144,7 +144,15 @@ class SupabaseService {
   // ==========================================
   Future<Map<String, dynamic>?> fetchRestaurantForCurrentUser() async {
     final user = currentUser;
-    if (user == null) return null;
+    if (user == null) {
+      final defaultRest = await client
+          .from('restaurants')
+          .select('*')
+          .eq('restaurant_id', 'res_the_loaf_butter_30071')
+          .maybeSingle();
+      if (defaultRest != null) return Map<String, dynamic>.from(defaultRest);
+      return null;
+    }
 
     final appMeta = user.appMetadata;
     final jwtRestId = appMeta['restaurant_id']?.toString();

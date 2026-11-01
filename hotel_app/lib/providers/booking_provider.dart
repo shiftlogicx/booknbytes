@@ -33,6 +33,11 @@ class BookingProvider extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   String get filterStatus => _filterStatus;
 
+  BookingProvider() {
+    // Immediately start listening for live bookings from the very first frame
+    _subscribeToBookings('res_the_loaf_butter_30071');
+  }
+
   int get totalCount => _bookings.length;
   int get confirmedCount => _bookings.where((b) => b.isConfirmed).length;
   int get pendingCount => _bookings.where((b) => b.isPending).length;
