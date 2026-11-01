@@ -7,8 +7,30 @@ import '../../providers/booking_provider.dart';
 import '../../widgets/booking_card.dart';
 import '../../widgets/reservation_success_dialog.dart';
 
-class BookingListScreen extends StatelessWidget {
+class BookingListScreen extends StatefulWidget {
   const BookingListScreen({super.key});
+
+  @override
+  State<BookingListScreen> createState() => _BookingListScreenState();
+}
+
+class _BookingListScreenState extends State<BookingListScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _refreshData();
+    });
+  }
+
+  void _refreshData() {
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    final booking = Provider.of<BookingProvider>(context, listen: false);
+    final restId = auth.currentRestaurantId;
+    if (restId.isNotEmpty) {
+      booking.loadBookings(restId);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -26,22 +48,52 @@ class BookingListScreen extends StatelessWidget {
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Table Reservations',
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-                color: Color(0xFF0F172A),
-                letterSpacing: -0.2,
-              ),
+            Row(
+              children: [
+                const Text(
+                  'Table Reservations',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF0F172A),
+                    letterSpacing: -0.2,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFECFDF5),
+                    borderRadius: BorderRadius.circular(6),
+                    border: Border.all(color: const Color(0xFFA7F3D0)),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircleAvatar(radius: 3, backgroundColor: Color(0xFF059669)),
+                      SizedBox(width: 4),
+                      Text(
+                        'LIVE',
+                        style: TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF059669),
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
             Text(
-              '${booking.totalCount} Total Entries · Live Floor Console',
+              '${booking.totalCount} Total Entries · ${auth.currentRestaurantName.isNotEmpty ? auth.currentRestaurantName : "Live Floor Console"}',
               style: const TextStyle(
                 fontSize: 11,
                 color: Color(0xFF64748B),
                 fontWeight: FontWeight.w500,
               ),
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),
@@ -51,7 +103,7 @@ class BookingListScreen extends StatelessWidget {
             icon: const Icon(Icons.refresh_rounded, color: Color(0xFF0F172A), size: 20),
             onPressed: () {
               HapticFeedback.lightImpact();
-              booking.loadBookings(auth.currentRestaurantId);
+              _refreshData();
             },
           ),
           const SizedBox(width: 8),
@@ -128,91 +180,110 @@ class BookingListScreen extends StatelessWidget {
               ),
             ),
 
-            // Bookings List
+            // Bookings List with Pull to Refresh
             Expanded(
-              child: booking.bookings.isEmpty
-                  ? Center(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 32),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              width: 72,
-                              height: 72,
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
-                                border: Border.all(color: const Color(0xFFE2E8F0), width: 1.2),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(0xFF0F172A).withValues(alpha: 0.04),
-                                    blurRadius: 20,
-                                    offset: const Offset(0, 6),
+              child: RefreshIndicator(
+                onRefresh: () async {
+                  HapticFeedback.lightImpact();
+                  final restId = auth.currentRestaurantId;
+                  if (restId.isNotEmpty) {
+                    await booking.loadBookings(restId);
+                  }
+                },
+                color: const Color(0xFF0F172A),
+                backgroundColor: Colors.white,
+                child: booking.bookings.isEmpty
+                    ? ListView(
+                        physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+                        children: [
+                          SizedBox(height: MediaQuery.of(context).size.height * 0.15),
+                          Center(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 32),
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Container(
+                                    width: 72,
+                                    height: 72,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      shape: BoxShape.circle,
+                                      border: Border.all(color: const Color(0xFFE2E8F0), width: 1.2),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: const Color(0xFF0F172A).withValues(alpha: 0.04),
+                                          blurRadius: 20,
+                                          offset: const Offset(0, 6),
+                                        ),
+                                      ],
+                                    ),
+                                    child: const Icon(
+                                      Icons.table_restaurant_rounded,
+                                      size: 32,
+                                      color: Color(0xFF64748B),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 18),
+                                  Text(
+                                    booking.filterStatus == 'ALL'
+                                        ? 'No Reservations in this Queue'
+                                        : 'No ${booking.filterStatus} Reservations',
+                                    style: const TextStyle(
+                                      color: Color(0xFF0F172A),
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: -0.2,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  const Text(
+                                    'Incoming bookings from the Customer App or Admin Portal will automatically stream here in real time.',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: Color(0xFF64748B),
+                                      fontSize: 12.5,
+                                      height: 1.4,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 20),
+                                  OutlinedButton.icon(
+                                    style: OutlinedButton.styleFrom(
+                                      foregroundColor: const Color(0xFF0F172A),
+                                      side: const BorderSide(color: Color(0xFFCBD5E1)),
+                                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                                    ),
+                                    onPressed: () {
+                                      HapticFeedback.lightImpact();
+                                      _refreshData();
+                                    },
+                                    icon: const Icon(Icons.refresh_rounded, size: 16),
+                                    label: const Text('Refresh Floor Feed', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
                                   ),
                                 ],
                               ),
-                              child: const Icon(
-                                Icons.table_restaurant_rounded,
-                                size: 32,
-                                color: Color(0xFF64748B),
-                              ),
                             ),
-                            const SizedBox(height: 18),
-                            const Text(
-                              'No Reservations in this Queue',
-                              style: TextStyle(
-                                color: Color(0xFF0F172A),
-                                fontSize: 16,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: -0.2,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            const Text(
-                              'Incoming bookings will automatically populate here via real-time floor sync.',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: Color(0xFF64748B),
-                                fontSize: 12.5,
-                                height: 1.4,
-                              ),
-                            ),
-                            const SizedBox(height: 20),
-                            OutlinedButton.icon(
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: const Color(0xFF0F172A),
-                                side: const BorderSide(color: Color(0xFFCBD5E1)),
-                                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                              ),
-                              onPressed: () {
-                                HapticFeedback.lightImpact();
-                                booking.loadBookings(auth.currentRestaurantId);
-                              },
-                              icon: const Icon(Icons.refresh_rounded, size: 16),
-                              label: const Text('Refresh Floor Feed', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 12)),
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
+                      )
+                    : ListView.builder(
+                        physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
+                        itemCount: booking.bookings.length,
+                        itemBuilder: (context, idx) {
+                          final b = booking.bookings[idx];
+                          return BookingCard(
+                            booking: b,
+                            onAccept: () {
+                              booking.updateStatus(b.bookingId, BookingStatus.confirmed);
+                              ReservationSuccessDialog.show(context, b);
+                            },
+                            onReject: () => booking.updateStatus(b.bookingId, BookingStatus.cancelled),
+                          );
+                        },
                       ),
-                    )
-                  : ListView.builder(
-                      physics: const BouncingScrollPhysics(),
-                      padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
-                      itemCount: booking.bookings.length,
-                      itemBuilder: (context, idx) {
-                        final b = booking.bookings[idx];
-                        return BookingCard(
-                          booking: b,
-                          onAccept: () {
-                            booking.updateStatus(b.bookingId, BookingStatus.confirmed);
-                            ReservationSuccessDialog.show(context, b);
-                          },
-                          onReject: () => booking.updateStatus(b.bookingId, BookingStatus.cancelled),
-                        );
-                      },
-                    ),
+              ),
             ),
           ],
         ),

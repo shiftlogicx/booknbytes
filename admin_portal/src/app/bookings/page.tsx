@@ -139,6 +139,8 @@ export default function BookingsPage() {
     const matchesSearch = 
       b.booking_id.toLowerCase().includes(query) ||
       b.restaurant_name.toLowerCase().includes(query) ||
+      (b.customer_name && b.customer_name.toLowerCase().includes(query)) ||
+      (b.customer_phone && b.customer_phone.includes(query)) ||
       (b.users?.name && b.users.name.toLowerCase().includes(query)) ||
       (b.users?.phone_number && b.users.phone_number.includes(query));
 
@@ -233,8 +235,8 @@ export default function BookingsPage() {
                       {b.restaurant_name}
                     </td>
                     <td className="py-3 px-4 text-slate-600">
-                      <div className="font-semibold text-slate-800">{b.users?.name || 'Guest Diner'}</div>
-                      <div className="text-[10px] text-slate-400">{b.users?.phone_number || b.users?.email || 'N/A'}</div>
+                      <div className="font-semibold text-slate-800">{b.customer_name || b.users?.name || 'Guest Diner'}</div>
+                      <div className="text-[10px] text-slate-400">{b.customer_phone || b.users?.phone_number || b.users?.email || 'N/A'}</div>
                     </td>
                     <td className="py-3 px-4 text-slate-600">
                       <div className="font-semibold">{b.booking_date}</div>

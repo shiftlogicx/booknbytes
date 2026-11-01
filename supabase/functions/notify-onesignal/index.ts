@@ -37,10 +37,10 @@ Deno.serve(async (req: Request) => {
     const appliedOffer = record.applied_offer || "";
     const status = record.status || "PENDING";
 
-    // Only notify if status is PENDING (new reservation waiting for restaurant confirmation)
-    if (status !== "PENDING") {
+    // Only notify if status is PENDING or CONFIRMED (new reservation waiting for restaurant confirmation or instant confirmed)
+    if (status !== "PENDING" && status !== "CONFIRMED") {
       return new Response(
-        JSON.stringify({ message: "Skipping notification; status is not PENDING.", status }),
+        JSON.stringify({ message: "Skipping notification; status is not PENDING or CONFIRMED.", status }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
       );
     }
@@ -91,6 +91,7 @@ Deno.serve(async (req: Request) => {
     }
 
     // Dispatch to OneSignal REST API v1
+    const isConfirmed = status === "CONFIRMED";
     const oneSignalPayload = {
       app_id: onesignalAppId,
       include_aliases: {
@@ -98,7 +99,7 @@ Deno.serve(async (req: Request) => {
       },
       target_channel: "push",
       headings: {
-        en: "🔔 New Table Reservation!",
+        en: isConfirmed ? "🔔 Confirmed Table Reservation!" : "🔔 New Table Reservation Request!",
       },
       contents: {
         en: `${customerName} · ${partySize} guests at ${timeSlot}`,
@@ -113,7 +114,7 @@ Deno.serve(async (req: Request) => {
         customer_name: customerName,
         customer_phone: customerPhone,
         applied_offer: appliedOffer,
-        status: "PENDING",
+        status: status,
         created_at: new Date().toISOString(),
       },
       priority: 10, // Maximum delivery priority
@@ -134,7 +135,7 @@ Deno.serve(async (req: Request) => {
     let osResult = await osResponse.json();
 
     // If alias targeting encounters an issue, fallback to restaurant_id tag filter
-    if (!osResponse.ok || osResult?.errors?.invalid_aliases) {
+    if (!osResponse.ok || osResult?.errors?.invalid_aliases || osResult?.errors?.includes?.("All included players are not subscribed")) {
       console.log(`[notify-onesignal] Trying fallback tag filter for restaurant ${restaurantId}`);
       const fallbackPayload = {
         app_id: onesignalAppId,
@@ -161,6 +162,35 @@ Deno.serve(async (req: Request) => {
 
       if (fallbackResponse.ok) {
         osResult = await fallbackResponse.json();
+      }
+
+      // If tag filter also had no subscribed players, broadcast to total subscriptions for immediate reach
+      if (!fallbackResponse.ok || (osResult?.errors && osResult.errors.length > 0)) {
+        console.log(`[notify-onesignal] Trying broadcast fallback to Total Subscriptions`);
+        const broadcastPayload = {
+          app_id: onesignalAppId,
+          included_segments: ["Total Subscriptions"],
+          headings: oneSignalPayload.headings,
+          contents: oneSignalPayload.contents,
+          data: oneSignalPayload.data,
+          priority: 10,
+          ios_sound: "alert_tone.wav",
+          android_sound: "alert_tone",
+          content_available: true,
+        };
+
+        const broadResponse = await fetch("https://onesignal.com/api/v1/notifications", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Basic ${onesignalApiKey}`,
+          },
+          body: JSON.stringify(broadcastPayload),
+        });
+
+        if (broadResponse.ok) {
+          osResult = await broadResponse.json();
+        }
       }
     }
 

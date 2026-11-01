@@ -304,6 +304,8 @@ export async function createBooking(payload: {
       user_id: userId,
       restaurant_id: payload.restaurant_id,
       restaurant_name: payload.restaurant_name,
+      customer_name: payload.customer_name || 'Guest Diner',
+      customer_phone: payload.customer_phone || '',
       party_size: payload.party_size,
       booking_date: payload.booking_date,
       time_slot: payload.time_slot,

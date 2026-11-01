@@ -59,13 +59,17 @@ class BookAndBiteHotelApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
-        ChangeNotifierProxyProvider<NotificationProvider, BookingProvider>(
+        ChangeNotifierProxyProvider2<AuthProvider, NotificationProvider, BookingProvider>(
           create: (_) => BookingProvider(),
-          update: (_, notifProvider, bookingProvider) {
+          update: (_, authProvider, notifProvider, bookingProvider) {
             final bp = bookingProvider ?? BookingProvider();
             bp.onNewBookingAlert = (booking) {
               notifProvider.triggerIncomingBookingAlert(booking);
             };
+            if (authProvider.currentRestaurantId.isNotEmpty) {
+              bp.initForRestaurant(authProvider.currentRestaurantId);
+              OneSignalService().loginRestaurant(authProvider.currentRestaurantId);
+            }
             return bp;
           },
         ),

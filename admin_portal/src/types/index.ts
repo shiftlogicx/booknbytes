@@ -92,6 +92,8 @@ export interface Booking {
   status: BookingStatus;
   created_at: string;
   slot_id?: string | null;
+  customer_name?: string | null;
+  customer_phone?: string | null;
   users?: {
     name?: string;
     phone_number?: string;

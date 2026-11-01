@@ -74,10 +74,15 @@ class BookingProvider extends ChangeNotifier {
   // INITIALIZE & SUBSCRIBE TO RESTAURANT BOOKINGS
   // ==========================================
   void initForRestaurant(String restaurantId) {
-    if (_currentRestaurantId == restaurantId && _bookings.isNotEmpty) return;
+    if (restaurantId.isEmpty) return;
+    final isNew = _currentRestaurantId != restaurantId;
     _currentRestaurantId = restaurantId;
-    loadBookings(restaurantId);
-    _subscribeToBookings(restaurantId);
+    if (isNew || _bookings.isEmpty) {
+      loadBookings(restaurantId);
+    }
+    if (_realtimeChannel == null || isNew) {
+      _subscribeToBookings(restaurantId);
+    }
   }
 
   Future<void> fetchBookings(String restaurantId) => loadBookings(restaurantId);
@@ -132,8 +137,8 @@ class BookingProvider extends ChangeNotifier {
             for (final b in list) {
               if (!_knownBookingIds.contains(b.bookingId)) {
                 _knownBookingIds.add(b.bookingId);
-                if (b.status == BookingStatus.pending) {
-                  debugPrint('[BookingProvider] New PENDING booking detected via stream: ${b.bookingId}');
+                if (b.status == BookingStatus.pending || b.status == BookingStatus.confirmed) {
+                  debugPrint('[BookingProvider] New booking detected via stream: ${b.bookingId}');
                   onNewBookingAlert?.call(b);
                   NotificationService().showBookingNotification(b);
                 }
@@ -157,8 +162,8 @@ class BookingProvider extends ChangeNotifier {
           _knownBookingIds.add(booking.bookingId);
           _bookings.insert(0, booking);
           notifyListeners();
-          if (booking.status == BookingStatus.pending) {
-            debugPrint('[BookingProvider] New PENDING booking received via FCM: ${booking.bookingId}');
+          if (booking.status == BookingStatus.pending || booking.status == BookingStatus.confirmed) {
+            debugPrint('[BookingProvider] New booking received via FCM: ${booking.bookingId}');
             onNewBookingAlert?.call(booking);
             NotificationService().showBookingNotification(booking);
           }
@@ -173,8 +178,8 @@ class BookingProvider extends ChangeNotifier {
           _knownBookingIds.add(booking.bookingId);
           _bookings.insert(0, booking);
           notifyListeners();
-          if (booking.status == BookingStatus.pending) {
-            debugPrint('[BookingProvider] New PENDING booking received via OneSignal: ${booking.bookingId}');
+          if (booking.status == BookingStatus.pending || booking.status == BookingStatus.confirmed) {
+            debugPrint('[BookingProvider] New booking received via OneSignal: ${booking.bookingId}');
             onNewBookingAlert?.call(booking);
             NotificationService().showBookingNotification(booking);
           }
@@ -201,6 +206,14 @@ class BookingProvider extends ChangeNotifier {
             _bookings.insert(0, booking);
             notifyListeners();
 
+            void triggerAlert(BookingModel b) {
+              if (b.status == BookingStatus.pending || b.status == BookingStatus.confirmed) {
+                debugPrint('[BookingProvider] Realtime alert triggered for booking #${b.bookingId} (${b.customerName})');
+                onNewBookingAlert?.call(b);
+                NotificationService().showBookingNotification(b);
+              }
+            }
+
             // If customer name was not joined in raw change, enrich asynchronously
             if ((booking.customerName == 'Guest Diner' || booking.customerName == null) && booking.userId.isNotEmpty) {
               _supabaseService.client
@@ -209,6 +222,7 @@ class BookingProvider extends ChangeNotifier {
                   .eq('user_id', booking.userId)
                   .maybeSingle()
                   .then((uData) {
+                    BookingModel finalBooking = booking;
                     if (uData != null) {
                       final enriched = booking.copyWith(
                         customerName: uData['name'] ?? booking.customerName,
@@ -219,14 +233,14 @@ class BookingProvider extends ChangeNotifier {
                         _bookings[idx] = enriched;
                         notifyListeners();
                       }
+                      finalBooking = enriched;
                     }
+                    triggerAlert(finalBooking);
+                  }).catchError((_) {
+                    triggerAlert(booking);
                   });
-            }
-
-            if (booking.status == BookingStatus.pending) {
-              debugPrint('[BookingProvider] Realtime alert triggered for booking #${booking.bookingId}');
-              onNewBookingAlert?.call(booking);
-              NotificationService().showBookingNotification(booking);
+            } else {
+              triggerAlert(booking);
             }
           }
         }

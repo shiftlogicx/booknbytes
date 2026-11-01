@@ -75,12 +75,12 @@ class BookingModel {
     }
 
     // Resolve customer info: can come directly, or via joined users table
-    String? resolvedName = map['customer_name'];
-    String? resolvedPhone = map['customer_phone'];
-    if (map['users'] is Map<String, dynamic>) {
+    String? resolvedName = map['customer_name'] ?? map['name'] ?? map['user_name'];
+    String? resolvedPhone = map['customer_phone'] ?? map['phone'] ?? map['phone_number'];
+    if ((resolvedName == null || resolvedName.trim().isEmpty || resolvedName == 'Guest Diner') && map['users'] is Map<String, dynamic>) {
       final userMap = map['users'] as Map<String, dynamic>;
-      resolvedName ??= userMap['name'];
-      resolvedPhone ??= userMap['phone_number'];
+      resolvedName = userMap['name'] ?? resolvedName;
+      resolvedPhone = userMap['phone_number'] ?? resolvedPhone;
     }
 
     return BookingModel(
@@ -109,6 +109,8 @@ class BookingModel {
       'restaurant_id': restaurantId,
       'restaurant_name': restaurantName,
       'party_size': partySize,
+      'customer_name': customerName,
+      'customer_phone': customerPhone,
       'booking_date': date,
       'time_slot': timeSlot,
       'status': status.value,
