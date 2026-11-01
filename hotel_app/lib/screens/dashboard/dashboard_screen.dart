@@ -10,7 +10,6 @@ import '../../providers/notification_provider.dart';
 import '../../widgets/glass_nav_dock.dart';
 import '../../widgets/location_picker_sheet.dart';
 import '../../widgets/shift_pulse_bento.dart';
-import '../alerts/incoming_booking_alert.dart';
 import '../bookings/booking_list_screen.dart';
 import '../discounts/discounts_offers_screen.dart';
 import '../profile/restaurant_profile_screen.dart';
@@ -101,51 +100,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     await bookingProvider.addNewIncomingBooking(mockBooking);
     if (!mounted) return;
     notifProvider.triggerIncomingBookingAlert(mockBooking);
-
-    final result = await Navigator.of(context).push<bool>(
-      PageRouteBuilder(
-        opaque: false,
-        pageBuilder: (context, _, __) => IncomingBookingAlertScreen(booking: mockBooking),
-      ),
-    );
-
-    if (!mounted) return;
-
-    if (result == false) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.cancel_outlined, color: Colors.white, size: 18),
-              const SizedBox(width: 10),
-              Text('Reservation #${mockBooking.bookingId} Declined · Table Released'),
-            ],
-          ),
-          backgroundColor: const Color(0xFF0F172A),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-      );
-    } else if (result == true) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.check_circle_rounded, color: Color(0xFF00E599), size: 18),
-              const SizedBox(width: 10),
-              Text('Table #${mockBooking.bookingId.replaceAll('bk_', '')} Confirmed · Diner Notified'),
-            ],
-          ),
-          backgroundColor: const Color(0xFF0F172A),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-            side: const BorderSide(color: Color(0xFF00E599), width: 1.0),
-          ),
-          duration: const Duration(milliseconds: 2500),
-        ),
-      );
-    }
   }
 
   @override

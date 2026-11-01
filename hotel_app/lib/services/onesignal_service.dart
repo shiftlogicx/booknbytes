@@ -11,6 +11,25 @@ class OneSignalService {
   /// Callback when an incoming booking notification arrives
   Function(BookingModel booking)? onBookingReceived;
 
+  final Map<String, DateTime> _recentlyProcessedBookings = {};
+
+  void _dispatchBooking(BookingModel booking) {
+    final key = booking.bookingId.trim().toLowerCase();
+    final now = DateTime.now();
+
+    _recentlyProcessedBookings.removeWhere(
+      (_, time) => now.difference(time).inSeconds > 120,
+    );
+
+    final last = _recentlyProcessedBookings[key];
+    if (last != null && now.difference(last).inSeconds < 45) {
+      debugPrint('[OneSignalService] Deduplicating push event for $key');
+      return;
+    }
+    _recentlyProcessedBookings[key] = now;
+    onBookingReceived?.call(booking);
+  }
+
   Future<void> initialize() async {
     if (!OneSignalConfig.isConfigured) {
       debugPrint('[OneSignalService] OneSignal App ID not configured; operating in local mode.');
@@ -31,11 +50,14 @@ class OneSignalService {
       // 3. Foreground notification display listener
       OneSignal.Notifications.addForegroundWillDisplayListener((event) {
         debugPrint('[OneSignalService] Foreground push received: ${event.notification.notificationId}');
+        // Prevent duplicate OS notification banner when the app is already in the foreground
+        event.preventDefault();
+
         final data = event.notification.additionalData;
         if (data != null && (data['type'] == 'NEW_BOOKING' || data.containsKey('booking_id'))) {
           final booking = _parseBookingFromData(data);
           if (booking != null) {
-            onBookingReceived?.call(booking);
+            _dispatchBooking(booking);
           }
         }
       });
@@ -47,7 +69,7 @@ class OneSignalService {
         if (data != null && (data['type'] == 'NEW_BOOKING' || data.containsKey('booking_id'))) {
           final booking = _parseBookingFromData(data);
           if (booking != null) {
-            onBookingReceived?.call(booking);
+            _dispatchBooking(booking);
           }
         }
       });

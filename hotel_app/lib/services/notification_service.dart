@@ -156,8 +156,25 @@ class NotificationService {
     await startBackgroundKeepAlive();
   }
 
-  /// Show a full-screen notification for incoming booking
+  final Map<String, DateTime> _recentlyNotifiedBookings = {};
+
+  /// Show a full-screen notification for incoming booking with automatic deduplication
   Future<void> showBookingNotification(BookingModel booking) async {
+    final bookingKey = booking.bookingId.trim().toLowerCase();
+    final now = DateTime.now();
+
+    // Clean up stale deduplication entries older than 2 minutes
+    _recentlyNotifiedBookings.removeWhere(
+      (_, time) => now.difference(time).inSeconds > 120,
+    );
+
+    // Suppress duplicate notification if shown in the last 45 seconds
+    final lastNotified = _recentlyNotifiedBookings[bookingKey];
+    if (lastNotified != null && now.difference(lastNotified).inSeconds < 45) {
+      debugPrint('[NotificationService] Deduplicating notification for booking $bookingKey (already shown ${now.difference(lastNotified).inSeconds}s ago)');
+      return;
+    }
+    _recentlyNotifiedBookings[bookingKey] = now;
     const androidDetails = AndroidNotificationDetails(
       'booking_alerts',
       'Booking Alerts',

@@ -33,10 +33,30 @@ class NotificationProvider extends ChangeNotifier {
     });
   }
 
+  final Map<String, DateTime> _recentlyAlertedBookings = {};
+
   void triggerIncomingBookingAlert(BookingModel booking) {
-    if (_isAlertVisible && _activeAlertBooking?.bookingId == booking.bookingId) {
+    final bookingKey = booking.bookingId.trim().toLowerCase();
+    final now = DateTime.now();
+
+    // Clean up stale entries older than 2 minutes
+    _recentlyAlertedBookings.removeWhere(
+      (_, time) => now.difference(time).inSeconds > 120,
+    );
+
+    // Deduplicate if alert is already on screen or was displayed in the last 45 seconds
+    if (_isAlertVisible && _activeAlertBooking?.bookingId.trim().toLowerCase() == bookingKey) {
+      debugPrint('[NotificationProvider] Deduplicating alert for $bookingKey (alert currently active on screen)');
       return;
     }
+
+    final lastAlert = _recentlyAlertedBookings[bookingKey];
+    if (lastAlert != null && now.difference(lastAlert).inSeconds < 45) {
+      debugPrint('[NotificationProvider] Deduplicating alert for $bookingKey (already triggered ${now.difference(lastAlert).inSeconds}s ago)');
+      return;
+    }
+    _recentlyAlertedBookings[bookingKey] = now;
+
     _activeAlertBooking = booking;
     _isAlertVisible = true;
     _notificationService.startRinging();

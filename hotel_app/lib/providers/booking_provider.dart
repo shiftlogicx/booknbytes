@@ -142,12 +142,12 @@ class BookingProvider extends ChangeNotifier {
         if (list.isNotEmpty) {
           if (_initialLoadCompleted) {
             for (final b in list) {
-              if (!_knownBookingIds.contains(b.bookingId)) {
+              final key = b.bookingId.trim().toLowerCase();
+              if (!_knownBookingIds.contains(b.bookingId) && !_knownBookingIds.contains(key)) {
                 _knownBookingIds.add(b.bookingId);
+                _knownBookingIds.add(key);
                 if (b.status == BookingStatus.pending || b.status == BookingStatus.confirmed) {
-                  debugPrint('[BookingProvider] New booking detected via stream: ${b.bookingId}');
-                  onNewBookingAlert?.call(b);
-                  NotificationService().showBookingNotification(b);
+                  _dispatchBookingAlert(b, 'Stream');
                 }
               }
             }
@@ -165,14 +165,14 @@ class BookingProvider extends ChangeNotifier {
     // 3. Connect FCM Service trigger for end-to-end coverage
     FCMService().onBookingReceived = (booking) {
       if (booking.restaurantId == _currentRestaurantId || _currentRestaurantId.isEmpty) {
-        if (!_knownBookingIds.contains(booking.bookingId)) {
+        final key = booking.bookingId.trim().toLowerCase();
+        if (!_knownBookingIds.contains(booking.bookingId) && !_knownBookingIds.contains(key)) {
           _knownBookingIds.add(booking.bookingId);
+          _knownBookingIds.add(key);
           _bookings.insert(0, booking);
           notifyListeners();
           if (booking.status == BookingStatus.pending || booking.status == BookingStatus.confirmed) {
-            debugPrint('[BookingProvider] New booking received via FCM: ${booking.bookingId}');
-            onNewBookingAlert?.call(booking);
-            NotificationService().showBookingNotification(booking);
+            _dispatchBookingAlert(booking, 'FCM');
           }
         }
       }
@@ -181,18 +181,41 @@ class BookingProvider extends ChangeNotifier {
     // 4. Connect OneSignal Push Notification trigger for background cross-platform alerts
     OneSignalService().onBookingReceived = (booking) {
       if (booking.restaurantId == _currentRestaurantId || _currentRestaurantId.isEmpty) {
-        if (!_knownBookingIds.contains(booking.bookingId)) {
+        final key = booking.bookingId.trim().toLowerCase();
+        if (!_knownBookingIds.contains(booking.bookingId) && !_knownBookingIds.contains(key)) {
           _knownBookingIds.add(booking.bookingId);
+          _knownBookingIds.add(key);
           _bookings.insert(0, booking);
           notifyListeners();
           if (booking.status == BookingStatus.pending || booking.status == BookingStatus.confirmed) {
-            debugPrint('[BookingProvider] New booking received via OneSignal: ${booking.bookingId}');
-            onNewBookingAlert?.call(booking);
-            NotificationService().showBookingNotification(booking);
+            _dispatchBookingAlert(booking, 'OneSignal');
           }
         }
       }
     };
+  }
+
+  final Map<String, DateTime> _recentlyDispatchedAlerts = {};
+
+  void _dispatchBookingAlert(BookingModel booking, String source) {
+    final key = booking.bookingId.trim().toLowerCase();
+    final now = DateTime.now();
+
+    // Clean up older than 2 minutes
+    _recentlyDispatchedAlerts.removeWhere(
+      (_, time) => now.difference(time).inSeconds > 120,
+    );
+
+    final last = _recentlyDispatchedAlerts[key];
+    if (last != null && now.difference(last).inSeconds < 45) {
+      debugPrint('[BookingProvider] Deduplicating alert from $source for $key (already dispatched ${now.difference(last).inSeconds}s ago)');
+      return;
+    }
+    _recentlyDispatchedAlerts[key] = now;
+
+    debugPrint('[BookingProvider] Dispatching alert via $source for booking #${booking.bookingId} (${booking.customerName})');
+    onNewBookingAlert?.call(booking);
+    NotificationService().showBookingNotification(booking);
   }
 
   void _handlePostgresChange(PostgresChangePayload payload) {
@@ -208,18 +231,12 @@ class BookingProvider extends ChangeNotifier {
             booking.restaurantId.isEmpty;
 
         if (matchesCurrent) {
-          if (!_knownBookingIds.contains(booking.bookingId)) {
+          final key = booking.bookingId.trim().toLowerCase();
+          if (!_knownBookingIds.contains(booking.bookingId) && !_knownBookingIds.contains(key)) {
             _knownBookingIds.add(booking.bookingId);
+            _knownBookingIds.add(key);
             _bookings.insert(0, booking);
             notifyListeners();
-
-            void triggerAlert(BookingModel b) {
-              if (b.status == BookingStatus.pending || b.status == BookingStatus.confirmed) {
-                debugPrint('[BookingProvider] Realtime alert triggered for booking #${b.bookingId} (${b.customerName})');
-                onNewBookingAlert?.call(b);
-                NotificationService().showBookingNotification(b);
-              }
-            }
 
             // If customer name was not joined in raw change, enrich asynchronously
             if ((booking.customerName == 'Guest Diner' || booking.customerName == null) && booking.userId.isNotEmpty) {
@@ -242,12 +259,18 @@ class BookingProvider extends ChangeNotifier {
                       }
                       finalBooking = enriched;
                     }
-                    triggerAlert(finalBooking);
+                    if (finalBooking.status == BookingStatus.pending || finalBooking.status == BookingStatus.confirmed) {
+                      _dispatchBookingAlert(finalBooking, 'Realtime INSERT');
+                    }
                   }).catchError((_) {
-                    triggerAlert(booking);
+                    if (booking.status == BookingStatus.pending || booking.status == BookingStatus.confirmed) {
+                      _dispatchBookingAlert(booking, 'Realtime INSERT');
+                    }
                   });
             } else {
-              triggerAlert(booking);
+              if (booking.status == BookingStatus.pending || booking.status == BookingStatus.confirmed) {
+                _dispatchBookingAlert(booking, 'Realtime INSERT');
+              }
             }
           }
         }
@@ -281,10 +304,20 @@ class BookingProvider extends ChangeNotifier {
   }
 
   Future<void> addNewIncomingBooking(BookingModel booking) async {
+    final key = booking.bookingId.trim().toLowerCase();
+    _knownBookingIds.add(booking.bookingId);
+    _knownBookingIds.add(key);
+    _recentlyDispatchedAlerts[key] = DateTime.now();
+
     _bookings.insert(0, booking);
     notifyListeners();
     try {
       final inserted = await _supabaseService.insertBooking(booking);
+      final insertedKey = inserted.bookingId.trim().toLowerCase();
+      _knownBookingIds.add(inserted.bookingId);
+      _knownBookingIds.add(insertedKey);
+      _recentlyDispatchedAlerts[insertedKey] = DateTime.now();
+
       final idx = _bookings.indexWhere((b) => b.bookingId == booking.bookingId);
       if (idx != -1) {
         _bookings[idx] = inserted.copyWith(
