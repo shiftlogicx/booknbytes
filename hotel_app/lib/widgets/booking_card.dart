@@ -16,141 +16,6 @@ class BookingCard extends StatelessWidget {
     this.onReject,
   });
 
-  void _confirmNoShow(BuildContext context) {
-    HapticFeedback.heavyImpact();
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (ctx) {
-        return Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFEF2F2),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: const Color(0xFFFECACA)),
-                    ),
-                    child: const Icon(Icons.person_off_rounded, color: Color(0xFFDC2626), size: 24),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Mark Customer as No-Show?',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          'Booking #${booking.bookingId} · ${booking.customerName ?? "Diner"}',
-                          style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 18),
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                ),
-                child: const Row(
-                  children: [
-                    Icon(Icons.timer_outlined, size: 18, color: Color(0xFF64748B)),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        '15-minute grace window expired. Marking as No-Show immediately releases the reserved table for walk-ins and logs this entry in your restaurant audit documents.',
-                        style: TextStyle(fontSize: 12, color: Color(0xFF475569), height: 1.4),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 22),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: const Color(0xFF64748B),
-                        side: const BorderSide(color: Color(0xFFCBD5E1)),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                      onPressed: () => Navigator.of(ctx).pop(),
-                      child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.w700)),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    flex: 2,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFDC2626),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                      onPressed: () {
-                        Navigator.of(ctx).pop();
-                        Provider.of<BookingProvider>(context, listen: false).markNoShow(booking.bookingId);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Row(
-                              children: [
-                                const Icon(Icons.person_off_rounded, color: Color(0xFFF87171), size: 18),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Text(
-                                    'Booking #${booking.bookingId} marked as No-Show · Table released',
-                                    style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.white),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            backgroundColor: const Color(0xFF0F172A),
-                            behavior: SnackBarBehavior.floating,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                        );
-                      },
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.person_off_rounded, size: 16),
-                          SizedBox(width: 6),
-                          Text('Confirm No-Show', style: TextStyle(fontWeight: FontWeight.w800)),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
   void _markSeated(BuildContext context) {
     HapticFeedback.mediumImpact();
     Provider.of<BookingProvider>(context, listen: false).markCompleted(booking.bookingId);
@@ -162,7 +27,7 @@ class BookingCard extends StatelessWidget {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                '${booking.customerName ?? "Diner"} Seated at Table · Service active',
+                '${booking.customerName ?? "Diner"} Seated · Service active',
                 style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.white),
               ),
             ),
@@ -488,106 +353,59 @@ class BookingCard extends StatelessWidget {
                           )
                         else
                           const Text(
-                            'Standard Table',
+                            'Standard Reservation',
                             style: TextStyle(fontSize: 11, color: Color(0xFF64748B), fontWeight: FontWeight.w600),
                           ),
                       ],
                     ),
                   ),
 
-                  // If Confirmed: Table info banner & Action buttons
+                  // If Confirmed: Status banner & Seat Diner Action
                   if (isConfirmed) ...[
                     const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFECFDF5),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: const Color(0xFFA7F3D0)),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFECFDF5),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: const Color(0xFFA7F3D0)),
+                      ),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text('🎉 ', style: TextStyle(fontSize: 12)),
+                          Text(
+                            'Diner notified · Ready for service',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Color(0xFF059669),
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
-                          child: const Row(
-                            children: [
-                              Icon(Icons.table_restaurant_rounded, size: 13, color: Color(0xFF059669)),
-                              SizedBox(width: 6),
-                              Text(
-                                'Assigned Table T-04',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w800,
-                                  color: Color(0xFF059669),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF1F5F9),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: const Color(0xFFE2E8F0)),
-                          ),
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text('✨ ', style: TextStyle(fontSize: 10)),
-                              Text(
-                                'Diner is notified',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: Color(0xFF059669),
-                                  fontStyle: FontStyle.italic,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
 
-                    const SizedBox(height: 14),
-                    // Action Buttons for Confirmed: Seat Diner OR Mark No-Show
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: () => _confirmNoShow(context),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: const Color(0xFFDC2626),
-                              side: const BorderSide(color: Color(0xFFFECACA)),
-                              padding: const EdgeInsets.symmetric(vertical: 11),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            ),
-                            icon: const Icon(Icons.person_off_rounded, size: 15),
-                            label: const Text(
-                              'Mark No-Show',
-                              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12),
-                            ),
-                          ),
+                    const SizedBox(height: 12),
+                    // Action Button for Confirmed: Seat Diner
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () => _markSeated(context),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF059669),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed: () => _markSeated(context),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF059669),
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 11),
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            ),
-                            icon: const Icon(Icons.chair_rounded, size: 15),
-                            label: const Text(
-                              'Seat Diner',
-                              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12),
-                            ),
-                          ),
+                        icon: const Icon(Icons.chair_rounded, size: 16),
+                        label: const Text(
+                          'Seat Diner',
+                          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13),
                         ),
-                      ],
+                      ),
                     ),
                   ],
 
@@ -607,7 +425,7 @@ class BookingCard extends StatelessWidget {
                           SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              'Customer Marked as No-Show · Table Capacity Released',
+                              'Customer Marked as No-Show · Capacity Released',
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w700,
@@ -649,52 +467,29 @@ class BookingCard extends StatelessWidget {
                     ),
                   ],
 
-                  // Action Buttons for Pending Reservations
+                  // Action Buttons for Pending Reservations: Accept Only (No Decline)
                   if (isPending) ...[
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () {
-                              HapticFeedback.mediumImpact();
-                              onReject?.call();
-                            },
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: const Color(0xFFDC2626),
-                              side: const BorderSide(color: Color(0xFFFECACA)),
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            ),
-                            child: const Text(
-                              'Decline',
-                              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
-                            ),
-                          ),
+                    const SizedBox(height: 14),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () {
+                          HapticFeedback.heavyImpact();
+                          onAccept?.call();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF059669),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 13),
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          flex: 2,
-                          child: ElevatedButton.icon(
-                            onPressed: () {
-                              HapticFeedback.heavyImpact();
-                              onAccept?.call();
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF059669),
-                              foregroundColor: Colors.white,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              elevation: 0,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            ),
-                            icon: const Icon(Icons.check_circle_rounded, size: 18),
-                            label: const Text(
-                              'Accept Table',
-                              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13),
-                            ),
-                          ),
+                        icon: const Icon(Icons.check_circle_rounded, size: 18),
+                        label: const Text(
+                          'Accept Reservation',
+                          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 0.3),
                         ),
-                      ],
+                      ),
                     ),
                   ],
                 ],

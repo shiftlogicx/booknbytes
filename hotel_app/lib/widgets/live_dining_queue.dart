@@ -239,7 +239,7 @@ class _LiveDiningQueueTrackerState extends State<LiveDiningQueueTracker>
                         time: '08:30 PM',
                         tag: 'NEXT ARRIVAL',
                         tagColor: const Color(0xFFF59E0B),
-                        details: 'Aditya & Ananya Roy · Table T-04 · 4 Guests',
+                        details: 'Aditya & Ananya Roy · 4 Guests Reserved',
                         isCurrent: false,
                       ),
                       _buildTimelineSlot(
@@ -523,7 +523,7 @@ class _RadialGaugePainter extends CustomPainter {
     const gradient = SweepGradient(
       startAngle: startAngle,
       endAngle: startAngle + totalSweep,
-      colors: const [
+      colors: [
         Color(0xFF00E599),
         Color(0xFF38BDF8),
         Color(0xFF818CF8),

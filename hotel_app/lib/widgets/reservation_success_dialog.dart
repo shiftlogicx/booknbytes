@@ -6,12 +6,10 @@ import 'emoji_burst_animation.dart';
 
 class ReservationSuccessDialog extends StatefulWidget {
   final BookingModel booking;
-  final String assignedTable;
 
   const ReservationSuccessDialog({
     super.key,
     required this.booking,
-    this.assignedTable = 'Table T-04',
   });
 
   static Future<void> show(BuildContext context, BookingModel booking) {
@@ -160,15 +158,16 @@ class _ReservationSuccessDialogState extends State<ReservationSuccessDialog>
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFF59E0B).withValues(alpha: 0.18),
+                            color: const Color(0xFF059669).withValues(alpha: 0.18),
                             borderRadius: BorderRadius.circular(8),
                           ),
-                          child: Text(
-                            widget.assignedTable,
-                            style: const TextStyle(
-                              fontSize: 12,
+                          child: const Text(
+                            'CONFIRMED',
+                            style: TextStyle(
+                              fontSize: 11,
                               fontWeight: FontWeight.w800,
-                              color: Color(0xFFFBBF24),
+                              color: Color(0xFF00E599),
+                              letterSpacing: 0.5,
                             ),
                           ),
                         ),

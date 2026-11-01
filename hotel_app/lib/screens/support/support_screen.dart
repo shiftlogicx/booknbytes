@@ -31,7 +31,7 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
     _FaqItem(
       question: 'What is the restaurant policy for guest no-shows?',
       answer:
-          'Diners are given a 15-minute grace window past their reserved time slot. If they do not arrive, you can tap \'Mark No-Show\' in the Bookings tab, which immediately frees up table capacity and alerts the customer.',
+          'Diners are given a 15-minute grace window past their reserved time slot. If diners do not arrive within the window, their table reservation automatically expires so walk-in guests can be accommodated.',
       category: 'RESERVATIONS & SEATING',
     ),
     _FaqItem(

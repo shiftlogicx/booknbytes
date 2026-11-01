@@ -161,14 +161,6 @@ class _BookingListScreenState extends State<BookingListScreen> {
                     ),
                     _buildPill(
                       context,
-                      label: 'No-Show',
-                      count: booking.noShowCount,
-                      dotColor: const Color(0xFFDC2626),
-                      isSelected: booking.filterStatus == 'NO_SHOW',
-                      filterValue: 'NO_SHOW',
-                    ),
-                    _buildPill(
-                      context,
                       label: 'Cancelled',
                       count: booking.cancelledCount,
                       dotColor: const Color(0xFF94A3B8),
@@ -279,7 +271,6 @@ class _BookingListScreenState extends State<BookingListScreen> {
                               booking.updateStatus(b.bookingId, BookingStatus.confirmed);
                               ReservationSuccessDialog.show(context, b);
                             },
-                            onReject: () => booking.updateStatus(b.bookingId, BookingStatus.cancelled),
                           );
                         },
                       ),

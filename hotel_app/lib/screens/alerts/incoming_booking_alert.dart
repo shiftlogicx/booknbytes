@@ -35,7 +35,6 @@ class _IncomingBookingAlertScreenState extends State<IncomingBookingAlertScreen>
   int _secondsRemaining = 60;
 
   bool _isConfirmed = false;
-  final String _assignedTable = 'Table T-04';
 
   @override
   void initState() {
@@ -64,7 +63,7 @@ class _IncomingBookingAlertScreenState extends State<IncomingBookingAlertScreen>
       curve: Curves.elasticOut,
     );
 
-    // Auto-countdown for 60 seconds: if unanswered, automatically moves to Pending section
+    // Auto-countdown for 60 seconds: if unanswered, automatically confirms the reservation
     _secondsRemaining = 60;
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (!mounted) {
@@ -77,7 +76,7 @@ class _IncomingBookingAlertScreenState extends State<IncomingBookingAlertScreen>
         });
       } else {
         timer.cancel();
-        _onAutoExpireToPending();
+        _onAccept();
       }
     });
   }
@@ -108,42 +107,6 @@ class _IncomingBookingAlertScreenState extends State<IncomingBookingAlertScreen>
     });
     _doneController.forward();
     HapticFeedback.heavyImpact();
-  }
-
-  void _onAutoExpireToPending() {
-    if (_isConfirmed || !mounted) return;
-    final notifProvider = Provider.of<NotificationProvider>(context, listen: false);
-
-    // Stop ringing
-    notifProvider.dismissAlert();
-
-    // The booking remains in PENDING status in database and shows in the Pending bookings tab
-    if (Navigator.of(context).canPop()) {
-      Navigator.of(context).pop();
-    }
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.hourglass_top_rounded, color: Color(0xFFFBBF24), size: 18),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                'Reservation #${widget.booking.bookingId} moved to Pending queue',
-                style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.white),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: const Color(0xFF0F172A),
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 4),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-      ),
-    );
   }
 
   @override
@@ -205,7 +168,7 @@ class _IncomingBookingAlertScreenState extends State<IncomingBookingAlertScreen>
                         const Icon(Icons.volume_up_rounded, color: Color(0xFFF87171), size: 16),
                         const SizedBox(width: 8),
                         Text(
-                          'RINGING · AUTO-PENDING IN ${_secondsRemaining}S',
+                          'RINGING · AUTO-ACCEPTS IN ${_secondsRemaining}S',
                           style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w800,
@@ -380,65 +343,33 @@ class _IncomingBookingAlertScreenState extends State<IncomingBookingAlertScreen>
                 ],
               ),
 
-              // Bottom Action Buttons: Only Accept Option (Auto-Pending after countdown)
+              // Bottom Action: Single Slide Confirmation (Auto-accepts after countdown)
               Column(
                 children: [
-                  // Prominent Direct Accept Button
-                  ElevatedButton(
-                    onPressed: _onAccept,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF00E599),
-                      foregroundColor: const Color(0xFF070B14),
-                      padding: const EdgeInsets.symmetric(vertical: 18),
-                      minimumSize: const Size.fromHeight(56),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      elevation: 8,
-                      shadowColor: const Color(0xFF00E599).withValues(alpha: 0.4),
-                    ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.check_circle_rounded, size: 24, color: Color(0xFF070B14)),
-                        SizedBox(width: 10),
-                        Text(
-                          'ACCEPT RESERVATION',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 0.8,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-
-                  // CRED-Style Alternative Slider
+                  // CRED-Style Swipe Slider: Single direct confirmation
                   CredSwipeSlider(
                     label: 'SLIDE TO CONFIRM TABLE',
                     activeColor: const Color(0xFF00E599),
                     onConfirmed: _onAccept,
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 14),
 
-                  // Live Auto-Pending Countdown Notice (No Reject/Decline)
+                  // Live Auto-Accept Countdown Notice (No Reject/Decline)
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 16),
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1E293B).withValues(alpha: 0.5),
-                      borderRadius: BorderRadius.circular(12),
+                      color: const Color(0xFF1E293B).withValues(alpha: 0.6),
+                      borderRadius: BorderRadius.circular(14),
                       border: Border.all(color: const Color(0xFF334155)),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.hourglass_top_rounded, color: Color(0xFFFBBF24), size: 15),
+                        const Icon(Icons.timer_outlined, color: Color(0xFF00E599), size: 16),
                         const SizedBox(width: 8),
                         Text(
-                          'Auto-moves to Pending section in ${_secondsRemaining}s',
+                          'Auto-accepts in ${_secondsRemaining}s if untouched',
                           style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
@@ -567,17 +498,25 @@ class _IncomingBookingAlertScreenState extends State<IncomingBookingAlertScreen>
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFF59E0B).withOpacity(0.2),
+                            color: const Color(0xFF10B981).withValues(alpha: 0.18),
                             borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: const Color(0xFFF59E0B).withOpacity(0.5)),
+                            border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.4)),
                           ),
-                          child: Text(
-                            _assignedTable,
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w800,
-                              color: Color(0xFFFBBF24),
-                            ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.check_circle_rounded, size: 14, color: Color(0xFF00E599)),
+                              SizedBox(width: 5),
+                              Text(
+                                'CONFIRMED',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w800,
+                                  color: Color(0xFF00E599),
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],

@@ -418,13 +418,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
 
             _buildInteractiveToggleTile(
-              icon: Icons.table_bar_rounded,
-              title: 'Auto-Assign Available Table',
-              subtitle: 'Pre-allocate next ready table upon acceptance',
+              icon: Icons.auto_mode_rounded,
+              title: 'Auto-Accept Bookings after 60s',
+              subtitle: 'Automatically confirms table reservations if alert is untouched',
               value: _autoAssignTables,
               onChanged: (val) {
                 setState(() => _autoAssignTables = val);
-                _showToggleNotice('Auto-Assign Table', val);
+                _showToggleNotice('Auto-Accept Bookings', val);
               },
             ),
 
