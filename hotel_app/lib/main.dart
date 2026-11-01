@@ -50,8 +50,39 @@ void main() async {
   runApp(const BookAndBiteHotelApp());
 }
 
-class BookAndBiteHotelApp extends StatelessWidget {
+class BookAndBiteHotelApp extends StatefulWidget {
   const BookAndBiteHotelApp({super.key});
+
+  @override
+  State<BookAndBiteHotelApp> createState() => _BookAndBiteHotelAppState();
+}
+
+class _BookAndBiteHotelAppState extends State<BookAndBiteHotelApp> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    // Ensure background keep-alive is active
+    NotificationService().startBackgroundKeepAlive();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    debugPrint('[AppLifecycle] State changed: $state');
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive || state == AppLifecycleState.hidden) {
+      // Screen locked or app in background: keep alive the audio session & WebSocket
+      NotificationService().startBackgroundKeepAlive();
+    } else if (state == AppLifecycleState.resumed) {
+      // App brought back to foreground
+      NotificationService().resumeBackgroundKeepAlive();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

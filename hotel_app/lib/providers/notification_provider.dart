@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/booking_model.dart';
 import '../services/notification_service.dart';
+import '../services/supabase_service.dart';
 import '../screens/alerts/incoming_booking_alert.dart';
 import '../main.dart';
 
@@ -16,6 +17,12 @@ class NotificationProvider extends ChangeNotifier {
   NotificationProvider() {
     _notificationService.onIncomingBooking = (booking) {
       triggerIncomingBookingAlert(booking);
+    };
+    _notificationService.onNotificationAction = (bookingId, actionId) {
+      if (actionId == 'action_accept') {
+        acceptBooking();
+        SupabaseService().updateBookingStatus(bookingId, 'CONFIRMED');
+      }
     };
   }
 

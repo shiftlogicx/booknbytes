@@ -118,6 +118,7 @@ Deno.serve(async (req: Request) => {
         created_at: new Date().toISOString(),
       },
       priority: 10, // Maximum delivery priority
+      existing_android_channel_id: "booking_alerts",
       ios_sound: "alert_tone.wav",
       android_sound: "alert_tone",
       content_available: true, // Wakes iOS app in background
@@ -146,6 +147,7 @@ Deno.serve(async (req: Request) => {
         contents: oneSignalPayload.contents,
         data: oneSignalPayload.data,
         priority: 10,
+        existing_android_channel_id: "booking_alerts",
         ios_sound: "alert_tone.wav",
         android_sound: "alert_tone",
         content_available: true,
@@ -174,6 +176,7 @@ Deno.serve(async (req: Request) => {
           contents: oneSignalPayload.contents,
           data: oneSignalPayload.data,
           priority: 10,
+          existing_android_channel_id: "booking_alerts",
           ios_sound: "alert_tone.wav",
           android_sound: "alert_tone",
           content_available: true,

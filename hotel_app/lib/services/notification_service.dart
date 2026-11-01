@@ -15,13 +15,48 @@ class NotificationService {
   final FlutterLocalNotificationsPlugin _localNotifications =
       FlutterLocalNotificationsPlugin();
   final AudioPlayer _audioPlayer = AudioPlayer();
+  final AudioPlayer _keepAlivePlayer = AudioPlayer();
 
   bool _isRinging = false;
+  bool _isKeepAliveActive = false;
   Timer? _snoozeTimer;
   Timer? _vibrateTimer;
 
   /// Callback when a booking alert should be shown
   Function(BookingModel booking)? onIncomingBooking;
+
+  /// Callback when a notification action is tapped
+  Function(String bookingId, String actionId)? onNotificationAction;
+
+  /// Start background silent keep-alive audio session (prevents iOS from suspending sockets)
+  Future<void> startBackgroundKeepAlive() async {
+    if (_isKeepAliveActive || _isRinging) return;
+    _isKeepAliveActive = true;
+    try {
+      await _keepAlivePlayer.setReleaseMode(ReleaseMode.loop);
+      await _keepAlivePlayer.setVolume(0.01);
+      await _keepAlivePlayer.play(AssetSource('sounds/silence.wav'));
+      debugPrint('[NotificationService] Background keep-alive audio session running.');
+    } catch (e) {
+      debugPrint('[NotificationService] Keep-alive player note: $e');
+    }
+  }
+
+  Future<void> pauseBackgroundKeepAlive() async {
+    try {
+      await _keepAlivePlayer.pause();
+    } catch (_) {}
+  }
+
+  Future<void> resumeBackgroundKeepAlive() async {
+    if (_isRinging) return;
+    try {
+      await _keepAlivePlayer.resume();
+    } catch (_) {
+      _isKeepAliveActive = false;
+      await startBackgroundKeepAlive();
+    }
+  }
 
   /// Initialize local notifications & audio session
   Future<void> initialize() async {
@@ -33,6 +68,7 @@ class NotificationService {
             category: AVAudioSessionCategory.playback,
             options: const {
               AVAudioSessionOptions.duckOthers,
+              AVAudioSessionOptions.mixWithOthers,
             },
           ),
           android: const AudioContextAndroid(
@@ -49,12 +85,41 @@ class NotificationService {
     }
 
     const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
-    const iosSettings = DarwinInitializationSettings(
+
+    final darwinCategories = <DarwinNotificationCategory>[
+      DarwinNotificationCategory(
+        'booking_alert_category',
+        actions: <DarwinNotificationAction>[
+          DarwinNotificationAction.plain(
+            'action_accept',
+            'Accept Reservation',
+            options: <DarwinNotificationActionOption>{
+              DarwinNotificationActionOption.foreground,
+            },
+          ),
+          DarwinNotificationAction.plain(
+            'action_view',
+            'View Booking',
+            options: <DarwinNotificationActionOption>{
+              DarwinNotificationActionOption.foreground,
+            },
+          ),
+        ],
+        options: <DarwinNotificationCategoryOption>{
+          DarwinNotificationCategoryOption.customDismissAction,
+        },
+      ),
+    ];
+
+    final iosSettings = DarwinInitializationSettings(
       requestAlertPermission: true,
       requestBadgePermission: true,
       requestSoundPermission: true,
+      requestCriticalPermission: true,
+      notificationCategories: darwinCategories,
     );
-    const settings = InitializationSettings(
+
+    final settings = InitializationSettings(
       android: androidSettings,
       iOS: iosSettings,
     );
@@ -64,11 +129,31 @@ class NotificationService {
       onDidReceiveNotificationResponse: _onNotificationTap,
     );
 
+    // Create high-importance Android channel with alert sound
+    const androidChannel = AndroidNotificationChannel(
+      'booking_alerts',
+      'Booking Alerts',
+      description: 'Priority alarm channel for incoming reservations',
+      importance: Importance.max,
+      playSound: true,
+      sound: RawResourceAndroidNotificationSound('alert_tone'),
+      enableVibration: true,
+      showBadge: true,
+    );
+
+    await _localNotifications
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>()
+        ?.createNotificationChannel(androidChannel);
+
     // Request permissions on Android 13+
     await _localNotifications
         .resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>()
         ?.requestNotificationsPermission();
+
+    // Start background keep-alive to preserve active WebSocket connection
+    await startBackgroundKeepAlive();
   }
 
   /// Show a full-screen notification for incoming booking
@@ -82,18 +167,35 @@ class NotificationService {
       fullScreenIntent: true,
       category: AndroidNotificationCategory.alarm,
       visibility: NotificationVisibility.public,
+      sound: RawResourceAndroidNotificationSound('alert_tone'),
       playSound: true,
       enableVibration: true,
       ongoing: true,
       autoCancel: false,
       timeoutAfter: 120000, // 2 minutes
+      actions: <AndroidNotificationAction>[
+        AndroidNotificationAction(
+          'action_accept',
+          'ACCEPT',
+          showsUserInterface: true,
+          cancelNotification: true,
+        ),
+        AndroidNotificationAction(
+          'action_view',
+          'VIEW',
+          showsUserInterface: true,
+          cancelNotification: true,
+        ),
+      ],
     );
 
     const iosDetails = DarwinNotificationDetails(
       presentAlert: true,
       presentBadge: true,
       presentSound: true,
-      interruptionLevel: InterruptionLevel.critical,
+      sound: 'alert_tone.wav',
+      interruptionLevel: InterruptionLevel.timeSensitive,
+      categoryIdentifier: 'booking_alert_category',
     );
 
     const details = NotificationDetails(
@@ -103,8 +205,8 @@ class NotificationService {
 
     await _localNotifications.show(
       booking.bookingId.hashCode,
-      '🔔 New Booking!',
-      '${booking.customerName ?? 'Guest'} · ${booking.partySize} guests · ${booking.timeSlot}',
+      '🔔 New Reservation Request!',
+      '${booking.customerName ?? 'Guest'} · ${booking.partySize} guests at ${booking.timeSlot}',
       details,
       payload: booking.bookingId,
     );
@@ -114,6 +216,9 @@ class NotificationService {
   Future<void> startRinging() async {
     if (_isRinging) return;
     _isRinging = true;
+
+    // Pause silent keep-alive while ringing loudly
+    await pauseBackgroundKeepAlive();
 
     // Trigger immediate haptics & start continuous vibration pulses
     HapticFeedback.heavyImpact();
@@ -153,6 +258,8 @@ class NotificationService {
     } catch (e) {
       debugPrint('[NotificationService] Error stopping audio: $e');
     }
+    // Resume silent keep-alive session to maintain active background sockets
+    await resumeBackgroundKeepAlive();
   }
 
   /// Play high-definition acceptance confirmation ringtone / chime
@@ -196,15 +303,19 @@ class NotificationService {
     await _localNotifications.cancelAll();
   }
 
-  /// Handle notification tap
+  /// Handle notification tap & quick action buttons
   void _onNotificationTap(NotificationResponse response) {
-    // The app will handle navigation through the FCM service
-    debugPrint('Notification tapped: ${response.payload}');
+    debugPrint('[NotificationService] Notification tapped: action=${response.actionId}, payload=${response.payload}');
+    final bookingId = response.payload;
+    if (bookingId != null && bookingId.isNotEmpty) {
+      onNotificationAction?.call(bookingId, response.actionId ?? '');
+    }
   }
 
   /// Dispose resources
   void dispose() {
     _snoozeTimer?.cancel();
     _audioPlayer.dispose();
+    _keepAlivePlayer.dispose();
   }
 }
