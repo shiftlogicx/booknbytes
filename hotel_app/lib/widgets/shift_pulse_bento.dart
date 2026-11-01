@@ -69,52 +69,60 @@ class _ShiftPulseBentoState extends State<ShiftPulseBento>
         children: [
           // Header Row
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF4F46E5).withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: const Color(0xFF4F46E5).withValues(alpha: 0.25),
-                      ),
-                    ),
-                    child: const Icon(
-                      Icons.insights_rounded,
-                      size: 14,
-                      color: Color(0xFF4F46E5),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'SHIFT RESERVATION PULSE',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 0.8,
-                          color: Color(0xFF0F172A),
+              Expanded(
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF4F46E5).withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: const Color(0xFF4F46E5).withValues(alpha: 0.25),
                         ),
                       ),
-                      Text(
-                        'Tap any metric to filter live guest stream',
-                        style: TextStyle(
-                          fontSize: 9.5,
-                          fontWeight: FontWeight.w500,
-                          color: Color(0xFF64748B),
-                        ),
+                      child: const Icon(
+                        Icons.insights_rounded,
+                        size: 14,
+                        color: Color(0xFF4F46E5),
                       ),
-                    ],
-                  ),
-                ],
+                    ),
+                    const SizedBox(width: 8),
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'SHIFT RESERVATION PULSE',
+                            style: TextStyle(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 0.5,
+                              color: Color(0xFF0F172A),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            'Tap metric to filter live guest stream',
+                            style: TextStyle(
+                              fontSize: 9.0,
+                              fontWeight: FontWeight.w500,
+                              color: Color(0xFF64748B),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 6),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF1F5F9),
                   borderRadius: BorderRadius.circular(20),
@@ -123,12 +131,12 @@ class _ShiftPulseBentoState extends State<ShiftPulseBento>
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.touch_app_rounded, size: 11, color: Color(0xFF64748B)),
+                    Icon(Icons.touch_app_rounded, size: 10, color: Color(0xFF64748B)),
                     SizedBox(width: 3),
                     Text(
                       'Interactive',
                       style: TextStyle(
-                        fontSize: 9.5,
+                        fontSize: 9.0,
                         fontWeight: FontWeight.w700,
                         color: Color(0xFF64748B),
                       ),
@@ -270,29 +278,38 @@ class _ShiftPulseBentoState extends State<ShiftPulseBento>
             children: [
               // Top row: title & icon
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Expanded(
-                    child: Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 9.5,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.6,
-                        color: isSelected ? accentColor : const Color(0xFF475569),
+                    child: SizedBox(
+                      height: 24,
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          title,
+                          style: TextStyle(
+                            fontSize: 9.0,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.3,
+                            height: 1.15,
+                            color: isSelected ? accentColor : const Color(0xFF475569),
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
+                  const SizedBox(width: 4),
                   Container(
-                    padding: const EdgeInsets.all(5),
+                    padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(7),
                       border: Border.all(color: borderColor),
                     ),
-                    child: Icon(icon, size: 13, color: accentColor),
+                    child: Icon(icon, size: 12, color: accentColor),
                   ),
                 ],
               ),

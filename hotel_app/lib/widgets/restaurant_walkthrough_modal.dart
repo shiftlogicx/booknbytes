@@ -123,7 +123,7 @@ class _RestaurantWalkthroughModalState extends State<RestaurantWalkthroughModal>
       backgroundColor: Colors.transparent,
       body: Center(
         child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
           constraints: const BoxConstraints(maxWidth: 420),
           decoration: BoxDecoration(
             color: const Color(0xFF0F1422).withValues(alpha: 0.94),
@@ -150,7 +150,7 @@ class _RestaurantWalkthroughModalState extends State<RestaurantWalkthroughModal>
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
               child: Padding(
-                padding: const EdgeInsets.all(24.0),
+                padding: const EdgeInsets.fromLTRB(18, 18, 18, 20),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -158,31 +158,40 @@ class _RestaurantWalkthroughModalState extends State<RestaurantWalkthroughModal>
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: slide.accentColor.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: slide.accentColor.withValues(alpha: 0.4)),
-                          ),
-                          child: Text(
-                            slide.badge,
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 0.6,
-                              color: slide.accentColor,
+                        Flexible(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: slide.accentColor.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: slide.accentColor.withValues(alpha: 0.4)),
+                            ),
+                            child: Text(
+                              slide.badge,
+                              style: TextStyle(
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.4,
+                                color: slide.accentColor,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ),
-                        TextButton(
-                          onPressed: _onFinish,
-                          child: const Text(
-                            'Skip Tutorial',
-                            style: TextStyle(
-                              color: Color(0xFF94A3B8),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
+                        const SizedBox(width: 8),
+                        InkWell(
+                          onTap: _onFinish,
+                          borderRadius: BorderRadius.circular(8),
+                          child: const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            child: Text(
+                              'Skip Tutorial',
+                              style: TextStyle(
+                                color: Color(0xFF94A3B8),
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ),

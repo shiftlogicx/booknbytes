@@ -316,7 +316,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   // 1. Sleek Command Header Bar
   Widget _buildCommandHeader(LocationProvider locationProvider) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(18),
@@ -329,62 +329,67 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
         ],
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // Left: Floor Status Toggle
-          Expanded(
-            child: Row(
-              children: [
-                Container(
-                  width: 9,
-                  height: 9,
-                  decoration: BoxDecoration(
-                    color: _isAcceptingReservations
-                        ? const Color(0xFF059669)
-                        : const Color(0xFF94A3B8),
-                    shape: BoxShape.circle,
-                    boxShadow: _isAcceptingReservations
-                        ? [
-                            BoxShadow(
-                              color: const Color(0xFF059669).withValues(alpha: 0.4),
-                              blurRadius: 6,
-                              spreadRadius: 1,
-                            ),
-                          ]
-                        : null,
-                  ),
+          // Primary Row: Status Indicator, Title & Switch Toggle
+          Row(
+            children: [
+              Container(
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(
+                  color: _isAcceptingReservations
+                      ? const Color(0xFF059669)
+                      : const Color(0xFF94A3B8),
+                  shape: BoxShape.circle,
+                  boxShadow: _isAcceptingReservations
+                      ? [
+                          BoxShadow(
+                            color: const Color(0xFF059669).withValues(alpha: 0.4),
+                            blurRadius: 6,
+                            spreadRadius: 1,
+                          ),
+                        ]
+                      : null,
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _isAcceptingReservations ? 'FLOOR IS LIVE' : 'FLOOR PAUSED',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w900,
-                          fontSize: 12,
-                          letterSpacing: 0.7,
-                          color: _isAcceptingReservations
-                              ? const Color(0xFF059669)
-                              : const Color(0xFF64748B),
-                        ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _isAcceptingReservations ? 'FLOOR IS LIVE' : 'FLOOR PAUSED',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 12.5,
+                        letterSpacing: 0.6,
+                        color: _isAcceptingReservations
+                            ? const Color(0xFF059669)
+                            : const Color(0xFF64748B),
                       ),
-                      Text(
-                        '${locationProvider.currentLocation.locality} · Dinner',
-                        style: const TextStyle(
-                          fontSize: 10,
-                          color: Color(0xFF64748B),
-                          fontWeight: FontWeight.w500,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${locationProvider.currentLocation.locality} · Dinner Shift',
+                      style: const TextStyle(
+                        fontSize: 10.5,
+                        color: Color(0xFF64748B),
+                        fontWeight: FontWeight.w500,
                       ),
-                    ],
-                  ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
                 ),
-                Switch.adaptive(
+              ),
+              const SizedBox(width: 8),
+              Transform.scale(
+                scale: 0.9,
+                child: Switch.adaptive(
                   value: _isAcceptingReservations,
                   activeColor: const Color(0xFF059669),
                   activeTrackColor: const Color(0xFF059669).withValues(alpha: 0.25),
@@ -420,80 +425,89 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     );
                   },
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
 
-          const SizedBox(width: 8),
+          const SizedBox(height: 10),
+          const Divider(height: 1, thickness: 0.7, color: Color(0xFFF1F5F9)),
+          const SizedBox(height: 10),
 
-          // Right: Action Buttons (Ring Bell & View Bookings)
+          // Secondary Row: Quick Actions
           Row(
-            mainAxisSize: MainAxisSize.min,
             children: [
               // Ring Bell Action Pill
-              Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: _simulateIncomingAlert,
-                  borderRadius: BorderRadius.circular(10),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFFFFBEB),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: const Color(0xFFFDE68A)),
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.ring_volume_rounded, size: 13, color: Color(0xFFD97706)),
-                        SizedBox(width: 4),
-                        Text(
-                          'Ring Bell',
-                          style: TextStyle(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w900,
-                            color: Color(0xFFB45309),
+              Expanded(
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: _simulateIncomingAlert,
+                    borderRadius: BorderRadius.circular(10),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFFBEB),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: const Color(0xFFFDE68A)),
+                      ),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.ring_volume_rounded, size: 14, color: Color(0xFFD97706)),
+                          SizedBox(width: 6),
+                          Text(
+                            'Ring Bell (Alert)',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFFB45309),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
 
-              const SizedBox(width: 6),
+              const SizedBox(width: 8),
 
               // View Bookings Action Pill
-              Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: () {
-                    HapticFeedback.lightImpact();
-                    setState(() => _currentNavIndex = 1);
-                  },
-                  borderRadius: BorderRadius.circular(10),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFECFDF5),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: const Color(0xFFA7F3D0)),
-                    ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.calendar_month_rounded, size: 13, color: Color(0xFF059669)),
-                        SizedBox(width: 4),
-                        Text(
-                          'Bookings',
-                          style: TextStyle(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w900,
-                            color: Color(0xFF047857),
+              Expanded(
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () {
+                      HapticFeedback.lightImpact();
+                      setState(() => _currentNavIndex = 1);
+                    },
+                    borderRadius: BorderRadius.circular(10),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFECFDF5),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: const Color(0xFFA7F3D0)),
+                      ),
+                      child: const Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.calendar_month_rounded, size: 14, color: Color(0xFF059669)),
+                          SizedBox(width: 6),
+                          Text(
+                            'Bookings',
+                            style: TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF047857),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
