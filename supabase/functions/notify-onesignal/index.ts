@@ -12,6 +12,38 @@ Deno.serve(async (req: Request) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
+  if (req.method === "GET") {
+    const onesignalAppId = Deno.env.get("ONESIGNAL_APP_ID") || "ONESIGNAL_APP_ID_PLACEHOLDER";
+    const onesignalApiKey = Deno.env.get("ONESIGNAL_REST_API_KEY") || "ONESIGNAL_REST_API_KEY_PLACEHOLDER";
+
+    const appRes = await fetch(`https://onesignal.com/api/v1/apps/${onesignalAppId}`, {
+      headers: { "Authorization": `Basic ${onesignalApiKey}` }
+    });
+    const appData = await appRes.json();
+
+    const playersRes = await fetch(`https://onesignal.com/api/v1/players?app_id=${onesignalAppId}&limit=10`, {
+      headers: { "Authorization": `Basic ${onesignalApiKey}` }
+    });
+    const playersData = await playersRes.json();
+
+    return new Response(
+      JSON.stringify({
+        app: {
+          id: appData.id,
+          name: appData.name,
+          players: appData.players,
+          messageable_players: appData.messageable_players,
+          gcm_key: appData.gcm_key ? "configured" : "missing",
+          fcm_v1: appData.fcm_v1_service_account_json ? "configured" : (appData.fcm_v1_account_id ? "configured" : "missing"),
+          apns_env: appData.apns_env || "none",
+          chrome_web_key: appData.chrome_web_key ? "configured" : "missing",
+        },
+        subscriptions: playersData,
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+    );
+  }
+
   if (req.method !== "POST") {
     return new Response(
       JSON.stringify({ error: "Method not allowed. Use POST." }),
@@ -119,9 +151,11 @@ Deno.serve(async (req: Request) => {
       },
       priority: 10, // Maximum delivery priority
       existing_android_channel_id: "booking_alerts",
+      android_channel_id: "booking_alerts",
+      android_visibility: 1, // Public on lockscreen
       ios_sound: "alert_tone.wav",
       android_sound: "alert_tone",
-      content_available: true, // Wakes iOS app in background
+      content_available: true, // Wakes app in background
     };
 
     const osResponse = await fetch("https://onesignal.com/api/v1/notifications", {
@@ -148,6 +182,8 @@ Deno.serve(async (req: Request) => {
         data: oneSignalPayload.data,
         priority: 10,
         existing_android_channel_id: "booking_alerts",
+        android_channel_id: "booking_alerts",
+        android_visibility: 1,
         ios_sound: "alert_tone.wav",
         android_sound: "alert_tone",
         content_available: true,
@@ -177,6 +213,8 @@ Deno.serve(async (req: Request) => {
           data: oneSignalPayload.data,
           priority: 10,
           existing_android_channel_id: "booking_alerts",
+          android_channel_id: "booking_alerts",
+          android_visibility: 1,
           ios_sound: "alert_tone.wav",
           android_sound: "alert_tone",
           content_available: true,

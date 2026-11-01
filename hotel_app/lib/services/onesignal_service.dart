@@ -45,9 +45,16 @@ class OneSignalService {
       OneSignal.initialize(OneSignalConfig.appId);
 
       // 2. Request notification permissions from user
-      await OneSignal.Notifications.requestPermission(true);
+      final permission = await OneSignal.Notifications.requestPermission(true);
+      debugPrint('[OneSignalService] Push notification permission result: $permission');
 
-      // 3. Foreground notification display listener
+      // 3. Explicitly opt in push subscription
+      await OneSignal.User.pushSubscription.optIn();
+      OneSignal.User.pushSubscription.addObserver((state) {
+        debugPrint('[OneSignalService] Subscription state: id=${state.current.id}, token=${state.current.token}, optedIn=${state.current.optedIn}');
+      });
+
+      // 4. Foreground notification display listener
       OneSignal.Notifications.addForegroundWillDisplayListener((event) {
         debugPrint('[OneSignalService] Foreground push received: ${event.notification.notificationId}');
         // Prevent duplicate OS notification banner when the app is already in the foreground
@@ -84,7 +91,8 @@ class OneSignalService {
     try {
       await OneSignal.login(restaurantId);
       await OneSignal.User.addTagWithKey('restaurant_id', restaurantId);
-      debugPrint('[OneSignalService] Logged in device with restaurantId: $restaurantId');
+      await OneSignal.User.pushSubscription.optIn();
+      debugPrint('[OneSignalService] Logged in device with restaurantId: $restaurantId, pushToken=${OneSignal.User.pushSubscription.token}');
     } catch (e) {
       debugPrint('[OneSignalService] Error logging in: $e');
     }
