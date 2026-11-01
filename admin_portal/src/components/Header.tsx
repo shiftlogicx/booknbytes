@@ -2,7 +2,9 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Menu, Plus, RefreshCw, CheckCircle2 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Menu, Plus, LogOut, ShieldCheck, User } from 'lucide-react';
+import { useAdminAuth } from '@/context/AuthContext';
 
 interface HeaderProps {
   onToggleSidebar: () => void;
@@ -10,6 +12,14 @@ interface HeaderProps {
 }
 
 export default function Header({ onToggleSidebar, title = "Admin Console" }: HeaderProps) {
+  const router = useRouter();
+  const { adminUser, signOut } = useAdminAuth();
+
+  const handleLogout = async () => {
+    await signOut();
+    router.push('/login');
+  };
+
   return (
     <header className="h-16 bg-white border-b border-slate-200/80 px-6 lg:px-8 flex items-center justify-between sticky top-0 z-30">
       {/* Left section */}
@@ -43,14 +53,27 @@ export default function Header({ onToggleSidebar, title = "Admin Console" }: Hea
         </Link>
 
         {/* Admin profile */}
-        <div className="flex items-center gap-2.5 pl-3 border-l border-slate-200">
-          <div className="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-800 font-bold text-xs">
-            A
+        <div className="flex items-center gap-3 pl-3 border-l border-slate-200">
+          <div className="w-8 h-8 rounded-full bg-slate-900 border border-slate-700 flex items-center justify-center text-emerald-400 font-bold text-xs uppercase shadow-sm">
+            {adminUser?.name ? adminUser.name.charAt(0) : 'A'}
           </div>
           <div className="hidden sm:block text-left leading-tight">
-            <div className="text-xs font-bold text-slate-900">Admin Control</div>
-            <div className="text-[10px] text-slate-400">Master Console</div>
+            <div className="text-xs font-bold text-slate-900 flex items-center gap-1">
+              {adminUser?.name || 'Super Admin'}
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 inline" />
+            </div>
+            <div className="text-[10px] text-slate-500 truncate max-w-[150px]">
+              {adminUser?.email || 'shiftlogiciq@gmail.com'}
+            </div>
           </div>
+
+          <button
+            onClick={handleLogout}
+            title="Sign Out of Admin Console"
+            className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
         </div>
       </div>
     </header>

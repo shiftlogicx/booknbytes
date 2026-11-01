@@ -6,7 +6,9 @@ import {
   Review, 
   UserProfile, 
   DashboardStats,
-  BookingStatus 
+  BookingStatus,
+  AdminUser,
+  AdminLoginLog
 } from '@/types';
 
 // ==========================================
@@ -548,4 +550,142 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 
 function jsonSafeStringify(obj: any): string {
   return JSON.stringify(obj);
+}
+
+// ==========================================
+// 6. ADMIN PORTAL USERS & AUDIT LOGS
+// ==========================================
+
+export async function getAdminUsers(): Promise<AdminUser[]> {
+  const { data, error } = await supabase
+    .from('admin_users')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching admin users:', error);
+    return [];
+  }
+
+  return (data || []) as AdminUser[];
+}
+
+export async function getAdminLoginLogs(): Promise<AdminLoginLog[]> {
+  const { data, error } = await supabase
+    .from('admin_login_logs')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(50);
+
+  if (error) {
+    console.error('Error fetching admin login logs:', error);
+    return [];
+  }
+
+  return (data || []) as AdminLoginLog[];
+}
+
+export async function recordAdminLogin(
+  email: string, 
+  authProvider: string = 'email', 
+  status: 'success' | 'failed' = 'success'
+): Promise<void> {
+  try {
+    const userAgent = typeof window !== 'undefined' ? window.navigator.userAgent : 'Server';
+    await supabase.from('admin_login_logs').insert([
+      {
+        email: email.trim().toLowerCase(),
+        auth_provider: authProvider,
+        status,
+        user_agent: userAgent
+      }
+    ]);
+
+    if (status === 'success') {
+      await supabase
+        .from('admin_users')
+        .update({ 
+          last_sign_in_at: new Date().toISOString(),
+          auth_provider: authProvider
+        })
+        .eq('email', email.trim().toLowerCase());
+    }
+  } catch (err) {
+    console.warn('Silent note recording admin login:', err);
+  }
+}
+
+export async function verifyAdminAuthorization(email: string): Promise<AdminUser | null> {
+  const normalized = email.trim().toLowerCase();
+  
+  // Master fallback admins always allowed
+  const isMasterAdmin = ['shiftlogiciq@gmail.com', 'admin@booknbytes.app', 'shiftlogicig@gmail.com'].includes(normalized);
+
+  const { data, error } = await supabase
+    .from('admin_users')
+    .select('*')
+    .eq('email', normalized)
+    .single();
+
+  if (error || !data) {
+    if (isMasterAdmin) {
+      // Upsert master admin automatically
+      const newAdmin: Partial<AdminUser> = {
+        email: normalized,
+        name: normalized.includes('shiftlogic') ? 'Shiftlogic Admin' : 'System Administrator',
+        role: 'super_admin',
+        status: 'active',
+        auth_provider: 'oauth'
+      };
+      const insertRes = await supabase.from('admin_users').insert([newAdmin]).select().single();
+      return (insertRes.data || newAdmin) as AdminUser;
+    }
+    return null;
+  }
+
+  if (data.status !== 'active') {
+    return null;
+  }
+
+  return data as AdminUser;
+}
+
+export async function createAdminUser(admin: {
+  email: string;
+  name: string;
+  role: 'super_admin' | 'admin' | 'manager' | 'support';
+  auth_provider?: string;
+}): Promise<AdminUser> {
+  const { data, error } = await supabase
+    .from('admin_users')
+    .insert([
+      {
+        email: admin.email.trim().toLowerCase(),
+        name: admin.name.trim(),
+        role: admin.role,
+        auth_provider: admin.auth_provider || 'email',
+        status: 'active'
+      }
+    ])
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Error creating admin user:', error);
+    throw new Error(error.message);
+  }
+
+  return data as AdminUser;
+}
+
+export async function deleteAdminUser(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('admin_users')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('Error deleting admin user:', error);
+    throw new Error(error.message);
+  }
 }

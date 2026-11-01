@@ -134,3 +134,30 @@ export interface DashboardStats {
   totalReviews: number;
   averageRating: number;
 }
+
+export type AdminRole = 'super_admin' | 'admin' | 'manager' | 'support';
+
+export interface AdminUser {
+  id: string;
+  auth_user_id?: string | null;
+  email: string;
+  name: string;
+  role: AdminRole;
+  avatar_url?: string | null;
+  auth_provider?: string;
+  status: 'active' | 'inactive' | 'suspended';
+  permissions?: string[];
+  last_sign_in_at?: string | null;
+  created_at: string;
+  updated_at?: string;
+}
+
+export interface AdminLoginLog {
+  id: string;
+  email: string;
+  auth_provider: string;
+  status: 'success' | 'failed';
+  user_agent?: string | null;
+  ip_address?: string | null;
+  created_at: string;
+}
