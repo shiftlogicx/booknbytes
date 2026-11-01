@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -30,6 +31,9 @@ class _IncomingBookingAlertScreenState extends State<IncomingBookingAlertScreen>
   late AnimationController _doneController;
   late Animation<double> _checkScaleAnimation;
 
+  Timer? _countdownTimer;
+  int _secondsRemaining = 60;
+
   bool _isConfirmed = false;
   final String _assignedTable = 'Table T-04';
 
@@ -59,16 +63,35 @@ class _IncomingBookingAlertScreenState extends State<IncomingBookingAlertScreen>
       parent: _doneController,
       curve: Curves.elasticOut,
     );
+
+    // Auto-countdown for 60 seconds: if unanswered, automatically moves to Pending section
+    _secondsRemaining = 60;
+    _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+      if (_secondsRemaining > 1) {
+        setState(() {
+          _secondsRemaining--;
+        });
+      } else {
+        timer.cancel();
+        _onAutoExpireToPending();
+      }
+    });
   }
 
   @override
   void dispose() {
+    _countdownTimer?.cancel();
     _pulseController.dispose();
     _doneController.dispose();
     super.dispose();
   }
 
   void _onAccept() {
+    _countdownTimer?.cancel();
     HapticFeedback.heavyImpact();
     final notifProvider = Provider.of<NotificationProvider>(context, listen: false);
     final bookingProvider = Provider.of<BookingProvider>(context, listen: false);
@@ -87,23 +110,40 @@ class _IncomingBookingAlertScreenState extends State<IncomingBookingAlertScreen>
     HapticFeedback.heavyImpact();
   }
 
-  void _onSnooze() {
-    HapticFeedback.mediumImpact();
+  void _onAutoExpireToPending() {
+    if (_isConfirmed || !mounted) return;
     final notifProvider = Provider.of<NotificationProvider>(context, listen: false);
-    notifProvider.snoozeAlert();
-    Navigator.of(context).pop();
-  }
 
-  void _onReject() {
-    HapticFeedback.heavyImpact();
-    final notifProvider = Provider.of<NotificationProvider>(context, listen: false);
-    final bookingProvider = Provider.of<BookingProvider>(context, listen: false);
-
-    // Stop ringing immediately
+    // Stop ringing
     notifProvider.dismissAlert();
-    bookingProvider.updateStatus(widget.booking.bookingId, BookingStatus.cancelled);
 
-    Navigator.of(context).pop(false);
+    // The booking remains in PENDING status in database and shows in the Pending bookings tab
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.hourglass_top_rounded, color: Color(0xFFFBBF24), size: 18),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Reservation #${widget.booking.bookingId} moved to Pending queue',
+                style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.white),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: const Color(0xFF0F172A),
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 4),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+    );
   }
 
   @override
@@ -153,24 +193,24 @@ class _IncomingBookingAlertScreenState extends State<IncomingBookingAlertScreen>
                 children: [
                   const SizedBox(height: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFEF4444).withOpacity(0.18),
+                      color: const Color(0xFFEF4444).withValues(alpha: 0.18),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: const Color(0xFFEF4444).withOpacity(0.5)),
+                      border: Border.all(color: const Color(0xFFEF4444).withValues(alpha: 0.5)),
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.volume_up_rounded, color: Color(0xFFF87171), size: 16),
-                        SizedBox(width: 8),
+                        const Icon(Icons.volume_up_rounded, color: Color(0xFFF87171), size: 16),
+                        const SizedBox(width: 8),
                         Text(
-                          'PRIORITY TABLE ALARM',
-                          style: TextStyle(
+                          'RINGING · AUTO-PENDING IN ${_secondsRemaining}S',
+                          style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.w800,
                             fontSize: 11,
-                            letterSpacing: 1.4,
+                            letterSpacing: 1.2,
                           ),
                         ),
                       ],
@@ -340,61 +380,73 @@ class _IncomingBookingAlertScreenState extends State<IncomingBookingAlertScreen>
                 ],
               ),
 
-              // Bottom Action Buttons
+              // Bottom Action Buttons: Only Accept Option (Auto-Pending after countdown)
               Column(
                 children: [
-                  // CRED-Style Swipe to Confirm Slider
+                  // Prominent Direct Accept Button
+                  ElevatedButton(
+                    onPressed: _onAccept,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF00E599),
+                      foregroundColor: const Color(0xFF070B14),
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      minimumSize: const Size.fromHeight(56),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      elevation: 8,
+                      shadowColor: const Color(0xFF00E599).withValues(alpha: 0.4),
+                    ),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.check_circle_rounded, size: 24, color: Color(0xFF070B14)),
+                        SizedBox(width: 10),
+                        Text(
+                          'ACCEPT RESERVATION',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.8,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+
+                  // CRED-Style Alternative Slider
                   CredSwipeSlider(
-                    label: 'SLIDE TO ACCEPT TABLE',
+                    label: 'SLIDE TO CONFIRM TABLE',
                     activeColor: const Color(0xFF00E599),
                     onConfirmed: _onAccept,
                   ),
                   const SizedBox(height: 12),
 
-                  Row(
-                    children: [
-                      // Snooze Button
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: _onSnooze,
-                          icon: const Icon(Icons.snooze_rounded, color: Color(0xFFFBBF24), size: 18),
-                          label: const Text(
-                            'Snooze (2m)',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.white70,
-                            ),
-                          ),
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: Color(0xFF334155)),
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      // Decline Button
-                      Expanded(
-                        child: OutlinedButton.icon(
-                          onPressed: _onReject,
-                          icon: const Icon(Icons.close_rounded, color: Color(0xFFEF4444), size: 18),
-                          label: const Text(
-                            'Decline',
-                            style: TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFFEF4444),
-                            ),
-                          ),
-                          style: OutlinedButton.styleFrom(
-                            side: BorderSide(color: const Color(0xFFEF4444).withOpacity(0.5)),
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  // Live Auto-Pending Countdown Notice (No Reject/Decline)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1E293B).withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFF334155)),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.hourglass_top_rounded, color: Color(0xFFFBBF24), size: 15),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Auto-moves to Pending section in ${_secondsRemaining}s',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFF94A3B8),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ],
               ),
