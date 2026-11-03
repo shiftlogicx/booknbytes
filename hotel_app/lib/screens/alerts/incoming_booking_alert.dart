@@ -437,11 +437,10 @@ class _IncomingBookingAlertScreenState extends State<IncomingBookingAlertScreen>
                     children: [
                       Text('🎉 ', style: TextStyle(fontSize: 14)),
                       Text(
-                        'Diner is notified',
+                        'Table Confirmed · Ready for Service',
                         style: TextStyle(
-                          fontSize: 15,
+                          fontSize: 14,
                           color: Color(0xFF00E599),
-                          fontStyle: FontStyle.italic,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 0.3,
                         ),

@@ -6,17 +6,16 @@ import '../../providers/auth_provider.dart';
 import '../../providers/booking_provider.dart';
 import '../../providers/slots_provider.dart';
 import '../../providers/location_provider.dart';
-import '../../providers/notification_provider.dart';
 import '../../widgets/glass_nav_dock.dart';
 import '../../widgets/location_picker_sheet.dart';
 import '../../widgets/shift_pulse_bento.dart';
 import '../bookings/booking_list_screen.dart';
-import '../discounts/discounts_offers_screen.dart';
 import '../profile/restaurant_profile_screen.dart';
 import '../settings/settings_screen.dart';
 import '../slots/slots_inventory_screen.dart';
 import '../support/support_screen.dart';
 import '../../widgets/restaurant_walkthrough_modal.dart';
+import '../../services/ota_update_service.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -36,6 +35,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final auth = Provider.of<AuthProvider>(context, listen: false);
       final bookingProvider = Provider.of<BookingProvider>(context, listen: false);
+
+      // Check and download OTA dynamic updates in the background
+      OtaUpdateService().checkForUpdatesAndDownload();
 
       // Wire up live incoming booking ringing alert callback (Realtime + FCM)
       bookingProvider.onNewBookingAlert = _handleIncomingBookingAlert;
@@ -63,14 +65,37 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   void _handleIncomingBookingAlert(BookingModel booking) {
     if (!mounted) return;
-    final notifProvider = Provider.of<NotificationProvider>(context, listen: false);
-    HapticFeedback.heavyImpact();
-    notifProvider.triggerIncomingBookingAlert(booking);
+    HapticFeedback.lightImpact();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(Icons.table_restaurant_rounded, color: Color(0xFF00E599), size: 18),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'New booking: ${booking.customerName ?? "Guest"} (${booking.partySize} Guests · ${booking.timeSlot})',
+                style: const TextStyle(fontWeight: FontWeight.w700, color: Colors.white, fontSize: 12.5),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: const Color(0xFF0F172A),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        duration: const Duration(seconds: 4),
+        action: SnackBarAction(
+          label: 'View',
+          textColor: const Color(0xFF00E599),
+          onPressed: () => setState(() => _currentNavIndex = 1),
+        ),
+      ),
+    );
   }
 
   void _simulateIncomingAlert() async {
-    HapticFeedback.heavyImpact();
-    final notifProvider = Provider.of<NotificationProvider>(context, listen: false);
+    HapticFeedback.lightImpact();
     final bookingProvider = Provider.of<BookingProvider>(context, listen: false);
     final auth = Provider.of<AuthProvider>(context, listen: false);
 
@@ -99,7 +124,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     await bookingProvider.addNewIncomingBooking(mockBooking);
     if (!mounted) return;
-    notifProvider.triggerIncomingBookingAlert(mockBooking);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Test booking #${mockBooking.bookingId} added to Bookings tab!'),
+        backgroundColor: const Color(0xFF0F172A),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        action: SnackBarAction(
+          label: 'View',
+          textColor: const Color(0xFF00E599),
+          onPressed: () => setState(() => _currentNavIndex = 1),
+        ),
+      ),
+    );
   }
 
   @override
@@ -219,8 +256,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
       case 2:
         return const TableSlotsScreen();
       case 3:
-        return const DiscountsOffersScreen();
-      case 4:
         return const SettingsScreen();
       default:
         return _buildFloorView(); // Initial Home Page: ONLY Shift Reservation Pulse
@@ -301,11 +336,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
           const SizedBox(height: 10),
 
           _buildQuickActionCard(
-            title: 'Discounts & Promotional Offers',
-            subtitle: 'Dynamic 10%–40% Off by time slot & custom promo codes',
-            icon: Icons.local_offer_rounded,
-            accentColor: const Color(0xFFF59E0B),
-            badge: 'OFFERS',
+            title: 'Settings & Restaurant Rules',
+            subtitle: 'Manage auto-confirm, instant ring alerts & opening hours',
+            icon: Icons.tune_rounded,
+            accentColor: const Color(0xFF8B5CF6),
+            badge: 'SETTINGS',
             onTap: () => setState(() => _currentNavIndex = 3),
           ),
         ],
@@ -453,10 +488,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.ring_volume_rounded, size: 14, color: Color(0xFFD97706)),
+                          Icon(Icons.add_task_rounded, size: 14, color: Color(0xFFD97706)),
                           SizedBox(width: 6),
                           Text(
-                            'Ring Bell (Alert)',
+                            'Test Booking',
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w800,

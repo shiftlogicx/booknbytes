@@ -7,13 +7,11 @@ import '../providers/booking_provider.dart';
 class BookingCard extends StatelessWidget {
   final BookingModel booking;
   final VoidCallback? onAccept;
-  final VoidCallback? onReject;
 
   const BookingCard({
     super.key,
     required this.booking,
     this.onAccept,
-    this.onReject,
   });
 
   void _markSeated(BuildContext context) {
@@ -376,7 +374,7 @@ class BookingCard extends StatelessWidget {
                         children: [
                           Text('🎉 ', style: TextStyle(fontSize: 12)),
                           Text(
-                            'Diner notified · Ready for service',
+                            'Confirmed · Ready for service',
                             style: TextStyle(
                               fontSize: 12,
                               color: Color(0xFF059669),

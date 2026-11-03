@@ -58,17 +58,34 @@ class NotificationProvider extends ChangeNotifier {
     _recentlyAlertedBookings[bookingKey] = now;
 
     _activeAlertBooking = booking;
-    _isAlertVisible = true;
-    _notificationService.startRinging();
+    _isAlertVisible = false;
     notifyListeners();
 
-    // Present the full-screen MyGate-style dialog globally over the active screen
-    final nav = appNavigatorKey.currentState;
-    if (nav != null) {
-      nav.push(
-        PageRouteBuilder(
-          opaque: false,
-          pageBuilder: (context, _, __) => IncomingBookingAlertScreen(booking: booking),
+    // Play a gentle notification sound without continuous ringing or blocking homescreen
+    _notificationService.playAcceptChime();
+
+    // Show a non-blocking in-app floating banner
+    final ctx = appNavigatorKey.currentContext;
+    if (ctx != null) {
+      ScaffoldMessenger.maybeOf(ctx)?.showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.table_restaurant_rounded, color: Color(0xFF00E599), size: 18),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'New booking from ${booking.customerName ?? "Guest"} (${booking.partySize} Guests · ${booking.timeSlot})',
+                  style: const TextStyle(fontWeight: FontWeight.w700, color: Colors.white, fontSize: 12.5),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: const Color(0xFF0F172A),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          duration: const Duration(seconds: 4),
         ),
       );
     }

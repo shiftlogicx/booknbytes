@@ -102,8 +102,9 @@ class BookingProvider extends ChangeNotifier {
     try {
       final fetched = await _supabaseService.fetchBookings(restaurantId);
       _bookings = fetched;
-      _knownBookingIds.clear();
+      // Accumulate known IDs so historical bookings are never re-alerted
       _knownBookingIds.addAll(fetched.map((b) => b.bookingId));
+      _knownBookingIds.addAll(fetched.map((b) => b.bookingId.trim().toLowerCase()));
       _initialLoadCompleted = true;
       _isLoading = false;
       notifyListeners();
@@ -136,22 +137,12 @@ class BookingProvider extends ChangeNotifier {
       debugPrint('[BookingProvider] Realtime channel subscription note: $e');
     }
 
-    // 2. Stream backup for guaranteed consistency
+    // 2. Stream backup for UI state synchronization (silent sync - never re-dispatches alerts)
     try {
       _streamSubscription = _supabaseService.streamBookings(restaurantId).listen((list) {
         if (list.isNotEmpty) {
-          if (_initialLoadCompleted) {
-            for (final b in list) {
-              final key = b.bookingId.trim().toLowerCase();
-              if (!_knownBookingIds.contains(b.bookingId) && !_knownBookingIds.contains(key)) {
-                _knownBookingIds.add(b.bookingId);
-                _knownBookingIds.add(key);
-                if (b.status == BookingStatus.pending || b.status == BookingStatus.confirmed) {
-                  _dispatchBookingAlert(b, 'Stream');
-                }
-              }
-            }
-          }
+          _knownBookingIds.addAll(list.map((b) => b.bookingId));
+          _knownBookingIds.addAll(list.map((b) => b.bookingId.trim().toLowerCase()));
           _bookings = list;
           notifyListeners();
         }
@@ -201,13 +192,21 @@ class BookingProvider extends ChangeNotifier {
     final key = booking.bookingId.trim().toLowerCase();
     final now = DateTime.now();
 
-    // Clean up older than 2 minutes
+    // 1. Recency filter: Only bookings created in the last 5 minutes can trigger an alert
+    final ageInMinutes = now.difference(booking.createdAt).inMinutes.abs();
+    if (ageInMinutes > 5) {
+      debugPrint('[BookingProvider] Suppressing alert for historical booking #$key created $ageInMinutes mins ago');
+      return;
+    }
+
+    // 2. Clean up older than 10 minutes
     _recentlyDispatchedAlerts.removeWhere(
-      (_, time) => now.difference(time).inSeconds > 120,
+      (_, time) => now.difference(time).inMinutes > 10,
     );
 
+    // 3. Deduplicate recent alerts within 2 minutes
     final last = _recentlyDispatchedAlerts[key];
-    if (last != null && now.difference(last).inSeconds < 45) {
+    if (last != null && now.difference(last).inSeconds < 120) {
       debugPrint('[BookingProvider] Deduplicating alert from $source for $key (already dispatched ${now.difference(last).inSeconds}s ago)');
       return;
     }
@@ -392,19 +391,6 @@ class BookingProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> rejectBooking(String bookingId) async {
-    final index = _bookings.indexWhere((b) => b.bookingId == bookingId);
-    if (index != -1) {
-      _bookings[index] = _bookings[index].copyWith(status: BookingStatus.rejected);
-      notifyListeners();
-    }
-
-    try {
-      await _supabaseService.updateBookingStatus(bookingId, 'REJECTED');
-    } catch (e) {
-      debugPrint('Error rejecting booking in Supabase: $e');
-    }
-  }
 
   @override
   void dispose() {

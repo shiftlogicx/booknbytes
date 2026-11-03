@@ -112,17 +112,15 @@ class _ReservationSuccessDialogState extends State<ReservationSuccessDialog>
               ),
               const SizedBox(height: 6),
 
-              // Italic "Diner is notified"
               const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text('🎉 ', style: TextStyle(fontSize: 13)),
                   Text(
-                    'Diner is notified',
+                    'Table Ready for Service',
                     style: TextStyle(
                       fontSize: 14,
                       color: Color(0xFF00E599),
-                      fontStyle: FontStyle.italic,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0.2,
                     ),
