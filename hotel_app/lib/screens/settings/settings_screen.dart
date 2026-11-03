@@ -8,7 +8,6 @@ import '../../widgets/brand_logo.dart';
 import '../../widgets/location_picker_sheet.dart';
 import '../../widgets/restaurant_walkthrough_modal.dart';
 import '../profile/restaurant_profile_screen.dart';
-import '../profile/booking_audit_doc_screen.dart';
 import '../support/support_screen.dart';
 import '../auth/login_screen.dart';
 import '../../services/ota_update_service.dart';
@@ -442,12 +441,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             const SizedBox(height: 24),
 
-            // Merchant & Settlement (Editable via Profile)
+            // Restaurant Info & Compliance (Editable via Profile)
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 const Text(
-                  'MERCHANT & SETTLEMENT',
+                  'RESTAURANT COMPLIANCE & INFO',
                   style: TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w800,
@@ -466,32 +465,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             const SizedBox(height: 6),
 
-            if (auth.canViewUpi)
-              _buildActionTile(
-                icon: Icons.account_balance_rounded,
-                title: 'Direct UPI Settlement VPA',
-                subtitle: '${profile.upiId} · 0% fee diner UPI settlement',
-                onTap: _openProfile,
-              ),
             _buildActionTile(
               icon: Icons.verified_user_rounded,
               title: 'FSSAI License Number',
               subtitle: '${profile.fssaiNumber} · Verified & Compliant',
               onTap: _openProfile,
             ),
-            if (auth.canAccessAuditDocs)
-              _buildActionTile(
-                icon: Icons.receipt_long_rounded,
-                title: 'Booking Audit Documents',
-                subtitle: 'Statement of platform arrivals, no-shows & discounts applied',
-                onTap: () {
-                  HapticFeedback.lightImpact();
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const BookingAuditDocScreen()),
-                  );
-                },
-                accentColor: const Color(0xFF2563EB),
-              ),
             _buildActionTile(
               icon: Icons.currency_rupee_rounded,
               title: 'Cost for Two Diners',

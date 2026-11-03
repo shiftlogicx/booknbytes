@@ -120,30 +120,6 @@ class _ShiftPulseBentoState extends State<ShiftPulseBento>
                   ],
                 ),
               ),
-              const SizedBox(width: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF1F5F9),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.touch_app_rounded, size: 10, color: Color(0xFF64748B)),
-                    SizedBox(width: 3),
-                    Text(
-                      'Interactive',
-                      style: TextStyle(
-                        fontSize: 9.0,
-                        fontWeight: FontWeight.w700,
-                        color: Color(0xFF64748B),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
             ],
           ),
 

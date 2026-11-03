@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -12,7 +11,7 @@ class RestaurantWalkthroughModal extends StatefulWidget {
       context: context,
       barrierDismissible: false,
       barrierLabel: 'Walkthrough',
-      barrierColor: Colors.black.withValues(alpha: 0.85),
+      barrierColor: Colors.black.withValues(alpha: 0.45),
       transitionDuration: const Duration(milliseconds: 350),
       pageBuilder: (context, anim1, anim2) {
         return const RestaurantWalkthroughModal();
@@ -126,161 +125,160 @@ class _RestaurantWalkthroughModalState extends State<RestaurantWalkthroughModal>
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
           constraints: const BoxConstraints(maxWidth: 420),
           decoration: BoxDecoration(
-            color: const Color(0xFF0F1422).withValues(alpha: 0.94),
-            borderRadius: BorderRadius.circular(32),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(28),
             border: Border.all(
-              color: slide.accentColor.withValues(alpha: 0.35),
-              width: 1.5,
+              color: const Color(0xFFE2E8F0),
+              width: 1.2,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.7),
-                blurRadius: 36,
-                offset: const Offset(0, 16),
+                color: const Color(0xFF0F172A).withValues(alpha: 0.12),
+                blurRadius: 32,
+                offset: const Offset(0, 12),
               ),
               BoxShadow(
-                color: slide.accentColor.withValues(alpha: 0.12),
-                blurRadius: 28,
-                spreadRadius: 2,
+                color: slide.accentColor.withValues(alpha: 0.1),
+                blurRadius: 20,
+                spreadRadius: 1,
               ),
             ],
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(32),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(18, 18, 18, 20),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Top Bar with Skip
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Flexible(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: slide.accentColor.withValues(alpha: 0.15),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: slide.accentColor.withValues(alpha: 0.4)),
-                            ),
-                            child: Text(
-                              slide.badge,
-                              style: TextStyle(
-                                fontSize: 9.5,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 0.4,
-                                color: slide.accentColor,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        InkWell(
-                          onTap: _onFinish,
-                          borderRadius: BorderRadius.circular(8),
-                          child: const Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            child: Text(
-                              'Skip Tutorial',
-                              style: TextStyle(
-                                color: Color(0xFF94A3B8),
-                                fontSize: 11.5,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // Slides PageView
-                    SizedBox(
-                      height: 340,
-                      child: PageView.builder(
-                        controller: _pageController,
-                        itemCount: _slides.length,
-                        onPageChanged: (idx) {
-                          HapticFeedback.selectionClick();
-                          setState(() => _currentPage = idx);
-                        },
-                        itemBuilder: (context, idx) {
-                          final currentSlide = _slides[idx];
-                          return _buildSlideContent(currentSlide);
-                        },
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // Page Indicators
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(_slides.length, (idx) {
-                        final isSelected = _currentPage == idx;
-                        return AnimatedContainer(
-                          duration: const Duration(milliseconds: 250),
-                          margin: const EdgeInsets.symmetric(horizontal: 4),
-                          width: isSelected ? 24 : 7,
-                          height: 7,
+            borderRadius: BorderRadius.circular(28),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 22),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Top Bar with Skip
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Flexible(
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                           decoration: BoxDecoration(
-                            color: isSelected
-                                ? slide.accentColor
-                                : const Color(0xFF334155),
-                            borderRadius: BorderRadius.circular(4),
+                            color: slide.accentColor.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: slide.accentColor.withValues(alpha: 0.3)),
                           ),
-                        );
-                      }),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // Action Button
-                    SizedBox(
-                      width: double.infinity,
-                      height: 52,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: slide.accentColor,
-                          foregroundColor: Colors.black,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
+                          child: Text(
+                            slide.badge,
+                            style: TextStyle(
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.4,
+                              color: slide.accentColor,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        ),
-                        onPressed: _nextPage,
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              _currentPage == _slides.length - 1
-                                  ? 'Got It • Enter Restaurant Suite'
-                                  : 'Next Feature',
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 0.2,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Icon(
-                              _currentPage == _slides.length - 1
-                                  ? Icons.check_circle_rounded
-                                  : Icons.arrow_forward_rounded,
-                              size: 18,
-                            ),
-                          ],
                         ),
                       ),
+                      const SizedBox(width: 8),
+                      InkWell(
+                        onTap: _onFinish,
+                        borderRadius: BorderRadius.circular(8),
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          child: Text(
+                            'Skip Tutorial',
+                            style: TextStyle(
+                              color: Color(0xFF64748B),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Slides PageView
+                  SizedBox(
+                    height: 330,
+                    child: PageView.builder(
+                      controller: _pageController,
+                      itemCount: _slides.length,
+                      onPageChanged: (idx) {
+                        HapticFeedback.selectionClick();
+                        setState(() => _currentPage = idx);
+                      },
+                      itemBuilder: (context, idx) {
+                        final currentSlide = _slides[idx];
+                        return _buildSlideContent(currentSlide);
+                      },
                     ),
-                  ],
-                ),
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  // Page Indicators
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(_slides.length, (idx) {
+                      final isSelected = _currentPage == idx;
+                      return AnimatedContainer(
+                        duration: const Duration(milliseconds: 250),
+                        margin: const EdgeInsets.symmetric(horizontal: 4),
+                        width: isSelected ? 24 : 7,
+                        height: 7,
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? slide.accentColor
+                              : const Color(0xFFE2E8F0),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                      );
+                    }),
+                  ),
+
+                  const SizedBox(height: 20),
+
+                  // Action Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF0F172A),
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                      ),
+                      onPressed: _nextPage,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            _currentPage == _slides.length - 1
+                                ? 'Got It • Enter Restaurant Suite'
+                                : 'Next Feature',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.2,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Icon(
+                            _currentPage == _slides.length - 1
+                                ? Icons.check_circle_rounded
+                                : Icons.arrow_forward_rounded,
+                            size: 18,
+                            color: Colors.white,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -295,10 +293,10 @@ class _RestaurantWalkthroughModalState extends State<RestaurantWalkthroughModal>
       children: [
         // Graphic Box
         Container(
-          width: 140,
-          height: 140,
+          width: 130,
+          height: 130,
           decoration: BoxDecoration(
-            color: currentSlide.accentColor.withValues(alpha: 0.12),
+            color: currentSlide.accentColor.withValues(alpha: 0.1),
             shape: BoxShape.circle,
             border: Border.all(
               color: currentSlide.accentColor.withValues(alpha: 0.3),
@@ -310,31 +308,31 @@ class _RestaurantWalkthroughModalState extends State<RestaurantWalkthroughModal>
           ),
         ),
 
-        const SizedBox(height: 24),
+        const SizedBox(height: 22),
 
         Text(
           currentSlide.title,
           textAlign: TextAlign.center,
           style: const TextStyle(
             fontSize: 20,
-            fontWeight: FontWeight.w800,
-            color: Colors.white,
+            fontWeight: FontWeight.w900,
+            color: Color(0xFF0F172A),
             letterSpacing: -0.3,
           ),
         ),
 
-        const SizedBox(height: 10),
+        const SizedBox(height: 8),
 
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 10),
           child: Text(
             currentSlide.subtitle,
             textAlign: TextAlign.center,
             style: const TextStyle(
               fontSize: 13,
               height: 1.45,
-              color: Color(0xFF94A3B8),
-              fontWeight: FontWeight.w400,
+              color: Color(0xFF475569),
+              fontWeight: FontWeight.w500,
             ),
           ),
         ),
@@ -353,7 +351,7 @@ class _RestaurantWalkthroughModalState extends State<RestaurantWalkthroughModal>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text('🔔', style: TextStyle(fontSize: 48)),
+                  const Text('🔔', style: TextStyle(fontSize: 46)),
                   const SizedBox(height: 4),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -379,10 +377,10 @@ class _RestaurantWalkthroughModalState extends State<RestaurantWalkthroughModal>
               children: [
                 Transform.translate(
                   offset: Offset(_pulseController.value * 16 - 8, 0),
-                  child: const Text('👉', style: TextStyle(fontSize: 48)),
+                  child: const Text('👉', style: TextStyle(fontSize: 46)),
                 ),
                 const SizedBox(height: 4),
-                const Text('✨ Locked in 1-Swipe 🍽️', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xFF00E599))),
+                const Text('✨ Locked in 1-Swipe 🍽️', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xFF059669))),
               ],
             );
           },
@@ -391,20 +389,21 @@ class _RestaurantWalkthroughModalState extends State<RestaurantWalkthroughModal>
         return Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text('🏷️', style: TextStyle(fontSize: 46)),
+            const Text('🏷️', style: TextStyle(fontSize: 44)),
             const SizedBox(height: 4),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF59E0B).withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(6),
+                    color: const Color(0xFFFFFBEB),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFFFDE68A)),
                   ),
                   child: const Text(
                     '30% OFF 🎉',
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: Color(0xFFFBBF24)),
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: Color(0xFFD97706)),
                   ),
                 ),
               ],
@@ -415,20 +414,21 @@ class _RestaurantWalkthroughModalState extends State<RestaurantWalkthroughModal>
         return Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Text('👨‍🍳', style: TextStyle(fontSize: 46)),
+            const Text('👨‍🍳', style: TextStyle(fontSize: 44)),
             const SizedBox(height: 4),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF38BDF8).withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(6),
+                    color: const Color(0xFFF0FDF4),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFFA7F3D0)),
                   ),
                   child: const Text(
                     '82% Full 🍽️',
-                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: Color(0xFF38BDF8)),
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: Color(0xFF059669)),
                   ),
                 ),
               ],

@@ -1255,8 +1255,8 @@ class _TableSlotsScreenState extends State<TableSlotsScreen> {
                 ),
                 Switch.adaptive(
                   value: _dynamicEnabled,
+                  activeColor: const Color(0xFFD97706),
                   activeTrackColor: const Color(0xFFFDE68A),
-                  activeThumbColor: const Color(0xFFD97706),
                   onChanged: (val) {
                     HapticFeedback.selectionClick();
                     setState(() => _dynamicEnabled = val);

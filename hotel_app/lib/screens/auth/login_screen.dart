@@ -534,7 +534,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
               const SizedBox(height: 4),
               Text(
                 _isOwnerMode
-                    ? 'Complete access to table reservations, slots, promo offers, UPI settlement & audit documents.'
+                    ? 'Complete access to table reservations, live floor slots, and promo offers.'
                     : 'Operational floor console: manage guest turnarounds, table reservations, and live seating.',
                 style: const TextStyle(fontSize: 12, color: Color(0xFF64748B), height: 1.4),
               ),
@@ -792,15 +792,6 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                 keyboardType: TextInputType.number,
                 style: const TextStyle(color: Color(0xFF0F172A), fontSize: 13, fontWeight: FontWeight.w600),
                 decoration: _inputDecoration('e.g. 11521034000123', Icons.verified_user_outlined),
-              ),
-              const SizedBox(height: 14),
-
-              // UPI ID
-              _buildFieldLabel('SETTLEMENT UPI VPA ID (0% COMMISSION)'),
-              TextField(
-                controller: _upiController,
-                style: const TextStyle(color: Color(0xFF0F172A), fontSize: 13, fontWeight: FontWeight.w600),
-                decoration: _inputDecoration('e.g. coastalcurry@sbi', Icons.account_balance_outlined),
               ),
               const SizedBox(height: 14),
 

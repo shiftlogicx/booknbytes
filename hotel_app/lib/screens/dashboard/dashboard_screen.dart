@@ -50,11 +50,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
       // Automatically detect real device GPS coordinates on launch
       Provider.of<LocationProvider>(context, listen: false).detectCurrentLocation();
 
-      // Show interactive first-time restaurant walkthrough ONLY during first login
-      auth.checkTutorialStatus().then((hasSeen) {
-        if (!hasSeen && mounted) {
+      // Show interactive first-time restaurant walkthrough ONLY when user signs up newly
+      auth.checkTutorialStatus().then((shouldShow) {
+        if (shouldShow && mounted) {
           Future.delayed(const Duration(milliseconds: 600), () {
-            if (mounted && !auth.hasSeenTutorial) {
+            if (mounted && auth.shouldShowTutorial) {
               RestaurantWalkthroughModal.show(context);
             }
           });
@@ -398,11 +398,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       _isAcceptingReservations ? 'FLOOR IS LIVE' : 'FLOOR PAUSED',
                       style: TextStyle(
                         fontWeight: FontWeight.w900,
-                        fontSize: 12.5,
+                        fontSize: 13,
                         letterSpacing: 0.6,
                         color: _isAcceptingReservations
-                            ? const Color(0xFF059669)
-                            : const Color(0xFF64748B),
+                            ? const Color(0xFF047857)
+                            : const Color(0xFFDC2626),
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -422,43 +422,89 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ),
               const SizedBox(width: 8),
-              Transform.scale(
-                scale: 0.9,
-                child: Switch.adaptive(
-                  value: _isAcceptingReservations,
-                  activeColor: const Color(0xFF059669),
-                  activeTrackColor: const Color(0xFF059669).withValues(alpha: 0.25),
-                  onChanged: (val) {
-                    HapticFeedback.selectionClick();
-                    setState(() => _isAcceptingReservations = val);
-                    ScaffoldMessenger.of(context).clearSnackBars();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Row(
-                          children: [
-                            Icon(
-                              val ? Icons.radio_button_checked_rounded : Icons.pause_circle_outline_rounded,
-                              color: val ? const Color(0xFF00E599) : const Color(0xFF94A3B8),
-                              size: 18,
+
+              // High-Contrast Interactive Toggle Button with Explicit Text
+              InkWell(
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  final val = !_isAcceptingReservations;
+                  setState(() => _isAcceptingReservations = val);
+                  ScaffoldMessenger.of(context).clearSnackBars();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Row(
+                        children: [
+                          Icon(
+                            val ? Icons.radio_button_checked_rounded : Icons.pause_circle_outline_rounded,
+                            color: val ? const Color(0xFF00E599) : const Color(0xFF94A3B8),
+                            size: 18,
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              val ? 'Floor is Live — accepting table reservations' : 'Floor paused — table bookings temporarily paused',
+                              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.white),
                             ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                val ? 'Floor is Live — accepting table reservations' : 'Floor paused — table bookings temporarily paused',
-                                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.white),
-                              ),
-                            ),
-                          ],
-                        ),
-                        backgroundColor: const Color(0xFF0F172A),
-                        behavior: SnackBarBehavior.floating,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        duration: const Duration(milliseconds: 2000),
+                          ),
+                        ],
                       ),
-                    );
-                  },
+                      backgroundColor: const Color(0xFF0F172A),
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      duration: const Duration(milliseconds: 2000),
+                    ),
+                  );
+                },
+                borderRadius: BorderRadius.circular(20),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                  decoration: BoxDecoration(
+                    color: _isAcceptingReservations ? const Color(0xFFECFDF5) : const Color(0xFFFEF2F2),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: _isAcceptingReservations ? const Color(0xFF059669) : const Color(0xFFDC2626),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: (_isAcceptingReservations ? const Color(0xFF059669) : const Color(0xFFDC2626)).withValues(alpha: 0.15),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: _isAcceptingReservations ? const Color(0xFF059669) : const Color(0xFFDC2626),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        _isAcceptingReservations ? 'LIVE' : 'PAUSED',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 0.5,
+                          color: _isAcceptingReservations ? const Color(0xFF047857) : const Color(0xFFB91C1C),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(
+                        _isAcceptingReservations ? Icons.check_circle_rounded : Icons.pause_circle_filled_rounded,
+                        size: 14,
+                        color: _isAcceptingReservations ? const Color(0xFF059669) : const Color(0xFFDC2626),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],

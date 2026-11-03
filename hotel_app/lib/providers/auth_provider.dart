@@ -238,7 +238,6 @@ class AuthProvider extends ChangeNotifier {
   User? _currentUser;
   bool _isLoading = false;
   String? _errorMessage;
-  bool _hasSeenTutorial = false;
   UserRole _role = UserRole.owner;
   late RestaurantProfileData _profile;
   Map<String, dynamic>? _generatedManagerCredentials;
@@ -247,7 +246,6 @@ class AuthProvider extends ChangeNotifier {
   User? get currentUser => _currentUser;
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
-  bool get hasSeenTutorial => _hasSeenTutorial;
   UserRole get role => _role;
   bool get isOwner => _role == UserRole.owner;
   bool get isManager => _role == UserRole.manager;
@@ -257,25 +255,41 @@ class AuthProvider extends ChangeNotifier {
   RestaurantProfileData get profile => _profile;
   Map<String, dynamic>? get generatedManagerCredentials => _generatedManagerCredentials;
 
+  bool _shouldShowTutorial = false;
+  bool get shouldShowTutorial => _shouldShowTutorial;
+  bool get hasSeenTutorial => !_shouldShowTutorial;
+
   Future<bool> checkTutorialStatus() async {
     final prefs = await SharedPreferences.getInstance();
-    final key = currentRestaurantId.isNotEmpty ? 'has_seen_tutorial_$currentRestaurantId' : 'has_seen_tutorial_default';
-    _hasSeenTutorial = (prefs.getBool(key) ?? false) || (prefs.getBool('has_seen_tutorial_global') ?? false);
+    // Only show if explicitly flagged during a fresh new signup
+    _shouldShowTutorial = prefs.getBool('should_show_tutorial_new_signup') ?? false;
     notifyListeners();
-    return _hasSeenTutorial;
+    return _shouldShowTutorial;
   }
 
   Future<void> markTutorialSeen() async {
-    _hasSeenTutorial = true;
+    _shouldShowTutorial = false;
     notifyListeners();
     try {
       final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('should_show_tutorial_new_signup', false);
       if (currentRestaurantId.isNotEmpty) {
         await prefs.setBool('has_seen_tutorial_$currentRestaurantId', true);
       }
       await prefs.setBool('has_seen_tutorial_global', true);
     } catch (e) {
       debugPrint('Error saving tutorial state: $e');
+    }
+  }
+
+  Future<void> flagNewSignupTutorial() async {
+    _shouldShowTutorial = true;
+    notifyListeners();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('should_show_tutorial_new_signup', true);
+    } catch (e) {
+      debugPrint('Error flagging tutorial: $e');
     }
   }
 
@@ -443,6 +457,9 @@ class AuthProvider extends ChangeNotifier {
 
       // Step 5: Refresh restaurant profile state
       await refreshRestaurantData();
+
+      // Flag tutorial to display ONLY for this newly signed up restaurant
+      await flagNewSignupTutorial();
 
       _isLoading = false;
       notifyListeners();
