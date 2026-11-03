@@ -554,6 +554,7 @@ class _SlotManagementScreenState extends State<SlotManagementScreen> {
     final hasDiscount = slot.discountPercentage > 0;
 
     return Container(
+      key: ValueKey('slot_${slot.id}_${slot.time}'),
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -750,36 +751,58 @@ class _SlotManagementScreenState extends State<SlotManagementScreen> {
                       ),
                   ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   physics: const BouncingScrollPhysics(),
                   child: Row(
-                    children: [0, 10, 15, 20, 25, 30, 40].map((pct) {
+                    children: [
+                      {'val': 0, 'label': '0% (Min)'},
+                      {'val': 10, 'label': '10% OFF'},
+                      {'val': 15, 'label': '15% OFF'},
+                      {'val': 20, 'label': '20% OFF'},
+                      {'val': 25, 'label': '25% OFF'},
+                      {'val': 30, 'label': '30% OFF'},
+                      {'val': 40, 'label': '40% OFF'},
+                      {'val': 50, 'label': '50% (Max)'},
+                    ].map((item) {
+                      final pct = item['val'] as int;
+                      final label = item['label'] as String;
                       final isSelected = slot.discountPercentage == pct;
                       return Padding(
-                        padding: const EdgeInsets.only(right: 8),
+                        padding: const EdgeInsets.only(right: 12),
                         child: InkWell(
                           onTap: () {
                             HapticFeedback.selectionClick();
                             setState(() => slot.discountPercentage = pct);
                           },
-                          borderRadius: BorderRadius.circular(10),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                          borderRadius: BorderRadius.circular(12),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 150),
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                             decoration: BoxDecoration(
                               color: isSelected
                                   ? (pct > 0 ? const Color(0xFFF59E0B) : const Color(0xFF334155))
                                   : const Color(0xFF172033),
-                              borderRadius: BorderRadius.circular(10),
+                              borderRadius: BorderRadius.circular(12),
                               border: Border.all(
                                 color: isSelected
                                     ? (pct > 0 ? const Color(0xFFF59E0B) : const Color(0xFF475569))
                                     : const Color(0xFF222F49),
+                                width: isSelected ? 1.5 : 1.0,
                               ),
+                              boxShadow: isSelected && pct > 0
+                                  ? [
+                                      BoxShadow(
+                                        color: const Color(0xFFF59E0B).withValues(alpha: 0.3),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ]
+                                  : null,
                             ),
                             child: Text(
-                              pct == 0 ? 'No Disc' : '$pct% OFF',
+                              label,
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w800,

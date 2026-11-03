@@ -15,6 +15,19 @@ Deno.serve(async (req: Request) => {
   if (req.method === "GET") {
     const onesignalAppId = Deno.env.get("ONESIGNAL_APP_ID") || "ONESIGNAL_APP_ID_PLACEHOLDER";
     const onesignalApiKey = Deno.env.get("ONESIGNAL_REST_API_KEY") || "ONESIGNAL_REST_API_KEY_PLACEHOLDER";
+    const url = new URL(req.url);
+    const notifId = url.searchParams.get("notif_id");
+
+    if (notifId) {
+      const notifRes = await fetch(`https://onesignal.com/api/v1/notifications/${notifId}?app_id=${onesignalAppId}`, {
+        headers: { "Authorization": `Basic ${onesignalApiKey}` }
+      });
+      const notifData = await notifRes.json();
+      return new Response(JSON.stringify(notifData), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200,
+      });
+    }
 
     const appRes = await fetch(`https://onesignal.com/api/v1/apps/${onesignalAppId}`, {
       headers: { "Authorization": `Basic ${onesignalApiKey}` }
@@ -151,7 +164,6 @@ Deno.serve(async (req: Request) => {
       },
       priority: 10, // Maximum delivery priority
       existing_android_channel_id: "booking_alerts",
-      android_channel_id: "booking_alerts",
       android_visibility: 1, // Public on lockscreen
       ios_sound: "alert_tone.wav",
       android_sound: "alert_tone",
@@ -182,7 +194,6 @@ Deno.serve(async (req: Request) => {
         data: oneSignalPayload.data,
         priority: 10,
         existing_android_channel_id: "booking_alerts",
-        android_channel_id: "booking_alerts",
         android_visibility: 1,
         ios_sound: "alert_tone.wav",
         android_sound: "alert_tone",
@@ -213,7 +224,6 @@ Deno.serve(async (req: Request) => {
           data: oneSignalPayload.data,
           priority: 10,
           existing_android_channel_id: "booking_alerts",
-          android_channel_id: "booking_alerts",
           android_visibility: 1,
           ios_sound: "alert_tone.wav",
           android_sound: "alert_tone",

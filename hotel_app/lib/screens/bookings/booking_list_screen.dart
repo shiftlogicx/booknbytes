@@ -266,6 +266,7 @@ class _BookingListScreenState extends State<BookingListScreen> {
                         itemBuilder: (context, idx) {
                           final b = booking.bookings[idx];
                           return BookingCard(
+                            key: ValueKey('booking_${b.bookingId}'),
                             booking: b,
                             onAccept: () {
                               booking.updateStatus(b.bookingId, BookingStatus.confirmed);

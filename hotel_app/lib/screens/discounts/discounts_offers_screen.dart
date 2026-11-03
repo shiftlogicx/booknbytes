@@ -792,34 +792,56 @@ class _DiscountsOffersScreenState extends State<DiscountsOffersScreen> {
 
           const SizedBox(height: 10),
 
-          // Percentage Selector Pills
+          // Percentage Selector Pills with Generous Spacing
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
             child: Row(
-              children: [0, 10, 15, 20, 25, 30, 40].map((val) {
+              children: [
+                {'val': 0, 'label': '0% (Min)'},
+                {'val': 10, 'label': '10% OFF'},
+                {'val': 15, 'label': '15% OFF'},
+                {'val': 20, 'label': '20% OFF'},
+                {'val': 25, 'label': '25% OFF'},
+                {'val': 30, 'label': '30% OFF'},
+                {'val': 40, 'label': '40% OFF'},
+                {'val': 50, 'label': '50% (Max)'},
+              ].map((item) {
+                final val = item['val'] as int;
+                final label = item['label'] as String;
                 final isSel = slot.discount == val;
                 return Padding(
-                  padding: const EdgeInsets.only(right: 6),
+                  padding: const EdgeInsets.only(right: 10),
                   child: InkWell(
                     onTap: () {
                       HapticFeedback.selectionClick();
                       setState(() => slot.discount = val);
                     },
-                    borderRadius: BorderRadius.circular(8),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    borderRadius: BorderRadius.circular(10),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 150),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
                       decoration: BoxDecoration(
                         color: isSel ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(10),
                         border: Border.all(
                           color: isSel ? const Color(0xFF0F172A) : const Color(0xFFE2E8F0),
+                          width: isSel ? 1.5 : 1.0,
                         ),
+                        boxShadow: isSel
+                            ? [
+                                BoxShadow(
+                                  color: const Color(0xFF0F172A).withValues(alpha: 0.2),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ]
+                            : null,
                       ),
                       child: Text(
-                        val == 0 ? 'No Offer' : '$val%',
+                        label,
                         style: TextStyle(
-                          fontSize: 10.5,
+                          fontSize: 11,
                           fontWeight: isSel ? FontWeight.w900 : FontWeight.w700,
                           color: isSel ? Colors.white : const Color(0xFF475569),
                         ),

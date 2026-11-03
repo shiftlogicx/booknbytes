@@ -235,7 +235,7 @@ class _TableSlotsScreenState extends State<TableSlotsScreen> {
 
                     const SizedBox(height: 14),
 
-                    // Discount Percentage
+                    // Discount Percentage Header
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -260,6 +260,75 @@ class _TableSlotsScreenState extends State<TableSlotsScreen> {
                         ),
                       ],
                     ),
+
+                    const SizedBox(height: 10),
+
+                    // Dynamic Min-Max Discount Toggle Buttons with Generous Spacing
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      physics: const BouncingScrollPhysics(),
+                      child: Row(
+                        children: [
+                          {'val': 0.0, 'label': '0% (Min)'},
+                          {'val': 10.0, 'label': '10% OFF'},
+                          {'val': 15.0, 'label': '15% OFF'},
+                          {'val': 20.0, 'label': '20% OFF'},
+                          {'val': 25.0, 'label': '25% OFF'},
+                          {'val': 30.0, 'label': '30% OFF'},
+                          {'val': 40.0, 'label': '40% OFF'},
+                          {'val': 50.0, 'label': '50% (Max)'},
+                        ].map((opt) {
+                          final optVal = opt['val'] as double;
+                          final isSel = discount == optVal;
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 10),
+                            child: InkWell(
+                              onTap: () {
+                                HapticFeedback.selectionClick();
+                                setModalState(() => discount = optVal);
+                              },
+                              borderRadius: BorderRadius.circular(10),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 150),
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                decoration: BoxDecoration(
+                                  color: isSel
+                                      ? (optVal > 0 ? const Color(0xFF059669) : const Color(0xFF334155))
+                                      : const Color(0xFFF1F5F9),
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                    color: isSel
+                                        ? (optVal > 0 ? const Color(0xFF059669) : const Color(0xFF334155))
+                                        : const Color(0xFFE2E8F0),
+                                    width: isSel ? 1.5 : 1.0,
+                                  ),
+                                  boxShadow: isSel
+                                      ? [
+                                          BoxShadow(
+                                            color: (optVal > 0 ? const Color(0xFF059669) : const Color(0xFF334155)).withValues(alpha: 0.25),
+                                            blurRadius: 8,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ]
+                                      : null,
+                                ),
+                                child: Text(
+                                  opt['label'] as String,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: isSel ? FontWeight.w800 : FontWeight.w600,
+                                    color: isSel ? Colors.white : const Color(0xFF475569),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+
+                    const SizedBox(height: 10),
+
                     Slider(
                       value: discount,
                       min: 0,
@@ -269,6 +338,18 @@ class _TableSlotsScreenState extends State<TableSlotsScreen> {
                       inactiveColor: const Color(0xFFE2E8F0),
                       label: '${discount.toInt()}% OFF',
                       onChanged: (val) => setModalState(() => discount = val),
+                    ),
+
+                    // Min - Max Boundary Indicators
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 6),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('0% (Min)', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFF94A3B8))),
+                          Text('50% (Max Limit)', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFF94A3B8))),
+                        ],
+                      ),
                     ),
 
                     const SizedBox(height: 20),
@@ -613,6 +694,7 @@ class _TableSlotsScreenState extends State<TableSlotsScreen> {
     final isLunch = slot.shift == 'LUNCH';
 
     return Container(
+      key: ValueKey('liveslot_${slot.slotId}'),
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(

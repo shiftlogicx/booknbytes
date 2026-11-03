@@ -48,8 +48,8 @@ class SlotPicker extends StatelessWidget {
         ),
         const SizedBox(height: 10),
         Wrap(
-          spacing: 8,
-          runSpacing: 8,
+          spacing: 12,
+          runSpacing: 10,
           children: sortedEntries.map((entry) {
             final slot = entry.key;
             final count = entry.value;
@@ -60,7 +60,7 @@ class SlotPicker extends StatelessWidget {
               onTap: isAvailable ? () => onSelected(slot) : null,
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 180),
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 decoration: BoxDecoration(
                   color: isSelected
                       ? AppTheme.primaryOrange

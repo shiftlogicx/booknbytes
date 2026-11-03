@@ -263,25 +263,59 @@ class _BookingScreenState extends State<BookingScreen> {
                   'Apply Dining Offer',
                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
                 Wrap(
-                  spacing: 8,
+                  spacing: 12,
+                  runSpacing: 10,
                   children: widget.restaurant.activeOffers.map((offer) {
                     final isSelected = _selectedOffer?.offerId == offer.offerId;
-                    return ChoiceChip(
-                      label: Text(offer.title),
-                      selected: isSelected,
-                      selectedColor: const Color(0xFFFFEDD5),
-                      labelStyle: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: isSelected ? const Color(0xFFC2410C) : Colors.grey.shade700,
-                      ),
-                      onSelected: (sel) {
+                    return InkWell(
+                      onTap: () {
                         setState(() {
-                          _selectedOffer = sel ? offer : null;
+                          _selectedOffer = isSelected ? null : offer;
                         });
                       },
+                      borderRadius: BorderRadius.circular(12),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 150),
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: isSelected ? const Color(0xFFFFF7ED) : Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: isSelected ? const Color(0xFFEA580C) : const Color(0xFFE2E8F0),
+                            width: isSelected ? 1.5 : 1.0,
+                          ),
+                          boxShadow: isSelected
+                              ? [
+                                  BoxShadow(
+                                    color: const Color(0xFFEA580C).withOpacity(0.15),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ]
+                              : null,
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              isSelected ? Icons.check_circle_rounded : Icons.local_offer_outlined,
+                              size: 14,
+                              color: isSelected ? const Color(0xFFEA580C) : const Color(0xFF64748B),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              offer.title,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                                color: isSelected ? const Color(0xFFEA580C) : const Color(0xFF334155),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     );
                   }).toList(),
                 ),
