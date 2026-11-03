@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:provider/provider.dart';
-import '../../providers/auth_provider.dart';
 
 class SupportScreen extends StatefulWidget {
-  const SupportScreen({super.key});
+  final int initialTabIndex;
+  const SupportScreen({super.key, this.initialTabIndex = 0});
 
   @override
   State<SupportScreen> createState() => _SupportScreenState();
@@ -19,51 +18,55 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
     _FaqItem(
       question: 'How do Priority Full-Screen Booking Alerts work?',
       answer:
-          'When a new table reservation is placed by a diner, your phone receives an immediate high-priority alarm. It displays a full-screen alert overlay with continuous acoustic ringing and vibration until you either Slide to Accept or Snooze.',
+          'When a diner places a table reservation, your device receives a high-priority alert. A full-screen overlay displays reservation details with acoustic ringing and vibration so your team never misses an incoming booking. You can slide or tap to confirm or snooze.',
       category: 'ALERTS & HARDWARE',
-    ),
-    _FaqItem(
-      question: 'How does instant 0% fee UPI settlement work with guests?',
-      answer:
-          'Diners pay their bill by scanning the table UPI QR code. The payment is transferred directly from the diner\'s bank to your verified UPI VPA ID (e.g. maheshlunch@sbi) with zero commission or aggregator deduction.',
-      category: 'PAYMENTS & SETTLEMENT',
     ),
     _FaqItem(
       question: 'What is the restaurant policy for guest no-shows?',
       answer:
-          'Diners are given a 15-minute grace window past their reserved time slot. If diners do not arrive within the window, their table reservation automatically expires so walk-in guests can be accommodated.',
+          'Diners are given a 15-minute grace window past their reserved time slot. If guests do not arrive within this window, their table reservation automatically expires so walk-in diners can be accommodated.',
       category: 'RESERVATIONS & SEATING',
     ),
     _FaqItem(
-      question: 'How do I configure dynamic hourly discounts and slot limits?',
+      question: 'How do I set up Breakfast, Lunch, and Dinner service shifts?',
       answer:
-          'Open the \'Slots\' tab in the bottom navigation dock. You can toggle lunch and dinner time blocks and assign customized discounts (10% to 40% OFF) to boost footfall during off-peak hours.',
+          'Navigate to Settings > Restaurant Profile > Operational Service Shifts. You can customize the opening and closing hours for Breakfast, Lunch, and Dinner. These shifts define when diners can book tables on customer apps.',
+      category: 'SERVICE SHIFTS',
+    ),
+    _FaqItem(
+      question: 'How do I configure Dynamic Min-Max discounts?',
+      answer:
+          'Open the Slots tab in the bottom navigation. Toggle "Enable Dynamic Min-Max Discount" and choose a strategy preset or fine-tune your Floor (Min) and Ceiling (Max) limits. Diners roll a dynamic surprise discount within your limits when reserving a table.',
       category: 'DISCOUNTS & SLOTS',
     ),
     _FaqItem(
-      question: 'How is restaurant dining capacity tracked during rush hours?',
+      question: 'How is restaurant dining capacity tracked on the Floor?',
       answer:
-          'The Floor dashboard monitors your current active covers against total capacity (e.g. 82% occupied). It computes pending arrivals and predicted rush timelines (8:00 PM, 8:30 PM, 9:00 PM) to help you manage table turnover.',
+          'The Floor dashboard monitors your live seated covers and upcoming reservations for today. You can mark guests as seated when they arrive to track live occupancy and turn tables efficiently.',
       category: 'FLOOR MANAGEMENT',
     ),
     _FaqItem(
       question: 'Can I temporarily pause online reservations during a kitchen rush?',
       answer:
-          'Yes. At the top of the Floor tab, simply toggle off \'Accepting Reservations\'. All customer apps will temporarily show tables as fully booked until you turn the toggle back on.',
+          'Yes. At the top of the Floor tab, tap the LIVE toggle. Switching it to PAUSED temporarily stops incoming table reservations until you switch it back on.',
       category: 'RESERVATIONS & SEATING',
     ),
     _FaqItem(
-      question: 'How do I update my FSSAI number and business address?',
+      question: 'How do I update my FSSAI license, contact phone, and outlet address?',
       answer:
-          'Navigate to Settings > Restaurant Profile. You can update your 14-digit FSSAI license, contact phone, operating shifts, and outlet address. Changes take effect immediately upon saving.',
-      category: 'MERCHANT COMPLIANCE',
+          'Navigate to Settings > Restaurant Profile. You can update your 14-digit FSSAI license, contact phone number, operating shifts, and outlet address. Changes save directly to your profile.',
+      category: 'RESTAURANT PROFILE',
     ),
   ];
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(
+      length: 2,
+      vsync: this,
+      initialIndex: widget.initialTabIndex.clamp(0, 1),
+    );
   }
 
   @override
@@ -73,307 +76,107 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
     super.dispose();
   }
 
-  void _copyToClipboard(String label, String value) {
-    HapticFeedback.selectionClick();
-    Clipboard.setData(ClipboardData(text: value));
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.check_circle_rounded, color: Color(0xFF059669), size: 18),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                '$label copied to clipboard: $value',
-                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13),
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: const Color(0xFF0F172A),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      ),
-    );
-  }
+  void _showFeedbackDialog() {
+    final textController = TextEditingController();
+    String selectedCategory = 'General Suggestion';
 
-  void _requestCallback() {
-    HapticFeedback.mediumImpact();
-    showModalBottomSheet(
+    showDialog(
       context: context,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Text(
+            'Share Feedback or Report an Issue',
+            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+          ),
+          content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFECFDF5),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: const Color(0xFFA7F3D0)),
-                    ),
-                    child: const Text('📞', style: TextStyle(fontSize: 26)),
-                  ),
-                  const SizedBox(width: 14),
-                  const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Text(
-                            'Priority Callback Requested',
-                            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
-                          ),
-                          SizedBox(width: 6),
-                          Text('⚡', style: TextStyle(fontSize: 14)),
-                        ],
-                      ),
-                      SizedBox(height: 2),
-                      Text('Dedicated Restaurant Success Manager 👨‍💼', style: TextStyle(fontSize: 12, color: Color(0xFF059669), fontWeight: FontWeight.w700)),
-                    ],
-                  ),
+              const Text(
+                'Category',
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B)),
+              ),
+              const SizedBox(height: 6),
+              DropdownButtonFormField<String>(
+                value: selectedCategory,
+                decoration: InputDecoration(
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+                items: const [
+                  DropdownMenuItem(value: 'General Suggestion', child: Text('General Suggestion')),
+                  DropdownMenuItem(value: 'Alert / Sound Issue', child: Text('Alert / Sound Issue')),
+                  DropdownMenuItem(value: 'Slot / Timings Bug', child: Text('Slot / Timings Bug')),
+                  DropdownMenuItem(value: 'Floor / Attendance Request', child: Text('Floor / Attendance Request')),
                 ],
+                onChanged: (val) {
+                  if (val != null) setDialogState(() => selectedCategory = val);
+                },
               ),
-              const SizedBox(height: 18),
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF8FAFC),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
-                ),
-                child: const Row(
-                  children: [
-                    Text('⏱️ ', style: TextStyle(fontSize: 20)),
-                    Expanded(
-                      child: Text(
-                        'Our restaurant executive is being dispatched now. You will receive a direct call on your phone within 5 minutes.',
-                        style: TextStyle(fontSize: 12, color: Color(0xFF334155), height: 1.4, fontWeight: FontWeight.w500),
-                      ),
-                    ),
-                  ],
-                ),
+              const SizedBox(height: 14),
+              const Text(
+                'Details',
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF64748B)),
               ),
-              const SizedBox(height: 22),
-              SizedBox(
-                width: double.infinity,
-                height: 50,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF059669),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                    elevation: 0,
-                  ),
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text('👍 ', style: TextStyle(fontSize: 16)),
-                      Text('Got It • Return to Floor', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
-                    ],
-                  ),
+              const SizedBox(height: 6),
+              TextField(
+                controller: textController,
+                maxLines: 4,
+                decoration: InputDecoration(
+                  hintText: 'Describe your observation or feature request...',
+                  hintStyle: const TextStyle(fontSize: 12, color: Color(0xFF94A3B8)),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                 ),
               ),
             ],
           ),
-        );
-      },
-    );
-  }
-
-  void _showFeedbackDialog() {
-    HapticFeedback.lightImpact();
-    int selectedRating = 5;
-    String selectedCategory = 'App Experience';
-    final feedbackController = TextEditingController();
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return Padding(
-              padding: EdgeInsets.fromLTRB(
-                24,
-                24,
-                24,
-                MediaQuery.of(context).viewInsets.bottom + 24,
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w700)),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF0F172A),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
-              child: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              onPressed: () {
+                HapticFeedback.mediumImpact();
+                Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: const Row(
                       children: [
-                        const Text(
-                          'Restaurant Feedback & Bug Report',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.close_rounded, color: Color(0xFF64748B), size: 20),
-                          onPressed: () => Navigator.of(context).pop(),
+                        Icon(Icons.check_circle_rounded, color: Color(0xFF00E599), size: 18),
+                        SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Thank you! Your feedback has been submitted to the product team.',
+                            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                          ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'Your direct feedback shapes future releases for BookNBytes Restaurant.',
-                      style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
-                    ),
-                    const SizedBox(height: 18),
-
-                    // Star Rating
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(5, (index) {
-                        final starIndex = index + 1;
-                        return IconButton(
-                          icon: Icon(
-                            starIndex <= selectedRating ? Icons.star_rounded : Icons.star_outline_rounded,
-                            color: const Color(0xFFD97706),
-                            size: 34,
-                          ),
-                          onPressed: () {
-                            HapticFeedback.selectionClick();
-                            setModalState(() => selectedRating = starIndex);
-                          },
-                        );
-                      }),
-                    ),
-
-                    const SizedBox(height: 16),
-                    const Text('FEEDBACK CATEGORY', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xFF64748B), letterSpacing: 0.5)),
-                    const SizedBox(height: 8),
-
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        'App Experience',
-                        'Audio & Alarm Ring',
-                        'Table Management',
-                        'UPI Settlements',
-                        'Feature Request',
-                      ].map((cat) {
-                        final isSel = selectedCategory == cat;
-                        return ChoiceChip(
-                          label: Text(cat),
-                          selected: isSel,
-                          selectedColor: const Color(0xFFECFDF5),
-                          backgroundColor: const Color(0xFFF1F5F9),
-                          side: BorderSide(
-                            color: isSel ? const Color(0xFF059669) : const Color(0xFFE2E8F0),
-                          ),
-                          labelStyle: TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: isSel ? const Color(0xFF059669) : const Color(0xFF475569),
-                          ),
-                          onSelected: (val) {
-                            if (val) setModalState(() => selectedCategory = cat);
-                          },
-                        );
-                      }).toList(),
-                    ),
-
-                    const SizedBox(height: 16),
-                    const Text('YOUR MESSAGE / BUG DETAILS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xFF64748B), letterSpacing: 0.5)),
-                    const SizedBox(height: 8),
-
-                    TextField(
-                      controller: feedbackController,
-                      maxLines: 4,
-                      style: const TextStyle(color: Color(0xFF0F172A), fontSize: 13, fontWeight: FontWeight.w500),
-                      decoration: InputDecoration(
-                        hintText: 'Describe what happened or suggest an enhancement...',
-                        hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
-                        filled: true,
-                        fillColor: const Color(0xFFF8FAFC),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
-                          borderSide: const BorderSide(color: Color(0xFF059669), width: 1.5),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 24),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 50,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF059669),
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                          elevation: 0,
-                        ),
-                        onPressed: () {
-                          HapticFeedback.mediumImpact();
-                          Navigator.of(context).pop();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: const Row(
-                                children: [
-                                  Icon(Icons.check_circle_rounded, color: Color(0xFF059669)),
-                                  SizedBox(width: 10),
-                                  Expanded(
-                                    child: Text(
-                                      'Thank you! Your feedback has been sent to our tech team.',
-                                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              backgroundColor: const Color(0xFF0F172A),
-                              behavior: SnackBarBehavior.floating,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            ),
-                          );
-                        },
-                        child: const Text('Submit Restaurant Feedback', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
+                    backgroundColor: const Color(0xFF0F172A),
+                    behavior: SnackBarBehavior.floating,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                );
+              },
+              child: const Text('Submit', style: TextStyle(fontWeight: FontWeight.w800)),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final auth = Provider.of<AuthProvider>(context);
-
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
         backgroundColor: Colors.white,
         elevation: 0,
@@ -386,7 +189,7 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Restaurant Help & Support',
+              'General Restaurant FAQs',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w800,
@@ -394,7 +197,7 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
               ),
             ),
             Text(
-              '24x7 Merchant Helpdesk, FAQs & Feedback',
+              'Guides for alerts, shifts, slots & floor operations',
               style: TextStyle(fontSize: 11, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
             ),
           ],
@@ -413,8 +216,7 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
               unselectedLabelColor: const Color(0xFF64748B),
               labelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, letterSpacing: 0.5),
               tabs: const [
-                Tab(text: 'CONTACT US'),
-                Tab(text: 'GENERAL FAQS'),
+                Tab(text: 'FAQS'),
                 Tab(text: 'FEEDBACK'),
               ],
             ),
@@ -424,256 +226,10 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
       body: TabBarView(
         controller: _tabController,
         children: [
-          _buildContactUsTab(auth),
           _buildFaqsTab(),
           _buildFeedbackTab(),
         ],
       ),
-    );
-  }
-
-  Widget _buildContactUsTab(AuthProvider auth) {
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 20, 16, 40),
-      children: [
-        // 24x7 Priority Card
-        Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x0A0F172A),
-                blurRadius: 14,
-                offset: Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 10,
-                        height: 10,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF059669),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      const Text(
-                        'RESTAURANT DESK LIVE',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.8,
-                          color: Color(0xFF059669),
-                        ),
-                      ),
-                    ],
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFEFF6FF),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(color: const Color(0xFFBFDBFE)),
-                    ),
-                    child: const Text(
-                      'Avg Response: < 2 min',
-                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFF2563EB)),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                'Direct Restaurant Concierge',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Support for ${auth.currentRestaurantName} (${auth.currentRestaurantId})',
-                style: const TextStyle(fontSize: 12, color: Color(0xFF64748B), fontWeight: FontWeight.w500),
-              ),
-              const SizedBox(height: 18),
-              // Prominent Responsive Request Callback Card Button
-              Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: _requestCallback,
-                  borderRadius: BorderRadius.circular(16),
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF059669), Color(0xFF047857)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Color(0x28059669),
-                          blurRadius: 14,
-                          offset: Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(9),
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(Icons.phone_callback_rounded, color: Color(0xFF059669), size: 18),
-                        ),
-                        const SizedBox(width: 14),
-                        const Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Text(
-                                    'Request Instant Callback',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w900,
-                                      fontSize: 14,
-                                      letterSpacing: -0.2,
-                                    ),
-                                  ),
-                                  SizedBox(width: 4),
-                                  Text('⚡', style: TextStyle(fontSize: 12)),
-                                ],
-                              ),
-                              SizedBox(height: 2),
-                              Text(
-                                'Dedicated restaurant manager calls in < 5 mins',
-                                style: TextStyle(
-                                  color: Color(0xFFD1FAE5),
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 11,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 18),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        const SizedBox(height: 24),
-        const Text(
-          'INSTANT COMMUNICATION CHANNELS',
-          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 0.8, color: Color(0xFF64748B)),
-        ),
-        const SizedBox(height: 12),
-
-        // Callback Channel Tile
-        _buildSupportTile(
-          icon: Icons.phone_callback_rounded,
-          iconColor: const Color(0xFF059669),
-          title: 'Request Priority Phone Callback ⚡',
-          subtitle: 'Manager connects to registered mobile in 5 mins',
-          actionLabel: 'Call Me 📞',
-          onTap: _requestCallback,
-        ),
-
-        // WhatsApp Channel
-        _buildSupportTile(
-          icon: Icons.chat_rounded,
-          iconColor: const Color(0xFF16A34A),
-          title: 'WhatsApp Restaurant Desk',
-          subtitle: '+91 98200 12345 · Instant chat support',
-          actionLabel: 'Chat / Copy',
-          onTap: () => _copyToClipboard('WhatsApp Number', '+91 98200 12345'),
-        ),
-
-        // Priority Helpline
-        _buildSupportTile(
-          icon: Icons.phone_in_talk_rounded,
-          iconColor: const Color(0xFF2563EB),
-          title: 'Priority Restaurant Helpline',
-          subtitle: '1800-BOOK-BYTES (Toll-Free 24x7)',
-          actionLabel: 'Call / Copy',
-          onTap: () => _copyToClipboard('Restaurant Helpline', '1800-2665-2483'),
-        ),
-
-        // Email Channel
-        _buildSupportTile(
-          icon: Icons.email_rounded,
-          iconColor: const Color(0xFFD97706),
-          title: 'Executive Support Email',
-          subtitle: 'support@booknbytes.com',
-          actionLabel: 'Mail / Copy',
-          onTap: () => _copyToClipboard('Support Email', 'support@booknbytes.com'),
-        ),
-
-        const SizedBox(height: 24),
-        const Text(
-          'ACCOUNT MANAGER',
-          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 0.8, color: Color(0xFF64748B)),
-        ),
-        const SizedBox(height: 10),
-
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x060F172A),
-                blurRadius: 10,
-                offset: Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              const CircleAvatar(
-                radius: 22,
-                backgroundColor: Color(0xFFECFDF5),
-                child: Text('RS', style: TextStyle(color: Color(0xFF059669), fontWeight: FontWeight.w800)),
-              ),
-              const SizedBox(width: 14),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Rohan Singhal', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: Color(0xFF0F172A))),
-                    SizedBox(height: 2),
-                    Text('Senior Restaurant Growth Manager · Pune Region', style: TextStyle(fontSize: 11, color: Color(0xFF64748B))),
-                  ],
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.phone_rounded, color: Color(0xFF059669), size: 20),
-                onPressed: () => _copyToClipboard('Manager Phone', '+91 99887 66554'),
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 
@@ -682,24 +238,25 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
         ? _allFaqs
         : _allFaqs.where((f) =>
             f.question.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-            f.answer.toLowerCase().contains(_searchQuery.toLowerCase())).toList();
+            f.answer.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+            f.category.toLowerCase().contains(_searchQuery.toLowerCase())).toList();
 
     return Column(
       children: [
-        // Search Bar
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+        // Search Box
+        Container(
+          color: Colors.white,
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
           child: TextField(
             controller: _faqSearchController,
-            onChanged: (val) => setState(() => _searchQuery = val),
-            style: const TextStyle(color: Color(0xFF0F172A), fontSize: 13, fontWeight: FontWeight.w600),
+            onChanged: (val) => setState(() => _searchQuery = val.trim()),
             decoration: InputDecoration(
-              hintText: 'Search restaurant questions, alerts, UPI...',
-              hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
-              prefixIcon: const Icon(Icons.search_rounded, color: Color(0xFF059669), size: 18),
+              hintText: 'Search operational guides & FAQs...',
+              hintStyle: const TextStyle(fontSize: 13, color: Color(0xFF94A3B8)),
+              prefixIcon: const Icon(Icons.search_rounded, size: 20, color: Color(0xFF64748B)),
               suffixIcon: _searchQuery.isNotEmpty
                   ? IconButton(
-                      icon: const Icon(Icons.clear_rounded, color: Color(0xFF64748B), size: 18),
+                      icon: const Icon(Icons.clear_rounded, size: 18, color: Color(0xFF94A3B8)),
                       onPressed: () {
                         _faqSearchController.clear();
                         setState(() => _searchQuery = '');
@@ -707,28 +264,39 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
                     )
                   : null,
               filled: true,
-              fillColor: Colors.white,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-              focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFF059669), width: 1.5)),
+              fillColor: const Color(0xFFF1F5F9),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide.none,
+              ),
             ),
           ),
         ),
 
-        // FAQs List
+        // List of FAQs
         Expanded(
           child: filteredFaqs.isEmpty
-              ? const Center(
-                  child: Text('No matching questions found', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w500)),
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.search_off_rounded, size: 48, color: Color(0xFFCBD5E1)),
+                      const SizedBox(height: 12),
+                      Text(
+                        'No questions found matching "$_searchQuery"',
+                        style: const TextStyle(fontSize: 13, color: Color(0xFF64748B), fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
                 )
               : ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 40),
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
                   itemCount: filteredFaqs.length,
                   itemBuilder: (context, idx) {
                     final item = filteredFaqs[idx];
                     return Container(
-                      margin: const EdgeInsets.only(bottom: 10),
+                      margin: const EdgeInsets.only(bottom: 12),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(16),
@@ -744,28 +312,51 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
                       child: Theme(
                         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
                         child: ExpansionTile(
-                          iconColor: const Color(0xFF059669),
-                          collapsedIconColor: const Color(0xFF94A3B8),
                           tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                           childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                          title: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                          iconColor: const Color(0xFF059669),
+                          collapsedIconColor: const Color(0xFF94A3B8),
+                          title: Row(
                             children: [
-                              Text(
-                                item.category,
-                                style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: Color(0xFF059669), letterSpacing: 0.6),
-                              ),
-                              const SizedBox(height: 3),
-                              Text(
-                                item.question,
-                                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF0F172A)),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF1F5F9),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  item.category,
+                                  style: const TextStyle(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.w800,
+                                    color: Color(0xFF64748B),
+                                    letterSpacing: 0.4,
+                                  ),
+                                ),
                               ),
                             ],
                           ),
+                          subtitle: Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text(
+                              item.question,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF0F172A),
+                              ),
+                            ),
+                          ),
                           children: [
+                            const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                            const SizedBox(height: 12),
                             Text(
                               item.answer,
-                              style: const TextStyle(fontSize: 12, color: Color(0xFF475569), height: 1.45),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF475569),
+                                height: 1.45,
+                              ),
                             ),
                           ],
                         ),
@@ -807,7 +398,7 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
               ),
               const SizedBox(height: 6),
               const Text(
-                'Notice an issue with the alarm chime, dining slots, or want a new feature? Share your thoughts directly with the product engineering team.',
+                'Notice an issue with booking alarms, dining slots, or want a new feature? Share your thoughts directly with the product engineering team.',
                 style: TextStyle(fontSize: 12, color: Color(0xFF64748B), height: 1.4),
               ),
               const SizedBox(height: 20),
@@ -816,7 +407,7 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
                 height: 48,
                 child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF059669),
+                    backgroundColor: const Color(0xFF0F172A),
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     elevation: 0,
@@ -832,64 +423,54 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
 
         const SizedBox(height: 24),
         const Text(
-          'COMMUNITY METRICS',
+          'PLATFORM METRICS',
           style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 0.8, color: Color(0xFF64748B)),
         ),
         const SizedBox(height: 10),
 
-        _buildCommunityTile(
+        _buildMetricTile(
           icon: Icons.speed_rounded,
           title: '99.98% System Uptime',
           subtitle: 'Real-time alert delivery latency < 450ms',
         ),
-        _buildCommunityTile(
-          icon: Icons.security_rounded,
-          title: 'Bank-Grade UPI Settlements',
-          subtitle: 'Direct NPCI payment rails, 0% platform intermediary',
+        _buildMetricTile(
+          icon: Icons.verified_user_rounded,
+          title: 'Direct Reservation Sync',
+          subtitle: 'Instant diner-to-restaurant notification pipeline',
         ),
-        _buildCommunityTile(
+        _buildMetricTile(
           icon: Icons.update_rounded,
-          title: 'Weekly Feature Updates',
-          subtitle: 'Restaurant feedback directly drives weekly app updates',
+          title: 'Continuous Feature Improvements',
+          subtitle: 'Restaurant feedback directly shapes weekly updates',
         ),
       ],
     );
   }
 
-  Widget _buildSupportTile({
+  Widget _buildMetricTile({
     required IconData icon,
-    required Color iconColor,
     required String title,
     required String subtitle,
-    required String actionLabel,
-    required VoidCallback onTap,
   }) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(16),
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x060F172A),
-            blurRadius: 10,
-            offset: Offset(0, 2),
-          ),
-        ],
       ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: iconColor.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(12),
+              color: const Color(0xFFF1F5F9),
+              borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(icon, color: iconColor, size: 22),
+            child: Icon(icon, color: const Color(0xFF0F172A), size: 18),
           ),
-          const SizedBox(width: 14),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -897,61 +478,6 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
                 Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13, color: Color(0xFF0F172A))),
                 const SizedBox(height: 2),
                 Text(subtitle, style: const TextStyle(fontSize: 11, color: Color(0xFF64748B))),
-              ],
-            ),
-          ),
-          InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(8),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF1F5F9),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: const Color(0xFFE2E8F0)),
-              ),
-              child: Text(
-                actionLabel,
-                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF059669)),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCommunityTile({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-  }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x040F172A),
-            blurRadius: 6,
-            offset: Offset(0, 1),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: const Color(0xFF059669), size: 20),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: Color(0xFF0F172A))),
-                const SizedBox(height: 2),
-                Text(subtitle, style: const TextStyle(fontSize: 10, color: Color(0xFF64748B))),
               ],
             ),
           ),

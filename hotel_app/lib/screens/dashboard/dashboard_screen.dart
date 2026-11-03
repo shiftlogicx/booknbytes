@@ -13,7 +13,6 @@ import '../bookings/booking_list_screen.dart';
 import '../profile/restaurant_profile_screen.dart';
 import '../settings/settings_screen.dart';
 import '../slots/slots_inventory_screen.dart';
-import '../support/support_screen.dart';
 import '../../widgets/restaurant_walkthrough_modal.dart';
 import '../../services/app_update_service.dart';
 
@@ -85,51 +84,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         duration: const Duration(seconds: 4),
-        action: SnackBarAction(
-          label: 'View',
-          textColor: const Color(0xFF00E599),
-          onPressed: () => setState(() => _currentNavIndex = 1),
-        ),
-      ),
-    );
-  }
-
-  void _simulateIncomingAlert() async {
-    HapticFeedback.lightImpact();
-    final bookingProvider = Provider.of<BookingProvider>(context, listen: false);
-    final auth = Provider.of<AuthProvider>(context, listen: false);
-
-    final currentRestId = auth.currentRestaurantId.isNotEmpty
-        ? auth.currentRestaurantId
-        : 'res_royal_biryani_house';
-    final currentRestName = auth.currentRestaurantName.isNotEmpty
-        ? auth.currentRestaurantName
-        : 'Royal Biryani House';
-    final currentUserId = auth.currentUser?.id ?? '6d03741d-db04-4370-bc49-bbb1149a5c33';
-
-    final mockBooking = BookingModel(
-      bookingId: 'bk_${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}',
-      userId: currentUserId,
-      restaurantId: currentRestId,
-      restaurantName: currentRestName,
-      customerName: 'Aditya & Ananya Roy',
-      customerPhone: '+91 98230 45678',
-      partySize: 4,
-      date: DateTime.now().toIso8601String().split('T')[0],
-      timeSlot: '20:30',
-      status: BookingStatus.pending,
-      appliedOffer: 'TASTE20',
-      createdAt: DateTime.now(),
-    );
-
-    await bookingProvider.addNewIncomingBooking(mockBooking);
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Test booking #${mockBooking.bookingId} added to Bookings tab!'),
-        backgroundColor: const Color(0xFF0F172A),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         action: SnackBarAction(
           label: 'View',
           textColor: const Color(0xFF00E599),
@@ -222,29 +176,41 @@ class _DashboardScreenState extends State<DashboardScreen> {
         ),
       ),
       actions: [
-        // 24x7 Support Hotline & Desk
-        IconButton(
-          tooltip: 'Restaurant Helpdesk & FAQs',
-          icon: const Icon(Icons.headset_mic_rounded, color: Color(0xFF059669), size: 20),
-          onPressed: () {
-            HapticFeedback.lightImpact();
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const SupportScreen()),
-            );
-          },
+        // Restaurant Profile Avatar / Icon
+        Padding(
+          padding: const EdgeInsets.only(right: 12),
+          child: GestureDetector(
+            onTap: () {
+              HapticFeedback.lightImpact();
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (_) => const RestaurantProfileScreen()),
+              );
+            },
+            child: Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: const Color(0xFFF1F5F9),
+                border: Border.all(color: const Color(0xFFCBD5E1), width: 1.5),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x0A0F172A),
+                    blurRadius: 4,
+                    offset: Offset(0, 1),
+                  ),
+                ],
+              ),
+              child: const Center(
+                child: Icon(
+                  Icons.person_rounded,
+                  size: 20,
+                  color: Color(0xFF334155),
+                ),
+              ),
+            ),
+          ),
         ),
-        // Edit Restaurant Profile
-        IconButton(
-          tooltip: 'Restaurant Profile & Timings',
-          icon: const Icon(Icons.storefront_rounded, color: Color(0xFF2563EB), size: 20),
-          onPressed: () {
-            HapticFeedback.lightImpact();
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const RestaurantProfileScreen()),
-            );
-          },
-        ),
-        const SizedBox(width: 4),
       ],
     );
   }
@@ -514,86 +480,42 @@ class _DashboardScreenState extends State<DashboardScreen> {
           const Divider(height: 1, thickness: 0.7, color: Color(0xFFF1F5F9)),
           const SizedBox(height: 10),
 
-          // Secondary Row: Quick Actions
-          Row(
-            children: [
-              // Ring Bell Action Pill
-              Expanded(
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: _simulateIncomingAlert,
-                    borderRadius: BorderRadius.circular(10),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFFFBEB),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: const Color(0xFFFDE68A)),
-                      ),
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.add_task_rounded, size: 14, color: Color(0xFFD97706)),
-                          SizedBox(width: 6),
-                          Text(
-                            'Test Booking',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w800,
-                              color: Color(0xFFB45309),
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
+          // Secondary Row: View Reservations
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () {
+                HapticFeedback.lightImpact();
+                setState(() => _currentNavIndex = 1);
+              },
+              borderRadius: BorderRadius.circular(10),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.calendar_month_rounded, size: 14, color: Color(0xFF059669)),
+                    SizedBox(width: 8),
+                    Text(
+                      'View Today\'s Reservations',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF0F172A),
                       ),
                     ),
-                  ),
+                    SizedBox(width: 4),
+                    Icon(Icons.arrow_forward_ios_rounded, size: 10, color: Color(0xFF94A3B8)),
+                  ],
                 ),
               ),
-
-              const SizedBox(width: 8),
-
-              // View Bookings Action Pill
-              Expanded(
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () {
-                      HapticFeedback.lightImpact();
-                      setState(() => _currentNavIndex = 1);
-                    },
-                    borderRadius: BorderRadius.circular(10),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFECFDF5),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: const Color(0xFFA7F3D0)),
-                      ),
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.calendar_month_rounded, size: 14, color: Color(0xFF059669)),
-                          SizedBox(width: 6),
-                          Text(
-                            'Bookings',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w800,
-                              color: Color(0xFF047857),
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
+            ),
           ),
         ],
       ),

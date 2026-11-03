@@ -88,6 +88,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  void _openFeedback() {
+    HapticFeedback.lightImpact();
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const SupportScreen(initialTabIndex: 1)),
+    );
+  }
+
   void _replayTutorial() {
     HapticFeedback.mediumImpact();
     RestaurantWalkthroughModal.show(context);
@@ -192,7 +199,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                         ),
                                         const SizedBox(width: 4),
                                         Text(
-                                          auth.isOwner ? '👑 RESTAURANT OWNER' : '👔 FLOOR MANAGER',
+                                          auth.isOwner ? 'RESTAURANT OWNER' : 'FLOOR MANAGER',
                                           style: TextStyle(
                                             fontSize: 9,
                                             fontWeight: FontWeight.w800,
@@ -473,9 +480,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             const SizedBox(height: 24),
 
-            // Help, Support & FAQs Section
+            // Resources & FAQs Section
             const Text(
-              'HELP, SUPPORT & COMMUNITY',
+              'RESOURCES & FAQS',
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w800,
@@ -486,16 +493,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 10),
 
             _buildActionTile(
-              icon: Icons.headset_mic_rounded,
-              title: '24x7 Restaurant Concierge & Helpline',
-              subtitle: 'Instant WhatsApp desk, priority hotline & callback',
-              onTap: _openSupport,
-              accentColor: const Color(0xFF059669),
-            ),
-            _buildActionTile(
               icon: Icons.quiz_rounded,
               title: 'General Restaurant FAQs',
-              subtitle: 'Answers for alerts, no-show rules, UPI & rush hours',
+              subtitle: 'Answers for alerts, no-show rules, operating shifts & slots',
               onTap: _openSupport,
               accentColor: const Color(0xFF2563EB),
             ),
@@ -503,7 +503,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               icon: Icons.feedback_rounded,
               title: 'Send Feedback & Bug Reports',
               subtitle: 'Share comments directly with the engineering team',
-              onTap: _openSupport,
+              onTap: _openFeedback,
               accentColor: const Color(0xFFD97706),
             ),
 
