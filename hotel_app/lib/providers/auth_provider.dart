@@ -391,6 +391,48 @@ class AuthProvider extends ChangeNotifier {
   // ==========================================
   // PASSWORD RESET & RECOVERY (SUPABASE AUTH)
   // ==========================================
+  Future<Map<String, dynamic>?> requestPasswordRecoveryCode(String email) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      final res = await _supabaseService.generatePasswordRecoveryCode(email);
+      _isLoading = false;
+      notifyListeners();
+      return res;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      notifyListeners();
+      return null;
+    }
+  }
+
+  Future<bool> updatePasswordAfterRecovery({
+    required String userId,
+    required String newPassword,
+    String? email,
+  }) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      await _supabaseService.adminUpdatePassword(
+        userId: userId,
+        newPassword: newPassword,
+        email: email,
+      );
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      notifyListeners();
+      return false;
+    }
+  }
+
   Future<bool> sendPasswordReset(String email) async {
     _isLoading = true;
     _errorMessage = null;

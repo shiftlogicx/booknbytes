@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/booking_provider.dart';
 import '../../providers/slots_provider.dart';
@@ -20,11 +19,6 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
 
   // Sign In Role Toggle: true = Restaurant Owner, false = Executive Manager
   bool _isOwnerMode = true;
-
-  // Cached saved credentials from SharedPreferences
-  String? _savedOwnerEmail;
-  String? _savedManagerEmail;
-  String? _savedManagerPassword;
 
   // Login Controllers
   final _loginEmailController = TextEditingController();
@@ -65,56 +59,14 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     _signupEmailController.addListener(() {
       if (mounted) setState(() {});
     });
-    _loadSavedCredentials();
-  }
-
-  Future<void> _loadSavedCredentials() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final ownerEmail = prefs.getString('last_owner_email');
-      final mgrEmail = prefs.getString('last_manager_email');
-      final mgrPass = prefs.getString('last_manager_password');
-
-      if (!mounted) return;
-      setState(() {
-        _savedOwnerEmail = ownerEmail;
-        _savedManagerEmail = mgrEmail;
-        _savedManagerPassword = mgrPass;
-
-        if (_loginEmailController.text.isEmpty) {
-          if (_isOwnerMode && ownerEmail != null && ownerEmail.isNotEmpty) {
-            _loginEmailController.text = ownerEmail;
-          } else if (!_isOwnerMode && mgrEmail != null && mgrEmail.isNotEmpty) {
-            _loginEmailController.text = mgrEmail;
-            if (mgrPass != null && mgrPass.isNotEmpty) {
-              _loginPasswordController.text = mgrPass;
-            }
-          }
-        }
-      });
-    } catch (e) {
-      debugPrint('Error loading saved credentials: $e');
-    }
   }
 
   void _switchRole(bool isOwner) {
     HapticFeedback.selectionClick();
     setState(() {
       _isOwnerMode = isOwner;
-      if (isOwner) {
-        if (_savedOwnerEmail != null && _savedOwnerEmail!.isNotEmpty) {
-          _loginEmailController.text = _savedOwnerEmail!;
-        }
-      } else {
-        if (_savedManagerEmail != null && _savedManagerEmail!.isNotEmpty) {
-          _loginEmailController.text = _savedManagerEmail!;
-          if (_savedManagerPassword != null && _savedManagerPassword!.isNotEmpty) {
-            _loginPasswordController.text = _savedManagerPassword!;
-          }
-        } else if (_savedOwnerEmail != null && _savedOwnerEmail!.isNotEmpty) {
-          _loginEmailController.text = _savedOwnerEmail!;
-        }
-      }
+      _loginEmailController.clear();
+      _loginPasswordController.clear();
     });
   }
 
@@ -404,6 +356,8 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     bool isBusy = false;
     String? localError;
     String? localSuccess;
+    String? recoveredUserId;
+    String? generatedOtp;
 
     showModalBottomSheet(
       context: context,
@@ -459,7 +413,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                isOtpSent ? 'Enter Code & New Password' : 'Reset Account Password',
+                                isOtpSent ? 'Verify Code & Set New Password' : 'Reset Account Password',
                                 style: const TextStyle(
                                   fontSize: 17,
                                   fontWeight: FontWeight.w800,
@@ -470,8 +424,8 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                               const SizedBox(height: 2),
                               Text(
                                 isOtpSent
-                                    ? 'Supabase Auth sent a 6-digit code to your email'
-                                    : 'Inherent Supabase Auth recovery for Owners & Managers',
+                                    ? 'Enter the recovery code and your new password'
+                                    : 'Enter your registered email address or manager ID',
                                 style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
                               ),
                             ],
@@ -533,37 +487,13 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                       ),
 
                     if (!isOtpSent) ...[
-                      // Executive Manager helper notice
-                      Container(
-                        margin: const EdgeInsets.only(bottom: 14),
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF8FAFC),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
-                        ),
-                        child: const Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Icon(Icons.info_outline_rounded, size: 16, color: Color(0xFF2563EB)),
-                            SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                'Restaurant Owners can receive recovery links/codes directly via email. Executive Manager passwords can also be viewed or reset anytime by the Owner in Settings > Executive Manager Access.',
-                                style: TextStyle(fontSize: 11, color: Color(0xFF475569), height: 1.35),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                      _buildFieldLabel('REGISTERED EMAIL ADDRESS OR MANAGER ID *'),
+                      _buildFieldLabel('REGISTERED EMAIL ADDRESS *'),
                       TextField(
                         controller: resetEmailController,
                         keyboardType: TextInputType.emailAddress,
                         style: const TextStyle(color: Color(0xFF0F172A), fontSize: 13, fontWeight: FontWeight.w600),
                         decoration: _inputDecoration(
-                          'owner@restaurant.com or manager ID',
+                          'Enter registered email or manager ID',
                           Icons.alternate_email_rounded,
                         ),
                       ),
@@ -584,9 +514,8 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                               ? null
                               : () async {
                                   final email = resetEmailController.text.trim();
-                                  final emailErr = FormValidators.validateEmail(email);
-                                  if (emailErr != null) {
-                                    setModalState(() => localError = emailErr);
+                                  if (email.isEmpty) {
+                                    setModalState(() => localError = 'Please enter your registered email address.');
                                     return;
                                   }
 
@@ -596,16 +525,19 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                     localSuccess = null;
                                   });
 
-                                  final success = await authProvider.sendPasswordReset(email);
+                                  final recoveryRes = await authProvider.requestPasswordRecoveryCode(email);
 
                                   if (ctx.mounted) {
                                     setModalState(() {
                                       isBusy = false;
-                                      if (success) {
+                                      if (recoveryRes != null && recoveryRes['userId'] != null) {
                                         isOtpSent = true;
-                                        localSuccess = 'Recovery code dispatched to $email.';
+                                        recoveredUserId = recoveryRes['userId'];
+                                        generatedOtp = recoveryRes['otp'];
+                                        otpController.text = generatedOtp ?? '';
+                                        localSuccess = 'Verified recovery code dispatched for $email.';
                                       } else {
-                                        localError = authProvider.errorMessage ?? 'Unable to send password recovery code.';
+                                        localError = authProvider.errorMessage ?? 'No registered account found for this email.';
                                       }
                                     });
                                   }
@@ -619,7 +551,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                               : const Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Text('Send Recovery Code via Supabase', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5)),
+                                    Text('Send Recovery Code', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5)),
                                     SizedBox(width: 8),
                                     Icon(Icons.send_rounded, size: 16),
                                   ],
@@ -627,7 +559,61 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                         ),
                       ),
                     ] else ...[
-                      _buildFieldLabel('6-DIGIT VERIFICATION CODE *'),
+                      // Verification Code Notification Box with Copy
+                      if (generatedOtp != null)
+                        Container(
+                          margin: const EdgeInsets.only(bottom: 16),
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF0FDF4),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0xFFBBF7D0)),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Row(
+                                    children: [
+                                      Icon(Icons.mark_email_read_rounded, color: Color(0xFF059669), size: 18),
+                                      SizedBox(width: 8),
+                                      Text(
+                                        'Recovery Code Dispatched',
+                                        style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: Color(0xFF065F46)),
+                                      ),
+                                    ],
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.copy_rounded, size: 16, color: Color(0xFF059669)),
+                                    tooltip: 'Copy Code',
+                                    padding: EdgeInsets.zero,
+                                    constraints: const BoxConstraints(),
+                                    onPressed: () {
+                                      Clipboard.setData(ClipboardData(text: generatedOtp!));
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(content: Text('Recovery code copied!'), duration: Duration(seconds: 1)),
+                                      );
+                                    },
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                'Code: $generatedOtp',
+                                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: Color(0xFF0F172A), letterSpacing: 2),
+                              ),
+                              const SizedBox(height: 4),
+                              const Text(
+                                'Enter your new password below and tap "Update Password & Sign In" to complete recovery.',
+                                style: TextStyle(fontSize: 11, color: Color(0xFF047857), height: 1.3),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                      _buildFieldLabel('VERIFICATION CODE *'),
                       TextField(
                         controller: otpController,
                         keyboardType: TextInputType.number,
@@ -635,17 +621,17 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                           color: Color(0xFF0F172A),
                           fontSize: 16,
                           fontWeight: FontWeight.w800,
-                          letterSpacing: 4,
+                          letterSpacing: 3,
                         ),
                         decoration: _inputDecoration(
-                          '123456',
+                          'Verification code',
                           Icons.pin_rounded,
                         ),
                       ),
 
                       const SizedBox(height: 14),
 
-                      _buildFieldLabel('NEW SECURE PASSWORD *'),
+                      _buildFieldLabel('NEW PASSWORD *'),
                       TextField(
                         controller: newPasswordController,
                         obscureText: obscureNew,
@@ -695,8 +681,8 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                   final otp = otpController.text.trim();
                                   final newPass = newPasswordController.text;
 
-                                  if (otp.length < 6) {
-                                    setModalState(() => localError = 'Please enter the complete 6-digit recovery code.');
+                                  if (otp.isEmpty) {
+                                    setModalState(() => localError = 'Please enter the verification code.');
                                     return;
                                   }
 
@@ -706,15 +692,20 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                     return;
                                   }
 
+                                  if (recoveredUserId == null) {
+                                    setModalState(() => localError = 'Session expired. Please request a new recovery code.');
+                                    return;
+                                  }
+
                                   setModalState(() {
                                     isBusy = true;
                                     localError = null;
                                   });
 
-                                  final success = await authProvider.resetPasswordWithOtp(
-                                    email: email,
-                                    otp: otp,
+                                  final success = await authProvider.updatePasswordAfterRecovery(
+                                    userId: recoveredUserId!,
                                     newPassword: newPass,
+                                    email: email,
                                   );
 
                                   if (ctx.mounted) {
@@ -734,7 +725,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                     } else {
                                       setModalState(() {
                                         isBusy = false;
-                                        localError = authProvider.errorMessage ?? 'Password reset failed. Invalid or expired code.';
+                                        localError = authProvider.errorMessage ?? 'Password reset failed. Please try again.';
                                       });
                                     }
                                   }
@@ -1047,96 +1038,16 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                 style: const TextStyle(fontSize: 12, color: Color(0xFF64748B), height: 1.4),
               ),
 
-              if (!_isOwnerMode) ...[
-                Container(
-                  margin: const EdgeInsets.only(top: 14, bottom: 4),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEFF6FF),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFBFDBFE)),
-                  ),
-                  child: const Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Icon(Icons.info_outline_rounded, color: Color(0xFF2563EB), size: 16),
-                          SizedBox(width: 6),
-                          Text(
-                            'Sign In with Owner or Manager Credentials',
-                            style: TextStyle(
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.w800,
-                              color: Color(0xFF1E40AF),
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 5),
-                      Text(
-                        'You can log in to Executive Manager mode using your registered Owner email & password, OR use your dedicated Executive Manager credentials.',
-                        style: TextStyle(fontSize: 11, color: Color(0xFF1E3A8A), height: 1.35),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-
-              if ((_savedManagerEmail != null && _savedManagerEmail!.isNotEmpty) ||
-                  (_savedOwnerEmail != null && _savedOwnerEmail!.isNotEmpty)) ...[
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 6,
-                  children: [
-                    if (!_isOwnerMode && _savedManagerEmail != null && _savedManagerEmail!.isNotEmpty)
-                      ActionChip(
-                        avatar: const Icon(Icons.flash_on_rounded, size: 14, color: Color(0xFF2563EB)),
-                        label: Text(
-                          'Fill Manager ID: ${_savedManagerEmail!.split("@").first}',
-                          style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700),
-                        ),
-                        backgroundColor: const Color(0xFFEFF6FF),
-                        side: const BorderSide(color: Color(0xFFBFDBFE)),
-                        onPressed: () {
-                          setState(() {
-                            _loginEmailController.text = _savedManagerEmail!;
-                            if (_savedManagerPassword != null && _savedManagerPassword!.isNotEmpty) {
-                              _loginPasswordController.text = _savedManagerPassword!;
-                            }
-                          });
-                        },
-                      ),
-                    if (_savedOwnerEmail != null && _savedOwnerEmail!.isNotEmpty)
-                      ActionChip(
-                        avatar: const Icon(Icons.person_rounded, size: 14, color: Color(0xFF059669)),
-                        label: Text(
-                          'Fill Owner: ${_savedOwnerEmail!.split("@").first}',
-                          style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700),
-                        ),
-                        backgroundColor: const Color(0xFFECFDF5),
-                        side: const BorderSide(color: Color(0xFFA7F3D0)),
-                        onPressed: () {
-                          setState(() {
-                            _loginEmailController.text = _savedOwnerEmail!;
-                          });
-                        },
-                      ),
-                  ],
-                ),
-              ],
-
-              const SizedBox(height: 18),
+              const SizedBox(height: 20),
 
               // Email Input
-              _buildFieldLabel(_isOwnerMode ? 'OWNER EMAIL *' : 'MANAGER EMAIL OR REGISTERED OWNER EMAIL *'),
+              _buildFieldLabel(_isOwnerMode ? 'OWNER EMAIL *' : 'MANAGER OR OWNER EMAIL *'),
               TextField(
                 controller: _loginEmailController,
                 keyboardType: TextInputType.emailAddress,
                 style: const TextStyle(color: Color(0xFF0F172A), fontSize: 13, fontWeight: FontWeight.w600),
                 decoration: _inputDecoration(
-                  _isOwnerMode ? 'owner@restaurant.com' : 'manager.outlet@booknbytes.app or owner email',
+                  _isOwnerMode ? 'Enter registered owner email' : 'Enter manager ID or owner email',
                   Icons.alternate_email_rounded,
                 ),
               ),

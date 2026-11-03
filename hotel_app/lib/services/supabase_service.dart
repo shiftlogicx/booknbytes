@@ -140,8 +140,152 @@ class SupabaseService {
   }
 
   // ==========================================
-  // 5. INHERENT SUPABASE AUTH: Password Reset
+  // 5. INHERENT SUPABASE AUTH: Password Recovery & Reset
   // ==========================================
+  Future<Map<String, dynamic>> generatePasswordRecoveryCode(String email) async {
+    final cleanEmail = email.trim().toLowerCase();
+    final adminHeaders = {
+      'apikey': SupabaseConfig.serviceRoleKey,
+      'Authorization': 'Bearer ${SupabaseConfig.serviceRoleKey}',
+      'Content-Type': 'application/json',
+    };
+
+    // 1. Check if user exists in auth.users
+    final listRes = await http.get(
+      Uri.parse('${SupabaseConfig.url}/auth/v1/admin/users?page=1&per_page=1000'),
+      headers: adminHeaders,
+    );
+
+    String? foundUserId;
+    if (listRes.statusCode == 200) {
+      final listData = jsonDecode(listRes.body);
+      final users = listData['users'] as List?;
+      if (users != null) {
+        for (final u in users) {
+          if (u['email']?.toString().toLowerCase() == cleanEmail) {
+            foundUserId = u['id']?.toString();
+            break;
+          }
+        }
+      }
+    }
+
+    // 2. If not found in auth.users, check if registered in restaurants table
+    if (foundUserId == null) {
+      final restRes = await http.get(
+        Uri.parse('${SupabaseConfig.url}/rest/v1/restaurants?select=restaurant_id,name,owners_details'),
+        headers: adminHeaders,
+      );
+      if (restRes.statusCode == 200) {
+        final restList = jsonDecode(restRes.body) as List?;
+        if (restList != null) {
+          for (final r in restList) {
+            final owners = r['owners_details'];
+            if (owners is Map) {
+              final ownerEmail = owners['email']?.toString().toLowerCase();
+              final mgrEmail = owners['manager_credentials'] is Map
+                  ? owners['manager_credentials']['email']?.toString().toLowerCase()
+                  : null;
+              if (ownerEmail == cleanEmail || mgrEmail == cleanEmail) {
+                // Provision auth user so recovery code can be generated
+                final createRes = await http.post(
+                  Uri.parse('${SupabaseConfig.url}/auth/v1/admin/users'),
+                  headers: adminHeaders,
+                  body: jsonEncode({
+                    'email': cleanEmail,
+                    'password': 'Temp@${DateTime.now().millisecondsSinceEpoch}!',
+                    'email_confirm': true,
+                    'app_metadata': {
+                      'role': mgrEmail == cleanEmail ? 'restaurant_manager' : 'restaurant_owner',
+                      'restaurant_id': r['restaurant_id'],
+                    },
+                  }),
+                );
+                if (createRes.statusCode == 200 || createRes.statusCode == 201) {
+                  final created = jsonDecode(createRes.body);
+                  foundUserId = created['id']?.toString();
+                }
+                break;
+              }
+            }
+          }
+        }
+      }
+    }
+
+    if (foundUserId == null) {
+      throw Exception('No registered account found for "$cleanEmail". Please verify the email or register a new restaurant.');
+    }
+
+    // 3. Generate recovery link and OTP
+    final genRes = await http.post(
+      Uri.parse('${SupabaseConfig.url}/auth/v1/admin/generate_link'),
+      headers: adminHeaders,
+      body: jsonEncode({
+        'type': 'recovery',
+        'email': cleanEmail,
+      }),
+    );
+
+    if (genRes.statusCode != 200) {
+      final err = jsonDecode(genRes.body);
+      throw Exception(err['message'] ?? err['msg'] ?? 'Failed to generate recovery code.');
+    }
+
+    final genData = jsonDecode(genRes.body);
+    final otp = genData['email_otp']?.toString() ??
+        '${100000 + (DateTime.now().millisecondsSinceEpoch % 900000)}';
+
+    return {
+      'userId': foundUserId,
+      'email': cleanEmail,
+      'otp': otp,
+    };
+  }
+
+  Future<void> adminUpdatePassword({
+    required String userId,
+    required String newPassword,
+    String? email,
+  }) async {
+    final adminHeaders = {
+      'apikey': SupabaseConfig.serviceRoleKey,
+      'Authorization': 'Bearer ${SupabaseConfig.serviceRoleKey}',
+      'Content-Type': 'application/json',
+    };
+
+    final updateRes = await http.put(
+      Uri.parse('${SupabaseConfig.url}/auth/v1/admin/users/$userId'),
+      headers: adminHeaders,
+      body: jsonEncode({'password': newPassword}),
+    );
+
+    if (updateRes.statusCode != 200) {
+      final err = jsonDecode(updateRes.body);
+      throw Exception(err['message'] ?? err['msg'] ?? 'Failed to update password.');
+    }
+
+    // If manager, sync default_password in restaurants table
+    if (email != null && email.contains('manager.')) {
+      try {
+        final restData = await findRestaurantByManagerEmail(email);
+        if (restData != null && restData['restaurant_id'] != null) {
+          final restId = restData['restaurant_id'];
+          final owners = Map<String, dynamic>.from(restData['owners_details'] ?? {});
+          if (owners['manager_credentials'] is Map) {
+            final mgrCreds = Map<String, dynamic>.from(owners['manager_credentials']);
+            mgrCreds['default_password'] = newPassword;
+            mgrCreds['password_updated'] = true;
+            owners['manager_credentials'] = mgrCreds;
+            await client.from('restaurants').update({'owners_details': owners}).eq('restaurant_id', restId);
+          }
+        }
+      } catch (e) {
+        // Non-critical background sync
+      }
+    }
+  }
+
   Future<void> sendPasswordResetEmail(String email) async {
     try {
       await client.auth.resetPasswordForEmail(
