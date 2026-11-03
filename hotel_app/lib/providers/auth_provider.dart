@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../config/supabase_config.dart';
 import '../services/supabase_service.dart';
 import '../services/onesignal_service.dart';
 
@@ -366,6 +367,11 @@ class AuthProvider extends ChangeNotifier {
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('user_role', _role == UserRole.manager ? 'manager' : 'owner');
+      if (_role == UserRole.owner) {
+        await prefs.setString('last_owner_email', email.trim());
+      } else {
+        await prefs.setString('last_manager_email', email.trim());
+      }
 
       await refreshRestaurantData();
       await checkTutorialStatus();
@@ -423,6 +429,15 @@ class AuthProvider extends ChangeNotifier {
       // Step 3: Create Restaurant record in Supabase
       final cleanSlug = restaurantName.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '_');
       final restId = 'res_${cleanSlug}_${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}';
+      final cleanEmailSlug = restaurantName.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+      final managerEmail = 'manager.${cleanEmailSlug.isEmpty ? cleanSlug : cleanEmailSlug}@booknbytes.app';
+      final defaultManagerPassword = 'Mgr@${cleanSlug.length >= 4 ? cleanSlug.substring(0, 4) : "2026"}!';
+
+      final managerCreds = {
+        'email': managerEmail,
+        'default_password': defaultManagerPassword,
+        'created_at': DateTime.now().toIso8601String(),
+      };
 
       final newRestData = {
         'restaurant_id': restId,
@@ -451,24 +466,34 @@ class AuthProvider extends ChangeNotifier {
           'owner_name': ownerName,
           'email': email,
           'phone': phone,
+          'manager_credentials': managerCreds,
         },
       };
 
       await _supabaseService.createRestaurant(newRestData);
 
       _role = UserRole.owner;
+      _generatedManagerCredentials = managerCreds;
+
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('user_role', 'owner');
+      await prefs.setString('last_owner_email', email);
+      await prefs.setString('last_manager_email', managerEmail);
+      await prefs.setString('last_manager_password', defaultManagerPassword);
 
-      // Step 4: Call activate-restaurant Edge Function to ensure Manager Credentials generate
+      // Step 4: Call activate-restaurant Edge Function to ensure Manager User row is provisioned in Supabase Auth
       try {
         final actResult = await _supabaseService.activateRestaurant(
           restaurantId: restId,
-          authToken: loginRes.session?.accessToken,
+          authToken: SupabaseConfig.serviceRoleKey,
         );
         final restObj = actResult['restaurant'] as Map<String, dynamic>?;
         if (restObj != null && restObj['manager_credentials'] != null) {
           _generatedManagerCredentials = Map<String, dynamic>.from(restObj['manager_credentials']);
+          final pEmail = _generatedManagerCredentials!['email']?.toString();
+          final pPass = _generatedManagerCredentials!['default_password']?.toString();
+          if (pEmail != null) await prefs.setString('last_manager_email', pEmail);
+          if (pPass != null) await prefs.setString('last_manager_password', pPass);
         }
       } catch (e) {
         debugPrint('Activation edge function notice: $e');
@@ -501,6 +526,11 @@ class AuthProvider extends ChangeNotifier {
         _profile = RestaurantProfileData.fromSupabase(restMap);
         if (_profile.managerCredentials != null) {
           _generatedManagerCredentials ??= _profile.managerCredentials;
+          final prefs = await SharedPreferences.getInstance();
+          final pEmail = _profile.managerCredentials!['email']?.toString();
+          final pPass = _profile.managerCredentials!['default_password']?.toString();
+          if (pEmail != null) await prefs.setString('last_manager_email', pEmail);
+          if (pPass != null) await prefs.setString('last_manager_password', pPass);
         }
         OneSignalService().loginRestaurant(_profile.restaurantId);
         notifyListeners();

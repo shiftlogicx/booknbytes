@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/booking_provider.dart';
 import '../../providers/slots_provider.dart';
@@ -17,8 +18,13 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
-  // Sign In Role Toggle: true = Restaurant Owner, false = Manager / Employee
+  // Sign In Role Toggle: true = Restaurant Owner, false = Executive Manager
   bool _isOwnerMode = true;
+
+  // Cached saved credentials from SharedPreferences
+  String? _savedOwnerEmail;
+  String? _savedManagerEmail;
+  String? _savedManagerPassword;
 
   // Login Controllers
   final _loginEmailController = TextEditingController();
@@ -58,6 +64,57 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     });
     _signupEmailController.addListener(() {
       if (mounted) setState(() {});
+    });
+    _loadSavedCredentials();
+  }
+
+  Future<void> _loadSavedCredentials() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final ownerEmail = prefs.getString('last_owner_email');
+      final mgrEmail = prefs.getString('last_manager_email');
+      final mgrPass = prefs.getString('last_manager_password');
+
+      if (!mounted) return;
+      setState(() {
+        _savedOwnerEmail = ownerEmail;
+        _savedManagerEmail = mgrEmail;
+        _savedManagerPassword = mgrPass;
+
+        if (_loginEmailController.text.isEmpty) {
+          if (_isOwnerMode && ownerEmail != null && ownerEmail.isNotEmpty) {
+            _loginEmailController.text = ownerEmail;
+          } else if (!_isOwnerMode && mgrEmail != null && mgrEmail.isNotEmpty) {
+            _loginEmailController.text = mgrEmail;
+            if (mgrPass != null && mgrPass.isNotEmpty) {
+              _loginPasswordController.text = mgrPass;
+            }
+          }
+        }
+      });
+    } catch (e) {
+      debugPrint('Error loading saved credentials: $e');
+    }
+  }
+
+  void _switchRole(bool isOwner) {
+    HapticFeedback.selectionClick();
+    setState(() {
+      _isOwnerMode = isOwner;
+      if (isOwner) {
+        if (_savedOwnerEmail != null && _savedOwnerEmail!.isNotEmpty) {
+          _loginEmailController.text = _savedOwnerEmail!;
+        }
+      } else {
+        if (_savedManagerEmail != null && _savedManagerEmail!.isNotEmpty) {
+          _loginEmailController.text = _savedManagerEmail!;
+          if (_savedManagerPassword != null && _savedManagerPassword!.isNotEmpty) {
+            _loginPasswordController.text = _savedManagerPassword!;
+          }
+        } else if (_savedOwnerEmail != null && _savedOwnerEmail!.isNotEmpty) {
+          _loginEmailController.text = _savedOwnerEmail!;
+        }
+      }
     });
   }
 
@@ -187,6 +244,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   }
 
   Future<void> _showCredentialsDialog(Map<String, dynamic> creds) async {
+    final mgrEmail = creds['email']?.toString() ?? 'manager@booknbytes.app';
+    final mgrPass = creds['default_password']?.toString() ?? 'Mgr@2026!';
+
     return showDialog(
       context: context,
       barrierDismissible: false,
@@ -197,9 +257,11 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
           children: [
             Icon(Icons.check_circle_rounded, color: Color(0xFF059669), size: 26),
             SizedBox(width: 10),
-            Text(
-              'Restaurant Activated',
-              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17, color: Color(0xFF0F172A)),
+            Expanded(
+              child: Text(
+                'Restaurant & Manager Activated',
+                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: Color(0xFF0F172A)),
+              ),
             ),
           ],
         ),
@@ -208,8 +270,8 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Your restaurant manager credentials have been generated and activated:',
-              style: TextStyle(fontSize: 13, color: Color(0xFF475569)),
+              'Your restaurant registration is complete! Dedicated Executive Manager credentials have been provisioned for your floor team:',
+              style: TextStyle(fontSize: 12.5, color: Color(0xFF475569), height: 1.4),
             ),
             const SizedBox(height: 14),
             Container(
@@ -222,27 +284,106 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Manager ID: ${creds['email'] ?? 'N/A'}',
-                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: Color(0xFF0F172A))),
-                  const SizedBox(height: 6),
-                  Text('Password: ${creds['default_password'] ?? 'AmitYashLogic@1999'}',
-                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: Color(0xFF059669))),
+                  const Row(
+                    children: [
+                      Icon(Icons.badge_rounded, size: 15, color: Color(0xFF2563EB)),
+                      SizedBox(width: 6),
+                      Text(
+                        'EXECUTIVE MANAGER CREDENTIALS',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF2563EB),
+                          letterSpacing: 0.6,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Manager Login ID:', style: TextStyle(fontSize: 10, color: Color(0xFF64748B), fontWeight: FontWeight.w600)),
+                            Text(mgrEmail, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: Color(0xFF0F172A))),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.copy_rounded, size: 16, color: Color(0xFF64748B)),
+                        tooltip: 'Copy Manager ID',
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        onPressed: () {
+                          Clipboard.setData(ClipboardData(text: mgrEmail));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Manager ID copied to clipboard'), duration: Duration(seconds: 2)),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                  const Divider(color: Color(0xFFE2E8F0), height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Default Password:', style: TextStyle(fontSize: 10, color: Color(0xFF64748B), fontWeight: FontWeight.w600)),
+                            Text(mgrPass, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: Color(0xFF059669))),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.copy_rounded, size: 16, color: Color(0xFF64748B)),
+                        tooltip: 'Copy Password',
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        onPressed: () {
+                          Clipboard.setData(ClipboardData(text: mgrPass));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Password copied to clipboard'), duration: Duration(seconds: 2)),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
             const SizedBox(height: 12),
-            const Text(
-              'You can reuse these credentials or your owner credentials anytime to log in.',
-              style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: const Color(0xFFECFDF5),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFFA7F3D0)),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.lightbulb_outline_rounded, color: Color(0xFF059669), size: 16),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'You can also log in to Executive Manager mode anytime using your Owner email & password.',
+                      style: TextStyle(fontSize: 11, color: Color(0xFF065F46), height: 1.3),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
         actions: [
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF059669),
+              backgroundColor: const Color(0xFF0F172A),
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
             ),
             onPressed: () => Navigator.of(ctx).pop(),
             child: const Text('Proceed to Dashboard', style: TextStyle(fontWeight: FontWeight.w800)),
@@ -393,10 +534,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
             children: [
               Expanded(
                 child: GestureDetector(
-                  onTap: () {
-                    HapticFeedback.selectionClick();
-                    setState(() => _isOwnerMode = true);
-                  },
+                  onTap: () => _switchRole(true),
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     decoration: BoxDecoration(
@@ -436,10 +574,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
               ),
               Expanded(
                 child: GestureDetector(
-                  onTap: () {
-                    HapticFeedback.selectionClick();
-                    setState(() => _isOwnerMode = false);
-                  },
+                  onTap: () => _switchRole(false),
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     decoration: BoxDecoration(
@@ -465,7 +600,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          'Floor Manager',
+                          'Executive Manager',
                           style: TextStyle(
                             fontSize: 12,
                             fontWeight: !_isOwnerMode ? FontWeight.w800 : FontWeight.w600,
@@ -511,7 +646,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    _isOwnerMode ? 'EXECUTIVE ACCESS' : 'FLOOR OPERATIONS',
+                    _isOwnerMode ? 'EXECUTIVE ACCESS' : 'OPERATIONAL MANAGEMENT',
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w800,
@@ -523,7 +658,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
               ),
               const SizedBox(height: 8),
               Text(
-                _isOwnerMode ? 'Restaurant Owner Sign In' : 'Floor Manager Sign In',
+                _isOwnerMode ? 'Restaurant Owner Sign In' : 'Executive Manager Sign In',
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w800,
@@ -539,16 +674,96 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                 style: const TextStyle(fontSize: 12, color: Color(0xFF64748B), height: 1.4),
               ),
 
-              const SizedBox(height: 20),
+              if (!_isOwnerMode) ...[
+                Container(
+                  margin: const EdgeInsets.only(top: 14, bottom: 4),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFEFF6FF),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFBFDBFE)),
+                  ),
+                  child: const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.info_outline_rounded, color: Color(0xFF2563EB), size: 16),
+                          SizedBox(width: 6),
+                          Text(
+                            'Sign In with Owner or Manager Credentials',
+                            style: TextStyle(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF1E40AF),
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 5),
+                      Text(
+                        'You can log in to Executive Manager mode using your registered Owner email & password, OR use your dedicated Executive Manager credentials.',
+                        style: TextStyle(fontSize: 11, color: Color(0xFF1E3A8A), height: 1.35),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+
+              if ((_savedManagerEmail != null && _savedManagerEmail!.isNotEmpty) ||
+                  (_savedOwnerEmail != null && _savedOwnerEmail!.isNotEmpty)) ...[
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
+                  children: [
+                    if (!_isOwnerMode && _savedManagerEmail != null && _savedManagerEmail!.isNotEmpty)
+                      ActionChip(
+                        avatar: const Icon(Icons.flash_on_rounded, size: 14, color: Color(0xFF2563EB)),
+                        label: Text(
+                          'Fill Manager ID: ${_savedManagerEmail!.split("@").first}',
+                          style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700),
+                        ),
+                        backgroundColor: const Color(0xFFEFF6FF),
+                        side: const BorderSide(color: Color(0xFFBFDBFE)),
+                        onPressed: () {
+                          setState(() {
+                            _loginEmailController.text = _savedManagerEmail!;
+                            if (_savedManagerPassword != null && _savedManagerPassword!.isNotEmpty) {
+                              _loginPasswordController.text = _savedManagerPassword!;
+                            }
+                          });
+                        },
+                      ),
+                    if (_savedOwnerEmail != null && _savedOwnerEmail!.isNotEmpty)
+                      ActionChip(
+                        avatar: const Icon(Icons.person_rounded, size: 14, color: Color(0xFF059669)),
+                        label: Text(
+                          'Fill Owner: ${_savedOwnerEmail!.split("@").first}',
+                          style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.w700),
+                        ),
+                        backgroundColor: const Color(0xFFECFDF5),
+                        side: const BorderSide(color: Color(0xFFA7F3D0)),
+                        onPressed: () {
+                          setState(() {
+                            _loginEmailController.text = _savedOwnerEmail!;
+                          });
+                        },
+                      ),
+                  ],
+                ),
+              ],
+
+              const SizedBox(height: 18),
 
               // Email Input
-              _buildFieldLabel(_isOwnerMode ? 'OWNER EMAIL *' : 'MANAGER EMAIL OR ID *'),
+              _buildFieldLabel(_isOwnerMode ? 'OWNER EMAIL *' : 'MANAGER EMAIL OR REGISTERED OWNER EMAIL *'),
               TextField(
                 controller: _loginEmailController,
                 keyboardType: TextInputType.emailAddress,
                 style: const TextStyle(color: Color(0xFF0F172A), fontSize: 13, fontWeight: FontWeight.w600),
                 decoration: _inputDecoration(
-                  _isOwnerMode ? 'owner@restaurant.com' : 'manager.outlet@booknbytes.app',
+                  _isOwnerMode ? 'owner@restaurant.com' : 'manager.outlet@booknbytes.app or owner email',
                   Icons.alternate_email_rounded,
                 ),
               ),
@@ -593,7 +808,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              _isOwnerMode ? 'Sign In as Owner' : 'Sign In as Manager',
+                              _isOwnerMode ? 'Sign In as Owner' : 'Sign In as Executive Manager',
                               style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5),
                             ),
                             const SizedBox(width: 8),

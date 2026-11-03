@@ -95,6 +95,134 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  void _showManagerCredentialsModal(RestaurantProfileData profile) {
+    HapticFeedback.mediumImpact();
+    final managerEmail = profile.managerCredentials?['email']?.toString() ??
+        'manager.${profile.restaurantId.replaceAll('res_', '')}@booknbytes.app';
+    final managerPassword = profile.managerCredentials?['default_password']?.toString() ?? 'Mgr@2026!';
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(color: const Color(0xFFCBD5E1), borderRadius: BorderRadius.circular(2)),
+              ),
+            ),
+            const SizedBox(height: 18),
+            const Row(
+              children: [
+                Icon(Icons.badge_rounded, color: Color(0xFF2563EB), size: 24),
+                SizedBox(width: 10),
+                Text(
+                  'Executive Manager Access',
+                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'Share these credentials with your front desk team to manage reservations without accessing financial settings.',
+              style: TextStyle(fontSize: 12, color: Color(0xFF64748B), height: 1.4),
+            ),
+            const SizedBox(height: 18),
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF8FAFC),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('MANAGER ID / EMAIL', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: Color(0xFF64748B))),
+                          const SizedBox(height: 3),
+                          Text(managerEmail, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: Color(0xFF0F172A))),
+                        ],
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.copy_rounded, size: 18, color: Color(0xFF2563EB)),
+                        tooltip: 'Copy Email',
+                        onPressed: () {
+                          HapticFeedback.selectionClick();
+                          Clipboard.setData(ClipboardData(text: managerEmail));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Manager Email copied to clipboard!'), duration: Duration(seconds: 1)),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                  const Divider(height: 16, color: Color(0xFFE2E8F0)),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('DEFAULT PASSWORD', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: Color(0xFF64748B))),
+                          const SizedBox(height: 3),
+                          Text(managerPassword, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: Color(0xFF059669))),
+                        ],
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.copy_rounded, size: 18, color: Color(0xFF059669)),
+                        tooltip: 'Copy Password',
+                        onPressed: () {
+                          HapticFeedback.selectionClick();
+                          Clipboard.setData(ClipboardData(text: managerPassword));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Manager Password copied to clipboard!'), duration: Duration(seconds: 1)),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 14),
+            const Text(
+              'Tip: You can also sign in as Executive Manager anytime using your registered Owner email & password.',
+              style: TextStyle(fontSize: 11, color: Color(0xFF64748B), fontStyle: FontStyle.italic),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              height: 46,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF0F172A),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Close', style: TextStyle(fontWeight: FontWeight.w800)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _replayTutorial() {
     HapticFeedback.mediumImpact();
     RestaurantWalkthroughModal.show(context);
@@ -199,7 +327,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                         ),
                                         const SizedBox(width: 4),
                                         Text(
-                                          auth.isOwner ? 'RESTAURANT OWNER' : 'FLOOR MANAGER',
+                                          auth.isOwner ? 'RESTAURANT OWNER' : 'EXECUTIVE MANAGER',
                                           style: TextStyle(
                                             fontSize: 9,
                                             fontWeight: FontWeight.w800,
@@ -476,6 +604,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
               title: 'Cost for Two Diners',
               subtitle: '₹${profile.costForTwo} for two · ${profile.cuisines.join(", ")}',
               onTap: _openProfile,
+            ),
+            _buildActionTile(
+              icon: Icons.badge_rounded,
+              title: 'Executive Manager Access',
+              subtitle: 'View login credentials for front desk & floor team',
+              onTap: () => _showManagerCredentialsModal(profile),
+              accentColor: const Color(0xFF2563EB),
             ),
 
             const SizedBox(height: 24),
