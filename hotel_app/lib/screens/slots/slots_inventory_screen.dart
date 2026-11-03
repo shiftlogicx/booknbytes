@@ -1595,41 +1595,17 @@ class _TableSlotsScreenState extends State<TableSlotsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          const Text(
-                            'Dynamic Min-Max Engine',
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w800,
-                              color: Color(0xFF0F172A),
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: _dynamicEnabled ? const Color(0xFFECFDF5) : const Color(0xFFF1F5F9),
-                              borderRadius: BorderRadius.circular(6),
-                              border: Border.all(
-                                color: _dynamicEnabled ? const Color(0xFFA7F3D0) : const Color(0xFFE2E8F0),
-                              ),
-                            ),
-                            child: Text(
-                              _dynamicEnabled ? '${_minDiscount.round()}%–${_maxDiscount.round()}% ACTIVE' : 'DISABLED',
-                              style: TextStyle(
-                                fontSize: 9,
-                                fontWeight: FontWeight.w900,
-                                color: _dynamicEnabled ? const Color(0xFF059669) : const Color(0xFF94A3B8),
-                                letterSpacing: 0.3,
-                              ),
-                            ),
-                          ),
-                        ],
+                      const Text(
+                        'Enable Dynamic Min-Max Discount',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF0F172A),
+                        ),
                       ),
                       const SizedBox(height: 3),
                       const Text(
-                        'Diners roll a dynamic surprise discount within your chosen limits to boost table footfall',
+                        'Set a variable discount range to optimize table bookings',
                         style: TextStyle(fontSize: 11, color: Color(0xFF64748B), height: 1.3),
                       ),
                     ],
@@ -1856,7 +1832,7 @@ class _TableSlotsScreenState extends State<TableSlotsScreen> {
                     ),
                     child: Row(
                       children: [
-                        const Text('🎲', style: TextStyle(fontSize: 20)),
+                        const Icon(Icons.casino_outlined, size: 20, color: Color(0xFF0F172A)),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Column(
@@ -1887,7 +1863,14 @@ class _TableSlotsScreenState extends State<TableSlotsScreen> {
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(color: const Color(0xFFCBD5E1)),
                             ),
-                            child: const Text('Re-roll 🎲', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 11, color: Color(0xFF0F172A))),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.refresh_rounded, size: 14, color: Color(0xFF0F172A)),
+                                SizedBox(width: 4),
+                                Text('Re-roll', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 11, color: Color(0xFF0F172A))),
+                              ],
+                            ),
                           ),
                         ),
                       ],

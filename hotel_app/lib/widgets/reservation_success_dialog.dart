@@ -89,20 +89,19 @@ class _ReservationSuccessDialogState extends State<ReservationSuccessDialog>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Happy Emoji Burst Animation
+              // Genuine Confirmation Animation
               ScaleTransition(
                 scale: _checkScaleAnimation,
-                child: const EmojiCelebrationBurst(
-                  emojis: ['🥳', '🎉', '🍽️', '✨', '👨‍🍳', '🥂', '🔥'],
-                  size: 45,
+                child: const GenuineConfirmationAnimation(
+                  size: 48,
                 ),
               ),
 
-              const SizedBox(height: 12),
+              const SizedBox(height: 14),
 
               // Title
               const Text(
-                'Reservation Confirmed!',
+                'Reservation Confirmed',
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w800,
@@ -115,7 +114,8 @@ class _ReservationSuccessDialogState extends State<ReservationSuccessDialog>
               const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text('🎉 ', style: TextStyle(fontSize: 13)),
+                  Icon(Icons.check_circle_rounded, size: 16, color: Color(0xFF00E599)),
+                  SizedBox(width: 6),
                   Text(
                     'Table Ready for Service',
                     style: TextStyle(
@@ -126,7 +126,6 @@ class _ReservationSuccessDialogState extends State<ReservationSuccessDialog>
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  Text(' ✨', style: TextStyle(fontSize: 13)),
                 ],
               ),
 
@@ -217,7 +216,8 @@ class _ReservationSuccessDialogState extends State<ReservationSuccessDialog>
                   child: const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text('🍽️ ', style: TextStyle(fontSize: 14)),
+                      Icon(Icons.restaurant_rounded, size: 16),
+                      SizedBox(width: 8),
                       Text(
                         'Ready for Service',
                         style: TextStyle(

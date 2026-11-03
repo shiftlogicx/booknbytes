@@ -1,47 +1,59 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
-class EmojiCelebrationBurst extends StatefulWidget {
-  final List<String> emojis;
+/// Genuine luxury confirmation animation with expanding ripple rings,
+/// an elastic checkmark badge, and crisp vector sparkle particles (no emojis).
+class GenuineConfirmationAnimation extends StatefulWidget {
   final double size;
   final VoidCallback? onComplete;
 
-  const EmojiCelebrationBurst({
+  const GenuineConfirmationAnimation({
     super.key,
-    this.emojis = const ['🥳', '🎉', '🍽️', '✨', '👨‍🍳', '🥂', '🔥'],
     this.size = 120,
     this.onComplete,
   });
 
   @override
-  State<EmojiCelebrationBurst> createState() => _EmojiCelebrationBurstState();
+  State<GenuineConfirmationAnimation> createState() => _GenuineConfirmationAnimationState();
 }
 
-class _EmojiCelebrationBurstState extends State<EmojiCelebrationBurst>
+/// Backwards compatibility alias for older references
+typedef EmojiCelebrationBurst = GenuineConfirmationAnimation;
+
+class _GenuineConfirmationAnimationState extends State<GenuineConfirmationAnimation>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  late List<_Particle> _particles;
+  late List<_VectorParticle> _particles;
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1600),
+      duration: const Duration(milliseconds: 1400),
     );
 
     final random = math.Random();
-    _particles = List.generate(widget.emojis.length, (i) {
-      final angle = (i * (2 * math.pi / widget.emojis.length)) + (random.nextDouble() * 0.4 - 0.2);
-      final distance = 45.0 + random.nextDouble() * 40.0;
-      final scale = 0.8 + random.nextDouble() * 0.5;
-      final rotation = (random.nextDouble() - 0.5) * 1.5;
-      return _Particle(
-        emoji: widget.emojis[i % widget.emojis.length],
+    const particleColors = [
+      Color(0xFF10B981), // Emerald
+      Color(0xFF34D399), // Mint
+      Color(0xFFF59E0B), // Amber Gold
+      Color(0xFFFBBF24), // Light Gold
+      Color(0xFF6EE7B7), // Light Emerald
+    ];
+
+    _particles = List.generate(14, (i) {
+      final angle = (i * (2 * math.pi / 14)) + (random.nextDouble() * 0.3 - 0.15);
+      final distance = 48.0 + random.nextDouble() * 38.0;
+      final size = 4.0 + random.nextDouble() * 4.0;
+      final isDiamond = i.isEven;
+      return _VectorParticle(
+        color: particleColors[i % particleColors.length],
         dx: math.cos(angle) * distance,
-        dy: math.sin(angle) * distance - 20, // bias slightly upwards
-        scale: scale,
-        rotation: rotation,
+        dy: math.sin(angle) * distance - 8,
+        size: size,
+        isDiamond: isDiamond,
+        rotation: random.nextDouble() * math.pi,
       );
     });
 
@@ -64,9 +76,22 @@ class _EmojiCelebrationBurstState extends State<EmojiCelebrationBurst>
       animation: _controller,
       builder: (context, child) {
         final progress = _controller.value;
-        // Ease out back for initial burst, ease in for gravity fall
-        final burstProgress = Curves.easeOutBack.transform(math.min(1.0, progress * 1.4));
-        final fadeProgress = progress > 0.75 ? (1.0 - progress) / 0.25 : 1.0;
+
+        // Ripples
+        final ripple1Progress = math.min(1.0, progress * 1.5);
+        final ripple1Scale = 0.8 + (ripple1Progress * 0.9);
+        final ripple1Opacity = (1.0 - ripple1Progress).clamp(0.0, 0.45);
+
+        final ripple2Progress = math.max(0.0, (progress - 0.15) * 1.4);
+        final ripple2Scale = 0.6 + (ripple2Progress * 1.0);
+        final ripple2Opacity = (1.0 - ripple2Progress).clamp(0.0, 0.35);
+
+        // Central Badge Elastic Scale
+        final badgeScale = Curves.elasticOut.transform(math.min(1.0, progress * 1.25));
+
+        // Particle Burst
+        final particleProgress = Curves.easeOutCubic.transform(math.min(1.0, progress * 1.3));
+        final particleFade = progress > 0.65 ? ((1.0 - progress) / 0.35).clamp(0.0, 1.0) : 1.0;
 
         return SizedBox(
           width: widget.size * 2,
@@ -74,52 +99,107 @@ class _EmojiCelebrationBurstState extends State<EmojiCelebrationBurst>
           child: Stack(
             alignment: Alignment.center,
             children: [
-              // Central happy cartoon icon bouncing
+              // Outer Ripple Ring 1
+              if (ripple1Opacity > 0.01)
+                Transform.scale(
+                  scale: ripple1Scale,
+                  child: Container(
+                    width: widget.size,
+                    height: widget.size,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: const Color(0xFF10B981).withValues(alpha: ripple1Opacity),
+                        width: 2.5,
+                      ),
+                    ),
+                  ),
+                ),
+
+              // Outer Ripple Ring 2
+              if (ripple2Opacity > 0.01)
+                Transform.scale(
+                  scale: ripple2Scale,
+                  child: Container(
+                    width: widget.size,
+                    height: widget.size,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: const Color(0xFF34D399).withValues(alpha: ripple2Opacity),
+                        width: 1.5,
+                      ),
+                    ),
+                  ),
+                ),
+
+              // Central Checkmark Badge
               Transform.scale(
-                scale: Curves.elasticOut.transform(math.min(1.0, progress * 1.2)),
+                scale: badgeScale,
                 child: Container(
-                  padding: const EdgeInsets.all(16),
+                  width: widget.size * 0.68,
+                  height: widget.size * 0.68,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF00E599).withValues(alpha: 0.18),
                     shape: BoxShape.circle,
-                    border: Border.all(
-                      color: const Color(0xFF00E599).withValues(alpha: 0.5),
-                      width: 2,
+                    gradient: const RadialGradient(
+                      center: Alignment(-0.2, -0.3),
+                      radius: 0.9,
+                      colors: [
+                        Color(0xFF34D399), // Light emerald
+                        Color(0xFF059669), // Rich emerald
+                        Color(0xFF047857), // Deep emerald
+                      ],
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF00E599).withValues(alpha: 0.35),
-                        blurRadius: 24,
-                        spreadRadius: 4,
+                        color: const Color(0xFF059669).withValues(alpha: 0.45),
+                        blurRadius: 28,
+                        spreadRadius: 6,
+                        offset: const Offset(0, 8),
                       ),
                     ],
                   ),
-                  child: const Text(
-                    '🥳',
-                    style: TextStyle(fontSize: 48),
+                  child: const Center(
+                    child: Icon(
+                      Icons.check_rounded,
+                      color: Colors.white,
+                      size: 44,
+                    ),
                   ),
                 ),
               ),
 
-              // Flying cartoon emoji particles
+              // Vector Sparkle Particles (No Emojis)
               ..._particles.map((p) {
-                final currentDx = p.dx * burstProgress;
-                final currentDy = (p.dy * burstProgress) + (progress * progress * 35.0); // slight gravity
-                final currentScale = p.scale * (burstProgress < 0.2 ? burstProgress * 5 : 1.0);
-                final currentRotation = p.rotation * burstProgress;
+                final currentDx = p.dx * particleProgress;
+                final currentDy = p.dy * particleProgress;
+                final currentScale = (particleProgress < 0.2 ? particleProgress * 5 : 1.0);
 
                 return Transform.translate(
                   offset: Offset(currentDx, currentDy),
                   child: Transform.rotate(
-                    angle: currentRotation,
+                    angle: p.rotation + (particleProgress * 0.8),
                     child: Transform.scale(
                       scale: currentScale,
                       child: Opacity(
-                        opacity: fadeProgress.clamp(0.0, 1.0),
-                        child: Text(
-                          p.emoji,
-                          style: const TextStyle(fontSize: 26),
-                        ),
+                        opacity: particleFade,
+                        child: p.isDiamond
+                            ? Container(
+                                width: p.size,
+                                height: p.size,
+                                decoration: BoxDecoration(
+                                  color: p.color,
+                                  borderRadius: BorderRadius.circular(1.5),
+                                ),
+                              )
+                            : Container(
+                                width: p.size,
+                                height: p.size,
+                                decoration: BoxDecoration(
+                                  color: p.color,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
                       ),
                     ),
                   ),
@@ -133,18 +213,20 @@ class _EmojiCelebrationBurstState extends State<EmojiCelebrationBurst>
   }
 }
 
-class _Particle {
-  final String emoji;
+class _VectorParticle {
+  final Color color;
   final double dx;
   final double dy;
-  final double scale;
+  final double size;
+  final bool isDiamond;
   final double rotation;
 
-  _Particle({
-    required this.emoji,
+  _VectorParticle({
+    required this.color,
     required this.dx,
     required this.dy,
-    required this.scale,
+    required this.size,
+    required this.isDiamond,
     required this.rotation,
   });
 }

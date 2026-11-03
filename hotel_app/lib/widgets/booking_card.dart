@@ -372,7 +372,8 @@ class BookingCard extends StatelessWidget {
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Text('🎉 ', style: TextStyle(fontSize: 12)),
+                          Icon(Icons.check_circle_rounded, size: 14, color: Color(0xFF059669)),
+                          SizedBox(width: 6),
                           Text(
                             'Confirmed · Ready for service',
                             style: TextStyle(

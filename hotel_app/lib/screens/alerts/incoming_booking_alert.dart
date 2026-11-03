@@ -285,8 +285,8 @@ class _IncomingBookingAlertScreenState extends State<IncomingBookingAlertScreen>
                           ),
                           child: Text(
                             widget.booking.appliedOffer != null
-                                ? '✨ Offer: ${widget.booking.appliedOffer}'
-                                : '⭐ VIP Guest Reservation',
+                                ? 'Offer: ${widget.booking.appliedOffer}'
+                                : 'VIP Guest Reservation',
                             style: const TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w700,
@@ -416,14 +416,13 @@ class _IncomingBookingAlertScreenState extends State<IncomingBookingAlertScreen>
                 children: [
                   ScaleTransition(
                     scale: _checkScaleAnimation,
-                    child: const EmojiCelebrationBurst(
-                      emojis: ['🥳', '🎉', '🍽️', '✨', '👨‍🍳', '🥂', '🔥'],
-                      size: 48,
+                    child: const GenuineConfirmationAnimation(
+                      size: 52,
                     ),
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 16),
                   const Text(
-                    'Reservation Confirmed!',
+                    'Reservation Confirmed',
                     style: TextStyle(
                       fontSize: 26,
                       fontWeight: FontWeight.w900,
@@ -435,7 +434,8 @@ class _IncomingBookingAlertScreenState extends State<IncomingBookingAlertScreen>
                   const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text('🎉 ', style: TextStyle(fontSize: 14)),
+                      Icon(Icons.check_circle_rounded, size: 16, color: Color(0xFF00E599)),
+                      SizedBox(width: 6),
                       Text(
                         'Table Confirmed · Ready for Service',
                         style: TextStyle(
@@ -445,7 +445,6 @@ class _IncomingBookingAlertScreenState extends State<IncomingBookingAlertScreen>
                           letterSpacing: 0.3,
                         ),
                       ),
-                      Text(' ✨', style: TextStyle(fontSize: 14)),
                     ],
                   ),
                 ],

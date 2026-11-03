@@ -35,7 +35,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          '$name is now ${val ? "ENABLED ⚡" : "DISABLED"}',
+          '$name is now ${val ? "ENABLED" : "DISABLED"}',
           style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: Colors.white),
         ),
         backgroundColor: const Color(0xFF0F172A),
