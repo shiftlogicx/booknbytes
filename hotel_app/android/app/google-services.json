@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "480656946997",
+    "project_id": "booknbytes",
+    "storage_bucket": "booknbytes.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:480656946997:android:72df0497a3ed0d0c62fe7c",
+        "android_client_info": {
+          "package_name": "com.booknbite.hotel"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBDfEB54psVBhLW_qoPxIAA_-CleEmO6Ew"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

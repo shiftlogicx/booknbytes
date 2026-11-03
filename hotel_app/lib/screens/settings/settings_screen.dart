@@ -11,6 +11,7 @@ import '../profile/restaurant_profile_screen.dart';
 import '../profile/booking_audit_doc_screen.dart';
 import '../support/support_screen.dart';
 import '../auth/login_screen.dart';
+import '../../services/ota_update_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -554,6 +555,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
               subtitle: 'Explore priority alarms, 1-touch swipe and dynamic slots',
               onTap: _replayTutorial,
               accentColor: const Color(0xFF4F46E5),
+            ),
+
+            const SizedBox(height: 24),
+
+            // Dynamic System Updates
+            const Text(
+              'DYNAMIC SYSTEM UPDATES',
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.8,
+                color: Color(0xFF64748B),
+              ),
+            ),
+            const SizedBox(height: 10),
+
+            _buildActionTile(
+              icon: Icons.cloud_sync_rounded,
+              title: 'Check for OTA Updates',
+              subtitle: 'Check for dynamic Shorebird over-the-air patches without reinstalling',
+              onTap: () async {
+                HapticFeedback.lightImpact();
+                await OtaUpdateService().checkForUpdatesAndDownload(
+                  context: context,
+                  showFeedback: true,
+                );
+              },
+              accentColor: const Color(0xFF0284C7),
             ),
 
             const SizedBox(height: 24),

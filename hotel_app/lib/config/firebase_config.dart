@@ -14,13 +14,12 @@ class FirebaseConfig {
 
   static FirebaseOptions get currentPlatformOptions {
     return const FirebaseOptions(
-      apiKey: 'YOUR_API_KEY',
-      appId: 'YOUR_APP_ID',
-      messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',
-      projectId: 'YOUR_PROJECT_ID',
-      storageBucket: 'YOUR_STORAGE_BUCKET',
-      iosBundleId: 'com.amitthakur.booknbite.hotelApp',
-      androidClientId: 'YOUR_ANDROID_CLIENT_ID',
+      apiKey: 'AIzaSyBDfEB54psVBhLW_qoPxIAA_-CleEmO6Ew',
+      appId: '1:480656946997:android:72df0497a3ed0d0c62fe7c',
+      messagingSenderId: '480656946997',
+      projectId: 'booknbytes',
+      storageBucket: 'booknbytes.firebasestorage.app',
+      androidClientId: '480656946997-d86b6a.apps.googleusercontent.com',
     );
   }
 
