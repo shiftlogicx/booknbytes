@@ -15,7 +15,7 @@ import '../settings/settings_screen.dart';
 import '../slots/slots_inventory_screen.dart';
 import '../support/support_screen.dart';
 import '../../widgets/restaurant_walkthrough_modal.dart';
-import '../../services/ota_update_service.dart';
+import '../../services/app_update_service.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -36,8 +36,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       final auth = Provider.of<AuthProvider>(context, listen: false);
       final bookingProvider = Provider.of<BookingProvider>(context, listen: false);
 
-      // Check and download OTA dynamic updates in the background
-      OtaUpdateService().checkForUpdatesAndDownload();
+      // Check for dynamic optional or mandatory app updates from Supabase
+      AppUpdateService.checkVersion(context);
 
       // Wire up live incoming booking ringing alert callback (Realtime + FCM)
       bookingProvider.onNewBookingAlert = _handleIncomingBookingAlert;

@@ -27,7 +27,8 @@ dependencies:
   http: ^1.6.0
   shared_preferences: ^2.3.2
   onesignal_flutter: ^5.7.2
-  shorebird_code_push: ^2.0.7
+  package_info_plus: ^9.0.1
+  url_launcher: ^6.3.2
 
 dev_dependencies:
   flutter_test:
@@ -39,4 +40,3 @@ flutter:
 
   assets:
     - assets/sounds/
-    - shorebird.yaml

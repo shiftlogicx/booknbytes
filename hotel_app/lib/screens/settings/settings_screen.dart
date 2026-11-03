@@ -10,7 +10,7 @@ import '../../widgets/restaurant_walkthrough_modal.dart';
 import '../profile/restaurant_profile_screen.dart';
 import '../support/support_screen.dart';
 import '../auth/login_screen.dart';
-import '../../services/ota_update_service.dart';
+import '../../services/app_update_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -538,9 +538,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             const SizedBox(height: 24),
 
-            // Dynamic System Updates
+            // App Version & Updates
             const Text(
-              'DYNAMIC SYSTEM UPDATES',
+              'APP VERSION & UPDATES',
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w800,
@@ -551,17 +551,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
             const SizedBox(height: 10),
 
             _buildActionTile(
-              icon: Icons.cloud_sync_rounded,
-              title: 'Check for OTA Updates',
-              subtitle: 'Check for dynamic Shorebird over-the-air patches without reinstalling',
+              icon: Icons.system_update_rounded,
+              title: 'Check for App Updates',
+              subtitle: 'Check for latest store release or required service updates',
               onTap: () async {
                 HapticFeedback.lightImpact();
-                await OtaUpdateService().checkForUpdatesAndDownload(
-                  context: context,
+                await AppUpdateService.checkVersion(
+                  context,
                   showFeedback: true,
                 );
               },
-              accentColor: const Color(0xFF0284C7),
+              accentColor: const Color(0xFF00E599),
             ),
 
             const SizedBox(height: 24),
