@@ -25,6 +25,8 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
   late TextEditingController _costForTwoController;
 
   late List<String> _selectedCuisines;
+  late String _breakfastOpen;
+  late String _breakfastClose;
   late String _lunchOpen;
   late String _lunchClose;
   late String _dinnerOpen;
@@ -66,6 +68,8 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
     _costForTwoController = TextEditingController(text: profile.costForTwo.toString());
 
     _selectedCuisines = List.from(profile.cuisines);
+    _breakfastOpen = profile.breakfastOpen;
+    _breakfastClose = profile.breakfastClose;
     _lunchOpen = profile.lunchOpen;
     _lunchClose = profile.lunchClose;
     _dinnerOpen = profile.dinnerOpen;
@@ -160,6 +164,8 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
       address: _addressController.text.trim(),
       costForTwo: int.tryParse(_costForTwoController.text.trim()) ?? 1200,
       cuisines: _selectedCuisines,
+      breakfastOpen: _breakfastOpen,
+      breakfastClose: _breakfastClose,
       lunchOpen: _lunchOpen,
       lunchClose: _lunchClose,
       dinnerOpen: _dinnerOpen,
@@ -531,6 +537,19 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
               // Section 4: Operational Shifts & Timings
               _buildSectionHeader('OPERATIONAL SERVICE SHIFTS'),
               const SizedBox(height: 10),
+
+              // Breakfast Shift Card
+              _buildTimingCard(
+                title: 'Breakfast Service Shift',
+                icon: Icons.breakfast_dining_rounded,
+                accentColor: const Color(0xFFEA580C),
+                openTime: _breakfastOpen,
+                closeTime: _breakfastClose,
+                onOpenTap: () => _pickTime(context, _breakfastOpen, (t) => _breakfastOpen = t),
+                onCloseTap: () => _pickTime(context, _breakfastClose, (t) => _breakfastClose = t),
+              ),
+
+              const SizedBox(height: 12),
 
               // Lunch Shift Card
               _buildTimingCard(

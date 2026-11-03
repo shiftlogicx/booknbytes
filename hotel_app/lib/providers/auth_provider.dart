@@ -17,6 +17,8 @@ class RestaurantProfileData {
   String address;
   int costForTwo;
   List<String> cuisines;
+  String breakfastOpen;
+  String breakfastClose;
   String lunchOpen;
   String lunchClose;
   String dinnerOpen;
@@ -42,6 +44,8 @@ class RestaurantProfileData {
     required this.address,
     required this.costForTwo,
     required this.cuisines,
+    required this.breakfastOpen,
+    required this.breakfastClose,
     required this.lunchOpen,
     required this.lunchClose,
     required this.dinnerOpen,
@@ -69,6 +73,8 @@ class RestaurantProfileData {
       address: 'Shop 4, Prime High Street',
       costForTwo: 1200,
       cuisines: const ['Bakery', 'Continental'],
+      breakfastOpen: '07:30 AM',
+      breakfastClose: '11:00 AM',
       lunchOpen: '11:30 AM',
       lunchClose: '03:30 PM',
       dinnerOpen: '07:00 PM',
@@ -89,11 +95,17 @@ class RestaurantProfileData {
     final timings = json['timings'] is Map ? json['timings'] as Map : {};
     final attrs = json['attributes'] is Map ? json['attributes'] as Map : {};
 
+    String breakfastO = '07:30 AM';
+    String breakfastC = '11:00 AM';
     String lunchO = '11:30 AM';
     String lunchC = '03:30 PM';
     String dinnerO = '07:00 PM';
     String dinnerC = '11:30 PM';
 
+    if (timings['breakfast'] is Map) {
+      breakfastO = timings['breakfast']['open'] ?? breakfastO;
+      breakfastC = timings['breakfast']['close'] ?? breakfastC;
+    }
     if (timings['lunch'] is Map) {
       lunchO = timings['lunch']['open'] ?? lunchO;
       lunchC = timings['lunch']['close'] ?? lunchC;
@@ -128,6 +140,8 @@ class RestaurantProfileData {
       address: json['address']?.toString() ?? 'Prime High Street, Central District',
       costForTwo: (json['cost_for_two'] as num?)?.toInt() ?? 1200,
       cuisines: cuisinesList,
+      breakfastOpen: breakfastO,
+      breakfastClose: breakfastC,
       lunchOpen: lunchO,
       lunchClose: lunchC,
       dinnerOpen: dinnerO,
@@ -158,6 +172,7 @@ class RestaurantProfileData {
       'min_discount': minDiscount,
       'max_discount': maxDiscount,
       'timings': {
+        'breakfast': {'open': breakfastOpen, 'close': breakfastClose},
         'lunch': {'open': lunchOpen, 'close': lunchClose},
         'dinner': {'open': dinnerOpen, 'close': dinnerClose},
       },
@@ -190,6 +205,8 @@ class RestaurantProfileData {
     String? address,
     int? costForTwo,
     List<String>? cuisines,
+    String? breakfastOpen,
+    String? breakfastClose,
     String? lunchOpen,
     String? lunchClose,
     String? dinnerOpen,
@@ -215,6 +232,8 @@ class RestaurantProfileData {
       address: address ?? this.address,
       costForTwo: costForTwo ?? this.costForTwo,
       cuisines: cuisines ?? List.from(this.cuisines),
+      breakfastOpen: breakfastOpen ?? this.breakfastOpen,
+      breakfastClose: breakfastClose ?? this.breakfastClose,
       lunchOpen: lunchOpen ?? this.lunchOpen,
       lunchClose: lunchClose ?? this.lunchClose,
       dinnerOpen: dinnerOpen ?? this.dinnerOpen,

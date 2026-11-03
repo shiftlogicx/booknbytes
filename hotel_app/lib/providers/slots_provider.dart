@@ -33,6 +33,7 @@ class SlotsProvider extends ChangeNotifier {
         final slotDay = DateTime(s.startDatetime!.year, s.startDatetime!.month, s.startDatetime!.day);
         if (!slotDay.isAtSameMomentAs(selDay)) return false;
       }
+      if (_shiftFilter == 'BREAKFAST') return s.shift == 'BREAKFAST';
       if (_shiftFilter == 'LUNCH') return s.shift == 'LUNCH';
       if (_shiftFilter == 'DINNER') return s.shift == 'DINNER';
       return true;

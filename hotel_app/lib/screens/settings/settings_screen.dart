@@ -26,7 +26,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _hapticRinging = true;
 
   // Automation & Communication
-  bool _instantSmsDiner = true;
   bool _autoAssignTables = true;
   bool _peakHourSurgePricing = true;
 
@@ -224,6 +223,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
+                                'Breakfast: ${profile.breakfastOpen} - ${profile.breakfastClose}',
+                                style: const TextStyle(fontSize: 10, color: Color(0xFF64748B), fontWeight: FontWeight.w600),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
                                 'Lunch: ${profile.lunchOpen} - ${profile.lunchClose}',
                                 style: const TextStyle(fontSize: 10, color: Color(0xFF64748B), fontWeight: FontWeight.w600),
                               ),
@@ -405,17 +409,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
             const SizedBox(height: 10),
-
-            _buildInteractiveToggleTile(
-              icon: Icons.sms_rounded,
-              title: 'Instant SMS & WhatsApp to Guest',
-              subtitle: 'Automatically dispatch reservation confirmation SMS to diner',
-              value: _instantSmsDiner,
-              onChanged: (val) {
-                setState(() => _instantSmsDiner = val);
-                _showToggleNotice('Instant SMS & WhatsApp to Guest', val);
-              },
-            ),
 
             _buildInteractiveToggleTile(
               icon: Icons.auto_mode_rounded,

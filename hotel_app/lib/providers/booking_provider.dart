@@ -30,6 +30,7 @@ class BookingProvider extends ChangeNotifier {
 
   List<BookingModel> get allBookings => _bookings;
   bool get isLoading => _isLoading;
+  bool get initialLoadCompleted => _initialLoadCompleted;
   String? get errorMessage => _errorMessage;
   String get filterStatus => _filterStatus;
 

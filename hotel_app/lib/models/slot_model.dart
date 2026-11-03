@@ -91,6 +91,7 @@ class DailySlotModel {
   String get shift {
     if (startDatetime == null) return 'LUNCH';
     final hour = startDatetime!.hour;
+    if (hour < 11) return 'BREAKFAST';
     return hour < 17 ? 'LUNCH' : 'DINNER';
   }
 

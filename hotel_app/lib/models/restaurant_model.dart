@@ -25,13 +25,17 @@ class GeoLocation {
 }
 
 class RestaurantTimings {
+  final TimeSlotRange? breakfast;
   final TimeSlotRange? lunch;
   final TimeSlotRange? dinner;
 
-  const RestaurantTimings({this.lunch, this.dinner});
+  const RestaurantTimings({this.breakfast, this.lunch, this.dinner});
 
   factory RestaurantTimings.fromMap(Map<String, dynamic> map) {
     return RestaurantTimings(
+      breakfast: map['breakfast'] != null
+          ? TimeSlotRange.fromMap(Map<String, dynamic>.from(map['breakfast']))
+          : null,
       lunch: map['lunch'] != null
           ? TimeSlotRange.fromMap(Map<String, dynamic>.from(map['lunch']))
           : null,
@@ -43,6 +47,7 @@ class RestaurantTimings {
 
   Map<String, dynamic> toMap() {
     return {
+      if (breakfast != null) 'breakfast': breakfast!.toMap(),
       if (lunch != null) 'lunch': lunch!.toMap(),
       if (dinner != null) 'dinner': dinner!.toMap(),
     };
