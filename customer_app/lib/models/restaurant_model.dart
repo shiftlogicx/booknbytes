@@ -114,20 +114,31 @@ class RestaurantAttributes {
   final bool hasBar;
   final bool isAc;
   final bool parkingAvailable;
+  final bool dynamicDiscountEnabled;
+  final int minDiscount;
+  final int maxDiscount;
 
   RestaurantAttributes({
     required this.isVegOnly,
     required this.hasBar,
     required this.isAc,
     required this.parkingAvailable,
+    this.dynamicDiscountEnabled = false,
+    this.minDiscount = 10,
+    this.maxDiscount = 30,
   });
 
   factory RestaurantAttributes.fromMap(Map<String, dynamic> data) {
+    final dynamicMap = data['dynamic_discount'] is Map ? data['dynamic_discount'] as Map : null;
     return RestaurantAttributes(
-      isVegOnly: data['is_veg_only'] ?? false,
-      hasBar: data['has_bar'] ?? false,
-      isAc: data['is_ac'] ?? false,
-      parkingAvailable: data['parking_available'] ?? false,
+      isVegOnly: data['is_veg_only'] ?? data['pure_veg'] ?? false,
+      hasBar: data['has_bar'] ?? data['serves_alcohol'] ?? false,
+      isAc: data['is_ac'] ?? data['has_ac'] ?? false,
+      parkingAvailable: data['parking_available'] ?? data['has_parking'] ?? false,
+      dynamicDiscountEnabled: data['dynamic_discount_enabled'] == true ||
+          (dynamicMap != null && dynamicMap['enabled'] == true),
+      minDiscount: ((data['min_discount'] ?? dynamicMap?['min_discount'] ?? 10) as num).toInt(),
+      maxDiscount: ((data['max_discount'] ?? dynamicMap?['max_discount'] ?? 30) as num).toInt(),
     );
   }
 
@@ -137,6 +148,14 @@ class RestaurantAttributes {
       'has_bar': hasBar,
       'is_ac': isAc,
       'parking_available': parkingAvailable,
+      'dynamic_discount_enabled': dynamicDiscountEnabled,
+      'min_discount': minDiscount,
+      'max_discount': maxDiscount,
+      'dynamic_discount': {
+        'enabled': dynamicDiscountEnabled,
+        'min_discount': minDiscount,
+        'max_discount': maxDiscount,
+      },
     };
   }
 }

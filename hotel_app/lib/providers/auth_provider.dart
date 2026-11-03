@@ -25,6 +25,9 @@ class RestaurantProfileData {
   bool hasBar;
   bool isAc;
   bool parkingAvailable;
+  bool dynamicDiscountEnabled;
+  int minDiscount;
+  int maxDiscount;
   List<Map<String, dynamic>> activeOffers;
   Map<String, dynamic>? managerCredentials;
 
@@ -47,6 +50,9 @@ class RestaurantProfileData {
     required this.hasBar,
     required this.isAc,
     required this.parkingAvailable,
+    this.dynamicDiscountEnabled = false,
+    this.minDiscount = 10,
+    this.maxDiscount = 30,
     this.activeOffers = const [],
     this.managerCredentials,
   });
@@ -71,6 +77,9 @@ class RestaurantProfileData {
       hasBar: false,
       isAc: true,
       parkingAvailable: true,
+      dynamicDiscountEnabled: false,
+      minDiscount: 10,
+      maxDiscount: 30,
       activeOffers: const [], // Clean slate on new restaurant
     );
   }
@@ -103,6 +112,11 @@ class RestaurantProfileData {
             (json['active_offers'] as List).map((e) => Map<String, dynamic>.from(e)))
         : <Map<String, dynamic>>[];
 
+    final dynamicMap = attrs['dynamic_discount'] is Map ? attrs['dynamic_discount'] as Map : null;
+    final dynEnabled = attrs['dynamic_discount_enabled'] == true || (dynamicMap != null && dynamicMap['enabled'] == true);
+    final minD = ((attrs['min_discount'] ?? dynamicMap?['min_discount'] ?? 10) as num).toInt();
+    final maxD = ((attrs['max_discount'] ?? dynamicMap?['max_discount'] ?? 30) as num).toInt();
+
     return RestaurantProfileData(
       restaurantId: json['restaurant_id']?.toString() ?? 'res_bombay_brasserie_01',
       name: json['name']?.toString() ?? 'BookNBytes Restaurant',
@@ -122,6 +136,9 @@ class RestaurantProfileData {
       hasBar: attrs['serves_alcohol'] == true,
       isAc: attrs['has_ac'] ?? true,
       parkingAvailable: attrs['has_parking'] ?? true,
+      dynamicDiscountEnabled: dynEnabled,
+      minDiscount: minD,
+      maxDiscount: maxD,
       activeOffers: offersList,
       managerCredentials: owners['manager_credentials'] is Map
           ? Map<String, dynamic>.from(owners['manager_credentials'])
@@ -137,6 +154,9 @@ class RestaurantProfileData {
       'address': address,
       'cost_for_two': costForTwo,
       'cuisines': cuisines,
+      'dynamic_discount_enabled': dynamicDiscountEnabled,
+      'min_discount': minDiscount,
+      'max_discount': maxDiscount,
       'timings': {
         'lunch': {'open': lunchOpen, 'close': lunchClose},
         'dinner': {'open': dinnerOpen, 'close': dinnerClose},
@@ -146,6 +166,14 @@ class RestaurantProfileData {
         'serves_alcohol': hasBar,
         'has_ac': isAc,
         'has_parking': parkingAvailable,
+        'dynamic_discount_enabled': dynamicDiscountEnabled,
+        'min_discount': minDiscount,
+        'max_discount': maxDiscount,
+        'dynamic_discount': {
+          'enabled': dynamicDiscountEnabled,
+          'min_discount': minDiscount,
+          'max_discount': maxDiscount,
+        },
       },
       'active_offers': activeOffers,
     };
@@ -170,6 +198,9 @@ class RestaurantProfileData {
     bool? hasBar,
     bool? isAc,
     bool? parkingAvailable,
+    bool? dynamicDiscountEnabled,
+    int? minDiscount,
+    int? maxDiscount,
     List<Map<String, dynamic>>? activeOffers,
     Map<String, dynamic>? managerCredentials,
   }) {
@@ -192,6 +223,9 @@ class RestaurantProfileData {
       hasBar: hasBar ?? this.hasBar,
       isAc: isAc ?? this.isAc,
       parkingAvailable: parkingAvailable ?? this.parkingAvailable,
+      dynamicDiscountEnabled: dynamicDiscountEnabled ?? this.dynamicDiscountEnabled,
+      minDiscount: minDiscount ?? this.minDiscount,
+      maxDiscount: maxDiscount ?? this.maxDiscount,
       activeOffers: activeOffers ?? List.from(this.activeOffers),
       managerCredentials: managerCredentials ?? this.managerCredentials,
     );
@@ -462,6 +496,20 @@ class AuthProvider extends ChangeNotifier {
       notifyListeners();
       return false;
     }
+  }
+
+  /// Update dynamic surprise discount range (min & max discount)
+  Future<bool> updateDynamicDiscount({
+    required bool enabled,
+    required int minDiscount,
+    required int maxDiscount,
+  }) async {
+    final updated = _profile.copyWith(
+      dynamicDiscountEnabled: enabled,
+      minDiscount: minDiscount,
+      maxDiscount: maxDiscount,
+    );
+    return await updateProfile(updated);
   }
 
   // ==========================================

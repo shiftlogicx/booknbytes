@@ -107,6 +107,8 @@ export interface DailySlot {
   start_datetime: string;
   end_datetime: string;
   discount_percentage: number;
+  min_discount?: number;
+  max_discount?: number;
   capacity: number;
   restaurant_name?: string;
 }

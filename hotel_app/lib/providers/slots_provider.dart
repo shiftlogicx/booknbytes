@@ -76,6 +76,8 @@ class SlotsProvider extends ChangeNotifier {
     required DateTime startDatetime,
     required DateTime endDatetime,
     required double discountPercentage,
+    double? minDiscount,
+    double? maxDiscount,
     required int capacity,
   }) async {
     _isLoading = true;
@@ -88,6 +90,8 @@ class SlotsProvider extends ChangeNotifier {
         startDatetime: startDatetime,
         endDatetime: endDatetime,
         discountPercentage: discountPercentage,
+        minDiscount: minDiscount,
+        maxDiscount: maxDiscount,
         capacity: capacity,
       );
       final created = await _supabaseService.insertDailySlot(slot);
@@ -108,12 +112,20 @@ class SlotsProvider extends ChangeNotifier {
   // ==========================================
   // UPDATE SLOT (DISCOUNT / CAPACITY)
   // ==========================================
-  Future<bool> updateSlot(String slotId, {double? discountPercentage, int? capacity}) async {
+  Future<bool> updateSlot(
+    String slotId, {
+    double? discountPercentage,
+    double? minDiscount,
+    double? maxDiscount,
+    int? capacity,
+  }) async {
     final index = _slots.indexWhere((s) => s.slotId == slotId);
     if (index == -1) return false;
 
     final updated = _slots[index].copyWith(
       discountPercentage: discountPercentage,
+      minDiscount: minDiscount,
+      maxDiscount: maxDiscount,
       capacity: capacity,
     );
     _slots[index] = updated;
@@ -122,6 +134,8 @@ class SlotsProvider extends ChangeNotifier {
     try {
       final data = <String, dynamic>{};
       if (discountPercentage != null) data['discount_percentage'] = discountPercentage;
+      if (minDiscount != null) data['min_discount'] = minDiscount;
+      if (maxDiscount != null) data['max_discount'] = maxDiscount;
       if (capacity != null) data['capacity'] = capacity;
 
       await _supabaseService.updateDailySlot(slotId, data);

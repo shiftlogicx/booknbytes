@@ -340,6 +340,8 @@ export async function getAllSlots(): Promise<DailySlot[]> {
     start_datetime: row.start_datetime,
     end_datetime: row.end_datetime,
     discount_percentage: Number(row.discount_percentage) || 0,
+    min_discount: row.min_discount != null ? Number(row.min_discount) : undefined,
+    max_discount: row.max_discount != null ? Number(row.max_discount) : undefined,
     capacity: row.capacity || 10,
     restaurant_name: row.restaurants?.name || row.restaurant_id,
   }));

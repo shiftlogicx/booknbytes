@@ -251,6 +251,47 @@ class _BookingScreenState extends State<BookingScreen> {
               ),
               const Divider(height: 32),
 
+              if (widget.restaurant.attributes.dynamicDiscountEnabled || widget.restaurant.attributes.minDiscount > 0) ...[
+                Container(
+                  margin: const EdgeInsets.only(bottom: 16),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFFBEB),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFFDE68A)),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFEF3C7),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Icon(Icons.casino_rounded, color: Color(0xFFD97706), size: 20),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '🎉 ${widget.restaurant.attributes.minDiscount}% – ${widget.restaurant.attributes.maxDiscount}% OFF on Slot Booking',
+                              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: Color(0xFF92400E)),
+                            ),
+                            const SizedBox(height: 2),
+                            const Text(
+                              'Dynamic slot discount applied automatically upon table reservation.',
+                              style: TextStyle(fontSize: 11, color: Color(0xFFB45309)),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+
               SlotPicker(
                 slots: availableSlots,
                 selectedSlot: _selectedSlot,

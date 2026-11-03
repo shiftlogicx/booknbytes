@@ -14,6 +14,12 @@ class TableSlotsScreen extends StatefulWidget {
 }
 
 class _TableSlotsScreenState extends State<TableSlotsScreen> {
+  bool _isSavingDynamic = false;
+  double _minDiscount = 10.0;
+  double _maxDiscount = 30.0;
+  bool _dynamicEnabled = true;
+  int _sampleRolledDiscount = 20;
+
   @override
   void initState() {
     super.initState();
@@ -23,7 +29,51 @@ class _TableSlotsScreenState extends State<TableSlotsScreen> {
       if (auth.currentRestaurantId.isNotEmpty) {
         slots.loadSlots(auth.currentRestaurantId);
       }
+      final profile = auth.profile;
+      setState(() {
+        _dynamicEnabled = profile.dynamicDiscountEnabled;
+        _minDiscount = profile.minDiscount.toDouble().clamp(5.0, 30.0);
+        _maxDiscount = profile.maxDiscount.toDouble().clamp(15.0, 60.0);
+        if (_maxDiscount < _minDiscount) _maxDiscount = _minDiscount;
+        _rollSampleDiscount();
+      });
     });
+  }
+
+  void _rollSampleDiscount() {
+    final min = _minDiscount.round();
+    final max = _maxDiscount.round();
+    if (min >= max) {
+      _sampleRolledDiscount = min;
+    } else {
+      final delta = max - min;
+      final randomOffset = (DateTime.now().microsecondsSinceEpoch % (delta + 1));
+      _sampleRolledDiscount = (min + randomOffset).clamp(min, max);
+    }
+  }
+
+  Future<void> _saveDynamicDiscount() async {
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    setState(() => _isSavingDynamic = true);
+    final success = await auth.updateDynamicDiscount(
+      enabled: _dynamicEnabled,
+      minDiscount: _minDiscount.round(),
+      maxDiscount: _maxDiscount.round(),
+    );
+    if (mounted) {
+      setState(() => _isSavingDynamic = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            success
+                ? 'Dynamic slot discount (${_minDiscount.round()}% - ${_maxDiscount.round()}%) published to table bookings!'
+                : 'Failed to update dynamic discounts',
+          ),
+          backgroundColor: success ? const Color(0xFF059669) : Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
   void _showPublishSlotSheet(BuildContext context) {
@@ -34,7 +84,10 @@ class _TableSlotsScreenState extends State<TableSlotsScreen> {
     TimeOfDay selectedStartTime = const TimeOfDay(hour: 13, minute: 0);
     TimeOfDay selectedEndTime = const TimeOfDay(hour: 15, minute: 0);
     int capacity = 30;
-    double discount = 20.0;
+    final profile = auth.profile;
+    double slotMinDiscount = profile.minDiscount.toDouble().clamp(0.0, 50.0);
+    double slotMaxDiscount = profile.maxDiscount.toDouble().clamp(10.0, 70.0);
+    if (slotMaxDiscount < slotMinDiscount) slotMaxDiscount = slotMinDiscount;
     String shift = 'LUNCH';
 
     showModalBottomSheet(
@@ -233,121 +286,121 @@ class _TableSlotsScreenState extends State<TableSlotsScreen> {
                       ],
                     ),
 
-                    const SizedBox(height: 14),
+                    const SizedBox(height: 16),
 
-                    // Discount Percentage Header
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('DYNAMIC DISCOUNT',
-                                style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFF64748B), letterSpacing: 0.5)),
-                            SizedBox(height: 2),
-                            Text('Incentive to attract off-peak footfall', style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8))),
-                          ],
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFFFBEB),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: const Color(0xFFFDE68A)),
-                          ),
-                          child: Text('${discount.toInt()}% OFF',
-                              style: const TextStyle(fontWeight: FontWeight.w900, color: Color(0xFFD97706), fontSize: 13)),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 10),
-
-                    // Dynamic Min-Max Discount Toggle Buttons with Generous Spacing
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      physics: const BouncingScrollPhysics(),
-                      child: Row(
+                    // Min & Max Discount Range for this slot
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFFBEB),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: const Color(0xFFFDE68A)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          {'val': 0.0, 'label': '0% (Min)'},
-                          {'val': 10.0, 'label': '10% OFF'},
-                          {'val': 15.0, 'label': '15% OFF'},
-                          {'val': 20.0, 'label': '20% OFF'},
-                          {'val': 25.0, 'label': '25% OFF'},
-                          {'val': 30.0, 'label': '30% OFF'},
-                          {'val': 40.0, 'label': '40% OFF'},
-                          {'val': 50.0, 'label': '50% (Max)'},
-                        ].map((opt) {
-                          final optVal = opt['val'] as double;
-                          final isSel = discount == optVal;
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 10),
-                            child: InkWell(
-                              onTap: () {
-                                HapticFeedback.selectionClick();
-                                setModalState(() => discount = optVal);
-                              },
-                              borderRadius: BorderRadius.circular(10),
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 150),
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                                decoration: BoxDecoration(
-                                  color: isSel
-                                      ? (optVal > 0 ? const Color(0xFF059669) : const Color(0xFF334155))
-                                      : const Color(0xFFF1F5F9),
-                                  borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(
-                                    color: isSel
-                                        ? (optVal > 0 ? const Color(0xFF059669) : const Color(0xFF334155))
-                                        : const Color(0xFFE2E8F0),
-                                    width: isSel ? 1.5 : 1.0,
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Row(
+                                children: [
+                                  Icon(Icons.casino_rounded, size: 16, color: Color(0xFFD97706)),
+                                  SizedBox(width: 6),
+                                  Text(
+                                    'SLOT MIN / MAX DISCOUNT',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w800,
+                                      color: Color(0xFF92400E),
+                                      letterSpacing: 0.5,
+                                    ),
                                   ),
-                                  boxShadow: isSel
-                                      ? [
-                                          BoxShadow(
-                                            color: (optVal > 0 ? const Color(0xFF059669) : const Color(0xFF334155)).withValues(alpha: 0.25),
-                                            blurRadius: 8,
-                                            offset: const Offset(0, 2),
-                                          ),
-                                        ]
-                                      : null,
+                                ],
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(color: const Color(0xFFFDE68A)),
                                 ),
                                 child: Text(
-                                  opt['label'] as String,
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: isSel ? FontWeight.w800 : FontWeight.w600,
-                                    color: isSel ? Colors.white : const Color(0xFF475569),
-                                  ),
+                                  '${slotMinDiscount.toInt()}% – ${slotMaxDiscount.toInt()}% OFF',
+                                  style: const TextStyle(fontWeight: FontWeight.w900, color: Color(0xFFD97706), fontSize: 12),
                                 ),
                               ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          const Text(
+                            'Diners roll a random discount between these limits when booking this slot.',
+                            style: TextStyle(fontSize: 11, color: Color(0xFFB45309)),
+                          ),
+                          const SizedBox(height: 12),
+
+                          // Minimum Discount Slider
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text('Min Discount', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF78350F))),
+                              Text('${slotMinDiscount.toInt()}% OFF', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF0F172A))),
+                            ],
+                          ),
+                          SliderTheme(
+                            data: SliderTheme.of(ctx).copyWith(
+                              activeTrackColor: const Color(0xFFD97706),
+                              thumbColor: const Color(0xFFD97706),
+                              inactiveTrackColor: const Color(0xFFFDE68A),
+                              trackHeight: 3,
                             ),
-                          );
-                        }).toList(),
-                      ),
-                    ),
+                            child: Slider(
+                              value: slotMinDiscount,
+                              min: 0,
+                              max: 50,
+                              divisions: 10,
+                              label: '${slotMinDiscount.toInt()}%',
+                              onChanged: (val) {
+                                setModalState(() {
+                                  slotMinDiscount = val;
+                                  if (slotMaxDiscount < slotMinDiscount) {
+                                    slotMaxDiscount = slotMinDiscount;
+                                  }
+                                });
+                              },
+                            ),
+                          ),
 
-                    const SizedBox(height: 10),
-
-                    Slider(
-                      value: discount,
-                      min: 0,
-                      max: 50,
-                      divisions: 10,
-                      activeColor: const Color(0xFF059669),
-                      inactiveColor: const Color(0xFFE2E8F0),
-                      label: '${discount.toInt()}% OFF',
-                      onChanged: (val) => setModalState(() => discount = val),
-                    ),
-
-                    // Min - Max Boundary Indicators
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 6),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('0% (Min)', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFF94A3B8))),
-                          Text('50% (Max Limit)', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Color(0xFF94A3B8))),
+                          // Maximum Discount Slider
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text('Max Discount', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF78350F))),
+                              Text('${slotMaxDiscount.toInt()}% OFF', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF0F172A))),
+                            ],
+                          ),
+                          SliderTheme(
+                            data: SliderTheme.of(ctx).copyWith(
+                              activeTrackColor: const Color(0xFF059669),
+                              thumbColor: const Color(0xFF059669),
+                              inactiveTrackColor: const Color(0xFFE2E8F0),
+                              trackHeight: 3,
+                            ),
+                            child: Slider(
+                              value: slotMaxDiscount,
+                              min: 10,
+                              max: 70,
+                              divisions: 12,
+                              label: '${slotMaxDiscount.toInt()}%',
+                              onChanged: (val) {
+                                setModalState(() {
+                                  slotMaxDiscount = val;
+                                  if (slotMinDiscount > slotMaxDiscount) {
+                                    slotMinDiscount = slotMaxDiscount;
+                                  }
+                                });
+                              },
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -374,7 +427,9 @@ class _TableSlotsScreenState extends State<TableSlotsScreen> {
                             restaurantId: auth.currentRestaurantId,
                             startDatetime: startDt,
                             endDatetime: endDt,
-                            discountPercentage: discount,
+                            discountPercentage: slotMinDiscount,
+                            minDiscount: slotMinDiscount,
+                            maxDiscount: slotMaxDiscount,
                             capacity: capacity,
                           );
 
@@ -383,7 +438,7 @@ class _TableSlotsScreenState extends State<TableSlotsScreen> {
                               SnackBar(
                                 content: Text(
                                   success
-                                      ? 'Table slot successfully published!'
+                                      ? 'Table slot published (${slotMinDiscount.toInt()}%–${slotMaxDiscount.toInt()}% OFF)!'
                                       : 'Failed to publish slot: ${slotsProvider.errorMessage}',
                                   style: const TextStyle(fontWeight: FontWeight.w700),
                                 ),
@@ -407,8 +462,268 @@ class _TableSlotsScreenState extends State<TableSlotsScreen> {
     );
   }
 
+  void _showEditSlotSheet(BuildContext context, DailySlotModel slot) {
+    HapticFeedback.mediumImpact();
+    final slotsProvider = Provider.of<SlotsProvider>(context, listen: false);
+
+    int editCapacity = slot.capacity;
+    double editMinDiscount = (slot.minDiscount ?? slot.discountPercentage).clamp(0.0, 50.0);
+    double editMaxDiscount = (slot.maxDiscount ?? slot.discountPercentage).clamp(10.0, 70.0);
+    if (editMaxDiscount < editMinDiscount) editMaxDiscount = editMinDiscount;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setModalState) {
+            return Padding(
+              padding: EdgeInsets.fromLTRB(20, 20, 20, MediaQuery.of(ctx).viewInsets.bottom + 20),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(color: const Color(0xFFCBD5E1), borderRadius: BorderRadius.circular(2)),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Configure Table Slot',
+                              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              '${slot.shift} • ${slot.timeFormatted}',
+                              style: const TextStyle(fontSize: 12, color: Color(0xFF64748B), fontWeight: FontWeight.w600),
+                            ),
+                          ],
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close_rounded, size: 20, color: Color(0xFF94A3B8)),
+                          onPressed: () => Navigator.of(ctx).pop(),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Table Capacity
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('TABLE CAPACITY',
+                                style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFF64748B), letterSpacing: 0.5)),
+                            SizedBox(height: 2),
+                            Text('Max covers allowed in this slot', style: TextStyle(fontSize: 11, color: Color(0xFF94A3B8))),
+                          ],
+                        ),
+                        Row(
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.remove_circle_outline_rounded, color: Color(0xFF94A3B8), size: 24),
+                              onPressed: editCapacity > 5 ? () => setModalState(() => editCapacity -= 5) : null,
+                            ),
+                            Text('$editCapacity', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900, color: Color(0xFF0F172A))),
+                            IconButton(
+                              icon: const Icon(Icons.add_circle_outline_rounded, color: Color(0xFF059669), size: 24),
+                              onPressed: editCapacity < 150 ? () => setModalState(() => editCapacity += 5) : null,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 18),
+
+                    // Slot Min-Max Discount Configuration
+                    Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFFBEB),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: const Color(0xFFFDE68A)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Row(
+                                children: [
+                                  Icon(Icons.casino_rounded, size: 16, color: Color(0xFFD97706)),
+                                  SizedBox(width: 6),
+                                  Text(
+                                    'SLOT MIN / MAX DISCOUNT',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w800,
+                                      color: Color(0xFF92400E),
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(color: const Color(0xFFFDE68A)),
+                                ),
+                                child: Text(
+                                  '${editMinDiscount.toInt()}% – ${editMaxDiscount.toInt()}% OFF',
+                                  style: const TextStyle(fontWeight: FontWeight.w900, color: Color(0xFFD97706), fontSize: 12),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          const Text(
+                            'Diners booking this specific slot roll between these min and max discount rates.',
+                            style: TextStyle(fontSize: 11, color: Color(0xFFB45309)),
+                          ),
+                          const SizedBox(height: 12),
+
+                          // Min Discount Slider
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text('Min Discount', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF78350F))),
+                              Text('${editMinDiscount.toInt()}% OFF', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF0F172A))),
+                            ],
+                          ),
+                          SliderTheme(
+                            data: SliderTheme.of(ctx).copyWith(
+                              activeTrackColor: const Color(0xFFD97706),
+                              thumbColor: const Color(0xFFD97706),
+                              inactiveTrackColor: const Color(0xFFFDE68A),
+                              trackHeight: 3,
+                            ),
+                            child: Slider(
+                              value: editMinDiscount,
+                              min: 0,
+                              max: 50,
+                              divisions: 10,
+                              label: '${editMinDiscount.toInt()}%',
+                              onChanged: (val) {
+                                setModalState(() {
+                                  editMinDiscount = val;
+                                  if (editMaxDiscount < editMinDiscount) {
+                                    editMaxDiscount = editMinDiscount;
+                                  }
+                                });
+                              },
+                            ),
+                          ),
+
+                          // Max Discount Slider
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text('Max Discount', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF78350F))),
+                              Text('${editMaxDiscount.toInt()}% OFF', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800, color: Color(0xFF0F172A))),
+                            ],
+                          ),
+                          SliderTheme(
+                            data: SliderTheme.of(ctx).copyWith(
+                              activeTrackColor: const Color(0xFF059669),
+                              thumbColor: const Color(0xFF059669),
+                              inactiveTrackColor: const Color(0xFFE2E8F0),
+                              trackHeight: 3,
+                            ),
+                            child: Slider(
+                              value: editMaxDiscount,
+                              min: 10,
+                              max: 70,
+                              divisions: 12,
+                              label: '${editMaxDiscount.toInt()}%',
+                              onChanged: (val) {
+                                setModalState(() {
+                                  editMaxDiscount = val;
+                                  if (editMinDiscount > editMaxDiscount) {
+                                    editMinDiscount = editMaxDiscount;
+                                  }
+                                });
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 22),
+
+                    // Update Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF0F172A),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          elevation: 0,
+                        ),
+                        onPressed: () async {
+                          Navigator.of(ctx).pop();
+                          final success = await slotsProvider.updateSlot(
+                            slot.slotId,
+                            capacity: editCapacity,
+                            minDiscount: editMinDiscount,
+                            maxDiscount: editMaxDiscount,
+                            discountPercentage: editMinDiscount,
+                          );
+
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  success
+                                      ? 'Slot updated: ${editMinDiscount.toInt()}%–${editMaxDiscount.toInt()}% OFF, $editCapacity covers'
+                                      : 'Failed to update slot',
+                                  style: const TextStyle(fontWeight: FontWeight.w700),
+                                ),
+                                backgroundColor: success ? const Color(0xFF059669) : const Color(0xFFDC2626),
+                                behavior: SnackBarBehavior.floating,
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              ),
+                            );
+                          }
+                        },
+                        child: const Text('Save Slot Changes', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final auth = Provider.of<AuthProvider>(context);
     final slotsProvider = Provider.of<SlotsProvider>(context);
     final filtered = slotsProvider.filteredSlots;
     final totalCapacity = filtered.fold<int>(0, (sum, s) => sum + s.capacity);
@@ -571,6 +886,11 @@ class _TableSlotsScreenState extends State<TableSlotsScreen> {
             ),
 
             const SizedBox(height: 16),
+
+            // Dynamic Min-Max Slot Discount Range Card
+            _buildDynamicDiscountCard(auth),
+
+            const SizedBox(height: 14),
 
             // Shift Filter Pills
             Row(
@@ -740,28 +1060,67 @@ class _TableSlotsScreenState extends State<TableSlotsScreen> {
                 ),
               ),
               const Spacer(),
-              if (slot.discountPercentage > 0)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              InkWell(
+                onTap: () => _showEditSlotSheet(context, slot),
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
                   decoration: BoxDecoration(
                     color: const Color(0xFFFFFBEB),
-                    borderRadius: BorderRadius.circular(6),
+                    borderRadius: BorderRadius.circular(8),
                     border: Border.all(color: const Color(0xFFFDE68A)),
                   ),
-                  child: Text(
-                    '${slot.discountPercentage.toInt()}% OFF',
-                    style: const TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w900,
-                      color: Color(0xFFD97706),
-                    ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.casino_rounded, size: 12, color: Color(0xFFD97706)),
+                      const SizedBox(width: 4),
+                      Text(
+                        slot.discountLabel,
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFFD97706),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      const Icon(Icons.tune_rounded, size: 12, color: Color(0xFFD97706)),
+                    ],
                   ),
                 ),
+              ),
+              const SizedBox(width: 4),
               IconButton(
                 icon: const Icon(Icons.delete_outline_rounded, size: 18, color: Color(0xFF94A3B8)),
+                tooltip: 'Delete Slot',
                 onPressed: () async {
                   HapticFeedback.lightImpact();
-                  await provider.deleteSlot(slot.slotId);
+                  final confirm = await showDialog<bool>(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      title: const Text('Delete Slot?', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+                      content: Text('Are you sure you want to remove the ${slot.timeFormatted} slot?'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx, false),
+                          child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w700)),
+                        ),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFDC2626),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                          onPressed: () => Navigator.pop(ctx, true),
+                          child: const Text('Delete', style: TextStyle(fontWeight: FontWeight.w700)),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (confirm == true) {
+                    await provider.deleteSlot(slot.slotId);
+                  }
                 },
               ),
             ],
@@ -797,11 +1156,300 @@ class _TableSlotsScreenState extends State<TableSlotsScreen> {
                     constraints: const BoxConstraints(),
                     onPressed: () => provider.updateSlot(slot.slotId, capacity: slot.capacity + 5),
                   ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    icon: const Icon(Icons.tune_rounded, size: 18, color: Color(0xFF2563EB)),
+                    tooltip: 'Configure Min/Max & Capacity',
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    onPressed: () => _showEditSlotSheet(context, slot),
+                  ),
                 ],
               ),
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildDynamicDiscountCard(AuthProvider auth) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: _dynamicEnabled ? const Color(0xFFFDE68A) : const Color(0xFFE2E8F0),
+          width: _dynamicEnabled ? 1.5 : 1.0,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: _dynamicEnabled
+                ? const Color(0xFFF59E0B).withValues(alpha: 0.08)
+                : const Color(0xFF0F172A).withValues(alpha: 0.04),
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header Row: Toggle & Badge
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 14, 10),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: _dynamicEnabled ? const Color(0xFFFEF3C7) : const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    Icons.casino_rounded,
+                    color: _dynamicEnabled ? const Color(0xFFD97706) : const Color(0xFF94A3B8),
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Text(
+                            'Dynamic Min-Max Discount',
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w800,
+                              color: Color(0xFF0F172A),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: _dynamicEnabled ? const Color(0xFFECFDF5) : const Color(0xFFF1F5F9),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              _dynamicEnabled ? '${_minDiscount.round()}%–${_maxDiscount.round()}% OFF' : 'DISABLED',
+                              style: TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.w800,
+                                color: _dynamicEnabled ? const Color(0xFF059669) : const Color(0xFF94A3B8),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      const Text(
+                        'Auto-roll variable discount on customer slot bookings',
+                        style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                      ),
+                    ],
+                  ),
+                ),
+                Switch.adaptive(
+                  value: _dynamicEnabled,
+                  activeTrackColor: const Color(0xFFFDE68A),
+                  activeThumbColor: const Color(0xFFD97706),
+                  onChanged: (val) {
+                    HapticFeedback.selectionClick();
+                    setState(() => _dynamicEnabled = val);
+                  },
+                ),
+              ],
+            ),
+          ),
+
+          if (_dynamicEnabled) ...[
+            const Divider(height: 1, color: Color(0xFFF1F5F9)),
+
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Preset Strategy Chips
+                  const Text(
+                    'STRATEGY PRESETS',
+                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFF64748B), letterSpacing: 0.5),
+                  ),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _buildPresetChip('Conservative (10% - 20%)', 10, 20),
+                      _buildPresetChip('Balanced (15% - 30%)', 15, 30),
+                      _buildPresetChip('Aggressive (20% - 40%)', 20, 40),
+                    ],
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Sliders: Min & Max
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'MINIMUM DISCOUNT (FLOOR)',
+                        style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFF64748B), letterSpacing: 0.5),
+                      ),
+                      Text(
+                        '${_minDiscount.round()}% OFF',
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: Color(0xFFD97706)),
+                      ),
+                    ],
+                  ),
+                  Slider(
+                    value: _minDiscount,
+                    min: 5,
+                    max: 30,
+                    divisions: 5,
+                    activeColor: const Color(0xFFD97706),
+                    inactiveColor: const Color(0xFFE2E8F0),
+                    onChanged: (val) {
+                      setState(() {
+                        _minDiscount = val;
+                        if (_maxDiscount < _minDiscount) _maxDiscount = _minDiscount;
+                        _rollSampleDiscount();
+                      });
+                    },
+                  ),
+
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'MAXIMUM DISCOUNT (CEILING)',
+                        style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFF64748B), letterSpacing: 0.5),
+                      ),
+                      Text(
+                        '${_maxDiscount.round()}% OFF',
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: Color(0xFFD97706)),
+                      ),
+                    ],
+                  ),
+                  Slider(
+                    value: _maxDiscount,
+                    min: 15,
+                    max: 60,
+                    divisions: 9,
+                    activeColor: const Color(0xFFD97706),
+                    inactiveColor: const Color(0xFFE2E8F0),
+                    onChanged: (val) {
+                      setState(() {
+                        _maxDiscount = val;
+                        if (_minDiscount > _maxDiscount) _minDiscount = _maxDiscount;
+                        _rollSampleDiscount();
+                      });
+                    },
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // Simulation Banner
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFFBEB),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFFDE68A)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Text('🎲', style: TextStyle(fontSize: 22)),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '🎉 Unlocked $_sampleRolledDiscount% OFF (Sample Roll)',
+                                style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13, color: Color(0xFF92400E)),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Customer rolls between ${_minDiscount.round()}% and ${_maxDiscount.round()}% on table booking.',
+                                style: const TextStyle(fontSize: 11, color: Color(0xFFB45309)),
+                              ),
+                            ],
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            HapticFeedback.selectionClick();
+                            setState(() => _rollSampleDiscount());
+                          },
+                          child: const Text('Re-roll 🎲', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 11, color: Color(0xFFB45309))),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 14),
+
+                  // Save Button
+                  SizedBox(
+                    width: double.infinity,
+                    height: 44,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF0F172A),
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      onPressed: _isSavingDynamic ? null : _saveDynamicDiscount,
+                      icon: _isSavingDynamic
+                          ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                          : const Icon(Icons.cloud_upload_rounded, size: 16),
+                      label: Text(
+                        _isSavingDynamic ? 'Saving...' : 'Apply Min-Max to Slot Bookings',
+                        style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPresetChip(String label, int min, int max) {
+    final isSelected = _minDiscount.round() == min && _maxDiscount.round() == max;
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.selectionClick();
+        setState(() {
+          _minDiscount = min.toDouble();
+          _maxDiscount = max.toDouble();
+          _rollSampleDiscount();
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: isSelected ? const Color(0xFF0F172A) : const Color(0xFFE2E8F0)),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+            color: isSelected ? Colors.white : const Color(0xFF475569),
+          ),
+        ),
       ),
     );
   }

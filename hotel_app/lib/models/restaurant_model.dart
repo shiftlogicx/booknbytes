@@ -100,20 +100,31 @@ class RestaurantAttributes {
   final bool hasBar;
   final bool isAc;
   final bool parkingAvailable;
+  final bool dynamicDiscountEnabled;
+  final int minDiscount;
+  final int maxDiscount;
 
   const RestaurantAttributes({
     required this.isVegOnly,
     required this.hasBar,
     required this.isAc,
     required this.parkingAvailable,
+    this.dynamicDiscountEnabled = false,
+    this.minDiscount = 10,
+    this.maxDiscount = 30,
   });
 
   factory RestaurantAttributes.fromMap(Map<String, dynamic> map) {
+    final dynamicMap = map['dynamic_discount'] is Map ? map['dynamic_discount'] as Map : null;
     return RestaurantAttributes(
-      isVegOnly: map['is_veg_only'] ?? false,
-      hasBar: map['has_bar'] ?? false,
-      isAc: map['is_ac'] ?? false,
-      parkingAvailable: map['parking_available'] ?? false,
+      isVegOnly: map['is_veg_only'] ?? map['pure_veg'] ?? false,
+      hasBar: map['has_bar'] ?? map['serves_alcohol'] ?? false,
+      isAc: map['is_ac'] ?? map['has_ac'] ?? false,
+      parkingAvailable: map['parking_available'] ?? map['has_parking'] ?? false,
+      dynamicDiscountEnabled: map['dynamic_discount_enabled'] == true ||
+          (dynamicMap != null && dynamicMap['enabled'] == true),
+      minDiscount: ((map['min_discount'] ?? dynamicMap?['min_discount'] ?? 10) as num).toInt(),
+      maxDiscount: ((map['max_discount'] ?? dynamicMap?['max_discount'] ?? 30) as num).toInt(),
     );
   }
 
@@ -123,6 +134,14 @@ class RestaurantAttributes {
       'has_bar': hasBar,
       'is_ac': isAc,
       'parking_available': parkingAvailable,
+      'dynamic_discount_enabled': dynamicDiscountEnabled,
+      'min_discount': minDiscount,
+      'max_discount': maxDiscount,
+      'dynamic_discount': {
+        'enabled': dynamicDiscountEnabled,
+        'min_discount': minDiscount,
+        'max_discount': maxDiscount,
+      },
     };
   }
 }

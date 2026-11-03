@@ -28,7 +28,6 @@ class GlassNavDock extends StatelessWidget {
         badgeCount: pendingCount > 0 ? pendingCount : null,
       ),
       _DockTab(icon: Icons.table_restaurant_rounded, activeIcon: Icons.table_restaurant_rounded, label: 'Slots'),
-      _DockTab(icon: Icons.local_offer_rounded, activeIcon: Icons.local_offer_rounded, label: 'Discounts'),
       _DockTab(icon: Icons.tune_rounded, activeIcon: Icons.tune_rounded, label: 'Settings'),
     ];
 
