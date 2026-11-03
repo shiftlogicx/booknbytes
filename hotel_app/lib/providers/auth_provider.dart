@@ -389,6 +389,55 @@ class AuthProvider extends ChangeNotifier {
   }
 
   // ==========================================
+  // PASSWORD RESET & RECOVERY (SUPABASE AUTH)
+  // ==========================================
+  Future<bool> sendPasswordReset(String email) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      await _supabaseService.sendPasswordResetEmail(email);
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> resetPasswordWithOtp({
+    required String email,
+    required String otp,
+    required String newPassword,
+  }) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      final authRes = await _supabaseService.verifyRecoveryOtp(email: email, token: otp);
+      if (authRes.session == null && authRes.user == null) {
+        throw Exception('Invalid or expired verification code.');
+      }
+      await _supabaseService.updateUserPassword(newPassword);
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<Map<String, dynamic>?> checkManagerRestaurant(String managerEmail) async {
+    return await _supabaseService.findRestaurantByManagerEmail(managerEmail);
+  }
+
+  // ==========================================
   // 2. SIGN UP OWNER & REGISTER RESTAURANT
   // ==========================================
   Future<bool> signupOwnerAndRegisterRestaurant({

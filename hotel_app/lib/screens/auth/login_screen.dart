@@ -393,6 +393,379 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     );
   }
 
+  void _showForgotPasswordSheet() {
+    HapticFeedback.lightImpact();
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final resetEmailController = TextEditingController(text: _loginEmailController.text.trim());
+    final otpController = TextEditingController();
+    final newPasswordController = TextEditingController();
+    bool obscureNew = true;
+    bool isOtpSent = false;
+    bool isBusy = false;
+    String? localError;
+    String? localSuccess;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (bottomSheetContext) => StatefulBuilder(
+        builder: (ctx, setModalState) {
+          final passVal = newPasswordController.text;
+          final hasLen = FormValidators.hasMinLength(passVal);
+          final hasUpper = FormValidators.hasUppercase(passVal);
+          final hasLower = FormValidators.hasLowercase(passVal);
+          final hasSpecial = FormValidators.hasSpecialChar(passVal);
+
+          return Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(ctx).viewInsets.bottom,
+            ),
+            child: Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFCBD5E1),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEFF6FF),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(Icons.lock_reset_rounded, color: Color(0xFF2563EB), size: 24),
+                        ),
+                        const SizedBox(width: 14),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                isOtpSent ? 'Enter Code & New Password' : 'Reset Account Password',
+                                style: const TextStyle(
+                                  fontSize: 17,
+                                  fontWeight: FontWeight.w800,
+                                  color: Color(0xFF0F172A),
+                                  letterSpacing: -0.2,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                isOtpSent
+                                    ? 'Supabase Auth sent a 6-digit code to your email'
+                                    : 'Inherent Supabase Auth recovery for Owners & Managers',
+                                style: const TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                              ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close_rounded, size: 20, color: Color(0xFF94A3B8)),
+                          onPressed: () => Navigator.pop(ctx),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    if (localError != null)
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 14),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFEF2F2),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: const Color(0xFFFECACA)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.error_outline_rounded, color: Color(0xFFDC2626), size: 16),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                localError!,
+                                style: const TextStyle(color: Color(0xFFB91C1C), fontSize: 11.5, fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                    if (localSuccess != null)
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 14),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF0FDF4),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: const Color(0xFFBBF7D0)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.check_circle_outline_rounded, color: Color(0xFF059669), size: 16),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                localSuccess!,
+                                style: const TextStyle(color: Color(0xFF065F46), fontSize: 11.5, fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                    if (!isOtpSent) ...[
+                      // Executive Manager helper notice
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 14),
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                        ),
+                        child: const Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(Icons.info_outline_rounded, size: 16, color: Color(0xFF2563EB)),
+                            SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Restaurant Owners can receive recovery links/codes directly via email. Executive Manager passwords can also be viewed or reset anytime by the Owner in Settings > Executive Manager Access.',
+                                style: TextStyle(fontSize: 11, color: Color(0xFF475569), height: 1.35),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      _buildFieldLabel('REGISTERED EMAIL ADDRESS OR MANAGER ID *'),
+                      TextField(
+                        controller: resetEmailController,
+                        keyboardType: TextInputType.emailAddress,
+                        style: const TextStyle(color: Color(0xFF0F172A), fontSize: 13, fontWeight: FontWeight.w600),
+                        decoration: _inputDecoration(
+                          'owner@restaurant.com or manager ID',
+                          Icons.alternate_email_rounded,
+                        ),
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      SizedBox(
+                        width: double.infinity,
+                        height: 48,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF0F172A),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            elevation: 0,
+                          ),
+                          onPressed: isBusy
+                              ? null
+                              : () async {
+                                  final email = resetEmailController.text.trim();
+                                  final emailErr = FormValidators.validateEmail(email);
+                                  if (emailErr != null) {
+                                    setModalState(() => localError = emailErr);
+                                    return;
+                                  }
+
+                                  setModalState(() {
+                                    isBusy = true;
+                                    localError = null;
+                                    localSuccess = null;
+                                  });
+
+                                  final success = await authProvider.sendPasswordReset(email);
+
+                                  if (ctx.mounted) {
+                                    setModalState(() {
+                                      isBusy = false;
+                                      if (success) {
+                                        isOtpSent = true;
+                                        localSuccess = 'Recovery code dispatched to $email.';
+                                      } else {
+                                        localError = authProvider.errorMessage ?? 'Unable to send password recovery code.';
+                                      }
+                                    });
+                                  }
+                                },
+                          child: isBusy
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                )
+                              : const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text('Send Recovery Code via Supabase', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5)),
+                                    SizedBox(width: 8),
+                                    Icon(Icons.send_rounded, size: 16),
+                                  ],
+                                ),
+                        ),
+                      ),
+                    ] else ...[
+                      _buildFieldLabel('6-DIGIT VERIFICATION CODE *'),
+                      TextField(
+                        controller: otpController,
+                        keyboardType: TextInputType.number,
+                        style: const TextStyle(
+                          color: Color(0xFF0F172A),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 4,
+                        ),
+                        decoration: _inputDecoration(
+                          '123456',
+                          Icons.pin_rounded,
+                        ),
+                      ),
+
+                      const SizedBox(height: 14),
+
+                      _buildFieldLabel('NEW SECURE PASSWORD *'),
+                      TextField(
+                        controller: newPasswordController,
+                        obscureText: obscureNew,
+                        onChanged: (_) => setModalState(() {}),
+                        style: const TextStyle(color: Color(0xFF0F172A), fontSize: 13, fontWeight: FontWeight.w600),
+                        decoration: _inputDecoration('Enter new password', Icons.lock_outline_rounded).copyWith(
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              obscureNew ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                              color: const Color(0xFF94A3B8),
+                              size: 18,
+                            ),
+                            onPressed: () => setModalState(() => obscureNew = !obscureNew),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 10),
+
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 4,
+                        children: [
+                          _buildRequirementChip('6+ chars', hasLen),
+                          _buildRequirementChip('Uppercase', hasUpper),
+                          _buildRequirementChip('Lowercase', hasLower),
+                          _buildRequirementChip('Special char', hasSpecial),
+                        ],
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      SizedBox(
+                        width: double.infinity,
+                        height: 48,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF059669),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            elevation: 0,
+                          ),
+                          onPressed: isBusy
+                              ? null
+                              : () async {
+                                  final email = resetEmailController.text.trim();
+                                  final otp = otpController.text.trim();
+                                  final newPass = newPasswordController.text;
+
+                                  if (otp.length < 6) {
+                                    setModalState(() => localError = 'Please enter the complete 6-digit recovery code.');
+                                    return;
+                                  }
+
+                                  final passErr = FormValidators.validatePassword(newPass);
+                                  if (passErr != null) {
+                                    setModalState(() => localError = passErr);
+                                    return;
+                                  }
+
+                                  setModalState(() {
+                                    isBusy = true;
+                                    localError = null;
+                                  });
+
+                                  final success = await authProvider.resetPasswordWithOtp(
+                                    email: email,
+                                    otp: otp,
+                                    newPassword: newPass,
+                                  );
+
+                                  if (ctx.mounted) {
+                                    if (success) {
+                                      Navigator.pop(ctx);
+                                      _loginEmailController.text = email;
+                                      _loginPasswordController.text = newPass;
+                                      if (mounted) {
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          const SnackBar(
+                                            content: Text('Password updated successfully! You can now sign in.'),
+                                            backgroundColor: Color(0xFF059669),
+                                            behavior: SnackBarBehavior.floating,
+                                          ),
+                                        );
+                                      }
+                                    } else {
+                                      setModalState(() {
+                                        isBusy = false;
+                                        localError = authProvider.errorMessage ?? 'Password reset failed. Invalid or expired code.';
+                                      });
+                                    }
+                                  }
+                                },
+                          child: isBusy
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                )
+                              : const Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text('Update Password & Sign In', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13.5)),
+                                    SizedBox(width: 8),
+                                    Icon(Icons.check_circle_outline_rounded, size: 16),
+                                  ],
+                                ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -788,7 +1161,28 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                 ),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 8),
+
+              // Forgot Password Trigger
+              Align(
+                alignment: Alignment.centerRight,
+                child: GestureDetector(
+                  onTap: _showForgotPasswordSheet,
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+                    child: Text(
+                      'Forgot Password?',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF2563EB),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 18),
 
               // Sign In Button
               SizedBox(

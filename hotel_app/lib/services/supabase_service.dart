@@ -140,7 +140,67 @@ class SupabaseService {
   }
 
   // ==========================================
-  // 5. RESTAURANTS: Fetch, Create, Update
+  // 5. INHERENT SUPABASE AUTH: Password Reset
+  // ==========================================
+  Future<void> sendPasswordResetEmail(String email) async {
+    try {
+      await client.auth.resetPasswordForEmail(
+        email.trim().toLowerCase(),
+      );
+    } on AuthException catch (e) {
+      throw Exception(e.message);
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
+
+  Future<AuthResponse> verifyRecoveryOtp({
+    required String email,
+    required String token,
+  }) async {
+    try {
+      final res = await client.auth.verifyOTP(
+        email: email.trim().toLowerCase(),
+        token: token.trim(),
+        type: OtpType.recovery,
+      );
+      return res;
+    } on AuthException catch (e) {
+      throw Exception(e.message);
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
+
+  Future<UserResponse> updateUserPassword(String newPassword) async {
+    try {
+      final res = await client.auth.updateUser(
+        UserAttributes(password: newPassword),
+      );
+      return res;
+    } on AuthException catch (e) {
+      throw Exception(e.message);
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
+
+  Future<Map<String, dynamic>?> findRestaurantByManagerEmail(String managerEmail) async {
+    try {
+      final res = await client
+          .from('restaurants')
+          .select('restaurant_id, name, owners_details')
+          .filter('owners_details->manager_credentials->>email', 'eq', managerEmail.trim().toLowerCase())
+          .maybeSingle();
+      if (res != null) return Map<String, dynamic>.from(res);
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // ==========================================
+  // 6. RESTAURANTS: Fetch, Create, Update
   // ==========================================
   Future<Map<String, dynamic>?> fetchRestaurantForCurrentUser() async {
     final user = currentUser;
