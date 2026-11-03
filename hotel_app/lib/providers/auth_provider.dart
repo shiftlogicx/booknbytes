@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -428,10 +429,18 @@ class AuthProvider extends ChangeNotifier {
 
       // Step 3: Create Restaurant record in Supabase
       final cleanSlug = restaurantName.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '_');
-      final restId = 'res_${cleanSlug}_${DateTime.now().millisecondsSinceEpoch.toString().substring(8)}';
+      final uniqueSuffix = DateTime.now().millisecondsSinceEpoch.toString().substring(8);
+      final restId = 'res_${cleanSlug}_$uniqueSuffix';
       final cleanEmailSlug = restaurantName.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
-      final managerEmail = 'manager.${cleanEmailSlug.isEmpty ? cleanSlug : cleanEmailSlug}@booknbytes.app';
-      final defaultManagerPassword = 'Mgr@${cleanSlug.length >= 4 ? cleanSlug.substring(0, 4) : "2026"}!';
+
+      // Generate 100% unique credentials per restaurant onboarding
+      final random = Random();
+      final randPin = (1000 + random.nextInt(9000)).toString();
+      const passChars = 'abcdefghjkmnpqrstuvwxyz23456789';
+      final randPassToken = List.generate(4, (_) => passChars[random.nextInt(passChars.length)]).join();
+
+      final managerEmail = 'manager.${cleanEmailSlug.isEmpty ? cleanSlug : cleanEmailSlug}.$randPin@booknbytes.app';
+      final defaultManagerPassword = 'Mgr@${cleanSlug.length >= 3 ? cleanSlug.substring(0, 3) : "bnb"}$randPassToken!';
 
       final managerCreds = {
         'email': managerEmail,

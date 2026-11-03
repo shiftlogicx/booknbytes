@@ -111,8 +111,10 @@ export async function onboardRestaurant(payload: OnboardRestaurantPayload): Prom
   const generatedRestId = edgeFunctionResult?.restaurant_id || 
     `res_${payload.name.toLowerCase().replace(/[^a-z0-9]/g, '_')}_${Math.floor(1000 + Math.random() * 9000)}`;
 
-  const managerEmail = `manager.${generatedRestId}@booknbytes.app`;
-  const managerPassword = 'AmitYashLogic@1999';
+  const randPin = Math.floor(1000 + Math.random() * 9000);
+  const randChars = Math.random().toString(36).substring(2, 6);
+  const managerEmail = `manager.${generatedRestId}.${randPin}@booknbytes.app`;
+  const managerPassword = `Mgr@${randChars}${randPin}!`;
 
   const fullRestaurantData = {
     restaurant_id: generatedRestId,
