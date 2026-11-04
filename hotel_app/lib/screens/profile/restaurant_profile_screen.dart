@@ -1333,6 +1333,75 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
     );
   }
 
+  Future<ImageSource?> _showSourceSelector(BuildContext context, {required String title, String? subtitle}) async {
+    return await showModalBottomSheet<ImageSource>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Center(
+              child: Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFCBD5E1),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              title,
+              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: Color(0xFF0F172A)),
+            ),
+            if (subtitle != null) ...[
+              const SizedBox(height: 3),
+              Text(subtitle, style: const TextStyle(fontSize: 11.5, color: Color(0xFF64748B))),
+            ],
+            const SizedBox(height: 18),
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEFF6FF),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.camera_alt_rounded, color: Color(0xFF2563EB), size: 22),
+              ),
+              title: const Text('Take Live Photo (Camera)', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5, color: Color(0xFF0F172A))),
+              subtitle: const Text('Capture a live picture using your camera', style: TextStyle(fontSize: 11, color: Color(0xFF64748B))),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14), side: const BorderSide(color: Color(0xFFE2E8F0))),
+              onTap: () => Navigator.pop(ctx, ImageSource.camera),
+            ),
+            const SizedBox(height: 10),
+            ListTile(
+              leading: Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFECFDF5),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.photo_library_rounded, color: Color(0xFF059669), size: 22),
+              ),
+              title: const Text('Choose from Gallery / Photos', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5, color: Color(0xFF0F172A))),
+              subtitle: const Text('Pick existing photos from your album', style: TextStyle(fontSize: 11, color: Color(0xFF64748B))),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14), side: const BorderSide(color: Color(0xFFE2E8F0))),
+              onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _pickAndUploadHotelPhoto(AuthProvider auth) async {
     if (auth.profile.hotelPhotos.length >= 3) {
       if (!mounted) return;
@@ -1345,9 +1414,16 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
       return;
     }
 
+    final source = await _showSourceSelector(
+      context,
+      title: 'Upload Hotel Ambience Photo',
+      subtitle: 'Strict maximum: 3 photos (${auth.profile.hotelPhotos.length}/3 uploaded)',
+    );
+    if (source == null) return;
+
     try {
       final XFile? file = await _picker.pickImage(
-        source: ImageSource.gallery,
+        source: source,
         imageQuality: 85,
         maxWidth: 1920,
       );
@@ -1394,11 +1470,28 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
   }
 
   Future<void> _pickAndUploadMenuImages(AuthProvider auth) async {
+    final source = await _showSourceSelector(
+      context,
+      title: 'Upload Menu Card Pages',
+      subtitle: 'Upload unlimited pages of food and beverage menu',
+    );
+    if (source == null) return;
+
     try {
-      final List<XFile> files = await _picker.pickMultiImage(
-        imageQuality: 85,
-        maxWidth: 1920,
-      );
+      List<XFile> files = [];
+      if (source == ImageSource.camera) {
+        final XFile? file = await _picker.pickImage(
+          source: ImageSource.camera,
+          imageQuality: 85,
+          maxWidth: 1920,
+        );
+        if (file != null) files.add(file);
+      } else {
+        files = await _picker.pickMultiImage(
+          imageQuality: 85,
+          maxWidth: 1920,
+        );
+      }
       if (files.isEmpty) return;
 
       setState(() {
