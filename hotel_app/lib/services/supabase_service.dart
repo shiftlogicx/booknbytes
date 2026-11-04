@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../config/supabase_config.dart';
@@ -217,7 +218,18 @@ class SupabaseService {
       throw Exception('No registered account found for "$cleanEmail". Please verify the email or register a new restaurant.');
     }
 
-    // 3. Generate recovery link and OTP
+    // 3. Dispatch recovery email to legitimate inbox & generate recovery OTP
+    try {
+      await http.post(
+        Uri.parse('${SupabaseConfig.url}/auth/v1/recover'),
+        headers: {
+          'apikey': SupabaseConfig.anonKey,
+          'Content-Type': 'application/json',
+        },
+        body: jsonEncode({'email': cleanEmail}),
+      );
+    } catch (_) {}
+
     final genRes = await http.post(
       Uri.parse('${SupabaseConfig.url}/auth/v1/admin/generate_link'),
       headers: adminHeaders,
@@ -526,5 +538,90 @@ class SupabaseService {
     await client.from('restaurants').update({
       'active_offers': offers,
     }).eq('restaurant_id', restaurantId);
+  }
+
+  // ==========================================
+  // 9. RESTAURANT MEDIA (HOTEL PHOTOS & MENU CARDS)
+  // ==========================================
+  Future<String> uploadMediaFile({
+    required String restaurantId,
+    required String category, // 'ambience' | 'menu'
+    required Uint8List bytes,
+    required String filename,
+    String? contentType,
+  }) async {
+    final mime = contentType ?? (filename.toLowerCase().endsWith('.png') ? 'image/png' : 'image/jpeg');
+    final ext = mime == 'image/png' ? 'png' : 'jpg';
+    final cleanName = '${category}_${DateTime.now().millisecondsSinceEpoch}.$ext';
+    final storagePath = '$restaurantId/$category/$cleanName';
+
+    final uploadUrl = Uri.parse('${SupabaseConfig.url}/storage/v1/object/restaurant-media/$storagePath');
+    final response = await http.post(
+      uploadUrl,
+      headers: {
+        'apikey': SupabaseConfig.serviceRoleKey,
+        'Authorization': 'Bearer ${SupabaseConfig.serviceRoleKey}',
+        'Content-Type': mime,
+        'x-upsert': 'true',
+      },
+      body: bytes,
+    );
+
+    if (response.statusCode >= 400) {
+      final err = jsonDecode(response.body);
+      throw Exception(err['message'] ?? 'Failed to upload media to storage.');
+    }
+
+    final publicUrl = '${SupabaseConfig.url}/storage/v1/object/public/restaurant-media/$storagePath';
+    return publicUrl;
+  }
+
+  Future<void> updateRestaurantVisuals({
+    required String restaurantId,
+    required List<String> hotelPhotos,
+    required List<String> menuImages,
+  }) async {
+    final cappedPhotos = hotelPhotos.take(3).toList();
+    final visuals = {
+      'hero_image': cappedPhotos.isNotEmpty ? cappedPhotos.first : '',
+      'ambience': cappedPhotos,
+      'menu_images': menuImages,
+    };
+
+    final adminHeaders = {
+      'apikey': SupabaseConfig.serviceRoleKey,
+      'Authorization': 'Bearer ${SupabaseConfig.serviceRoleKey}',
+      'Content-Type': 'application/json',
+    };
+
+    final res = await http.patch(
+      Uri.parse('${SupabaseConfig.url}/rest/v1/restaurants?restaurant_id=eq.$restaurantId'),
+      headers: adminHeaders,
+      body: jsonEncode({'visuals': visuals}),
+    );
+
+    if (res.statusCode >= 400) {
+      throw Exception('Failed to update restaurant visuals.');
+    }
+  }
+
+  Future<void> deleteMediaFile(String publicUrl) async {
+    try {
+      final uri = Uri.parse(publicUrl);
+      final pathSegments = uri.pathSegments;
+      final bucketIdx = pathSegments.indexOf('restaurant-media');
+      if (bucketIdx != -1 && pathSegments.length > bucketIdx + 1) {
+        final objectPath = pathSegments.sublist(bucketIdx + 1).join('/');
+        await http.delete(
+          Uri.parse('${SupabaseConfig.url}/storage/v1/object/restaurant-media/$objectPath'),
+          headers: {
+            'apikey': SupabaseConfig.serviceRoleKey,
+            'Authorization': 'Bearer ${SupabaseConfig.serviceRoleKey}',
+          },
+        );
+      }
+    } catch (_) {
+      // Non-critical background cleanup
+    }
   }
 }

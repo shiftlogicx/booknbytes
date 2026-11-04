@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -34,6 +35,8 @@ class RestaurantProfileData {
   int maxDiscount;
   List<Map<String, dynamic>> activeOffers;
   Map<String, dynamic>? managerCredentials;
+  List<String> hotelPhotos;
+  List<String> menuImages;
 
   RestaurantProfileData({
     required this.restaurantId,
@@ -61,6 +64,8 @@ class RestaurantProfileData {
     this.maxDiscount = 30,
     this.activeOffers = const [],
     this.managerCredentials,
+    this.hotelPhotos = const [],
+    this.menuImages = const [],
   });
 
   factory RestaurantProfileData.defaults() {
@@ -89,6 +94,8 @@ class RestaurantProfileData {
       minDiscount: 10,
       maxDiscount: 30,
       activeOffers: const [], // Clean slate on new restaurant
+      hotelPhotos: const [],
+      menuImages: const [],
     );
   }
 
@@ -96,6 +103,14 @@ class RestaurantProfileData {
     final owners = json['owners_details'] is Map ? json['owners_details'] as Map : {};
     final timings = json['timings'] is Map ? json['timings'] as Map : {};
     final attrs = json['attributes'] is Map ? json['attributes'] as Map : {};
+    final visuals = json['visuals'] is Map ? json['visuals'] as Map : {};
+
+    final hotelPhotosList = visuals['ambience'] is List
+        ? List<String>.from((visuals['ambience'] as List).map((e) => e.toString()))
+        : <String>[];
+    final menuImagesList = visuals['menu_images'] is List
+        ? List<String>.from((visuals['menu_images'] as List).map((e) => e.toString()))
+        : <String>[];
 
     String breakfastO = '07:30 AM';
     String breakfastC = '11:00 AM';
@@ -159,6 +174,8 @@ class RestaurantProfileData {
       managerCredentials: owners['manager_credentials'] is Map
           ? Map<String, dynamic>.from(owners['manager_credentials'])
           : null,
+      hotelPhotos: hotelPhotosList,
+      menuImages: menuImagesList,
     );
   }
 
@@ -193,6 +210,11 @@ class RestaurantProfileData {
         },
       },
       'active_offers': activeOffers,
+      'visuals': {
+        'hero_image': hotelPhotos.isNotEmpty ? hotelPhotos.first : '',
+        'ambience': hotelPhotos.take(3).toList(),
+        'menu_images': menuImages,
+      },
     };
   }
 
@@ -222,6 +244,8 @@ class RestaurantProfileData {
     int? maxDiscount,
     List<Map<String, dynamic>>? activeOffers,
     Map<String, dynamic>? managerCredentials,
+    List<String>? hotelPhotos,
+    List<String>? menuImages,
   }) {
     return RestaurantProfileData(
       restaurantId: restaurantId ?? this.restaurantId,
@@ -249,6 +273,8 @@ class RestaurantProfileData {
       maxDiscount: maxDiscount ?? this.maxDiscount,
       activeOffers: activeOffers ?? List.from(this.activeOffers),
       managerCredentials: managerCredentials ?? this.managerCredentials,
+      hotelPhotos: hotelPhotos ?? List.from(this.hotelPhotos),
+      menuImages: menuImages ?? List.from(this.menuImages),
     );
   }
 }
@@ -676,6 +702,120 @@ class AuthProvider extends ChangeNotifier {
       maxDiscount: maxDiscount,
     );
     return await updateProfile(updated);
+  }
+
+  // ==========================================
+  // MEDIA MANAGEMENT (HOTEL PHOTOS & MENUS)
+  // ==========================================
+  Future<bool> uploadHotelPhoto(Uint8List bytes, String filename) async {
+    if (_profile.hotelPhotos.length >= 3) {
+      _errorMessage = 'Maximum 3 hotel photos allowed. Delete an existing photo first.';
+      notifyListeners();
+      return false;
+    }
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      final url = await _supabaseService.uploadMediaFile(
+        restaurantId: currentRestaurantId,
+        category: 'ambience',
+        bytes: bytes,
+        filename: filename,
+      );
+      final updatedPhotos = List<String>.from(_profile.hotelPhotos)..add(url);
+      _profile = _profile.copyWith(hotelPhotos: updatedPhotos.take(3).toList());
+      await _supabaseService.updateRestaurantVisuals(
+        restaurantId: currentRestaurantId,
+        hotelPhotos: _profile.hotelPhotos,
+        menuImages: _profile.menuImages,
+      );
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> deleteHotelPhoto(String photoUrl) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      final updatedPhotos = List<String>.from(_profile.hotelPhotos)..remove(photoUrl);
+      _profile = _profile.copyWith(hotelPhotos: updatedPhotos);
+      await _supabaseService.updateRestaurantVisuals(
+        restaurantId: currentRestaurantId,
+        hotelPhotos: _profile.hotelPhotos,
+        menuImages: _profile.menuImages,
+      );
+      await _supabaseService.deleteMediaFile(photoUrl);
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> uploadMenuImage(Uint8List bytes, String filename) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      final url = await _supabaseService.uploadMediaFile(
+        restaurantId: currentRestaurantId,
+        category: 'menu',
+        bytes: bytes,
+        filename: filename,
+      );
+      final updatedMenu = List<String>.from(_profile.menuImages)..add(url);
+      _profile = _profile.copyWith(menuImages: updatedMenu);
+      await _supabaseService.updateRestaurantVisuals(
+        restaurantId: currentRestaurantId,
+        hotelPhotos: _profile.hotelPhotos,
+        menuImages: _profile.menuImages,
+      );
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> deleteMenuImage(String menuUrl) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      final updatedMenu = List<String>.from(_profile.menuImages)..remove(menuUrl);
+      _profile = _profile.copyWith(menuImages: updatedMenu);
+      await _supabaseService.updateRestaurantVisuals(
+        restaurantId: currentRestaurantId,
+        hotelPhotos: _profile.hotelPhotos,
+        menuImages: _profile.menuImages,
+      );
+      await _supabaseService.deleteMediaFile(menuUrl);
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _isLoading = false;
+      _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      notifyListeners();
+      return false;
+    }
   }
 
   // ==========================================

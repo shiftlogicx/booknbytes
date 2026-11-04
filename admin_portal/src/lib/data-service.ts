@@ -129,11 +129,13 @@ export async function onboardRestaurant(payload: OnboardRestaurantPayload): Prom
     },
     visuals: {
       hero_image: payload.hero_image || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80',
-      ambience: payload.ambience || [
-        'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80',
-        'https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?auto=format&fit=crop&w=800&q=80',
-      ],
-      menu_images: [],
+      ambience: (payload.ambience && payload.ambience.length > 0
+        ? payload.ambience
+        : [
+            'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80',
+            'https://images.unsplash.com/photo-1550966871-3ed3cdb5ed0c?auto=format&fit=crop&w=800&q=80',
+          ]).slice(0, 3),
+      menu_images: payload.menu_images || [],
     },
     attributes: {
       pure_veg: Boolean(payload.pure_veg),

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/brand_logo.dart';
 import '../auth/login_screen.dart';
@@ -14,6 +16,9 @@ class RestaurantProfileScreen extends StatefulWidget {
 
 class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
   final _formKey = GlobalKey<FormState>();
+  final ImagePicker _picker = ImagePicker();
+  bool _isUploadingMedia = false;
+  String _uploadStatusMessage = '';
 
   late TextEditingController _nameController;
   late TextEditingController _ownerNameController;
@@ -614,6 +619,11 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
                 onChanged: (val) => setState(() => _parkingAvailable = val),
               ),
 
+              const SizedBox(height: 24),
+
+              // Section 6: Hotel Photos & Menu Cards
+              _buildMediaSection(context, auth),
+
               const SizedBox(height: 32),
 
               // Save Button
@@ -930,6 +940,601 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  // ==========================================
+  // MEDIA MANAGEMENT: AMBIENCE (MAX 3) & MENU (UNLIMITED)
+  // ==========================================
+  Widget _buildMediaSection(BuildContext context, AuthProvider auth) {
+    final hotelPhotos = auth.profile.hotelPhotos;
+    final menuImages = auth.profile.menuImages;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader('HOTEL PHOTOS & MENU CARDS (SUPABASE BLOB STORAGE)'),
+        const SizedBox(height: 4),
+        const Text(
+          'Upload high-definition hotel photos and menu cards stored on Supabase bucket for diners',
+          style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+        ),
+        const SizedBox(height: 12),
+
+        if (_isUploadingMedia)
+          Container(
+            margin: const EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: const Color(0xFFEFF6FF),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0xFFBFDBFE)),
+            ),
+            child: Row(
+              children: [
+                const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(color: Color(0xFF2563EB), strokeWidth: 2),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    _uploadStatusMessage,
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF1E40AF)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+        // Card 1: Hotel Photos (Ambience - Max 3)
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x060F172A),
+                blurRadius: 10,
+                offset: Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Row(
+                    children: [
+                      Icon(Icons.photo_library_rounded, color: Color(0xFF0F172A), size: 18),
+                      SizedBox(width: 8),
+                      Text(
+                        'Hotel & Dining Photos',
+                        style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
+                      ),
+                    ],
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: hotelPhotos.length >= 3 ? const Color(0xFFFEF2F2) : const Color(0xFFECFDF5),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: hotelPhotos.length >= 3 ? const Color(0xFFFECACA) : const Color(0xFFA7F3D0),
+                      ),
+                    ),
+                    child: Text(
+                      '${hotelPhotos.length}/3 photos',
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w800,
+                        color: hotelPhotos.length >= 3 ? const Color(0xFFDC2626) : const Color(0xFF059669),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                'Showcase your dining interior, ambiance, and exterior (strict limit: 3 photos).',
+                style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+              ),
+              const SizedBox(height: 14),
+
+              SizedBox(
+                height: 100,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  children: [
+                    ...hotelPhotos.asMap().entries.map((entry) {
+                      final idx = entry.key;
+                      final url = entry.value;
+                      return Container(
+                        width: 120,
+                        margin: const EdgeInsets.only(right: 12),
+                        child: Stack(
+                          children: [
+                            GestureDetector(
+                              onTap: () => _viewFullImage(context, url, 'Hotel Photo #${idx + 1}'),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Container(
+                                  width: 120,
+                                  height: 100,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFF1F5F9),
+                                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                                  ),
+                                  child: CachedNetworkImage(
+                                    imageUrl: url,
+                                    fit: BoxFit.cover,
+                                    placeholder: (_, __) => const Center(
+                                      child: SizedBox(
+                                        width: 20,
+                                        height: 20,
+                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                      ),
+                                    ),
+                                    errorWidget: (_, __, ___) => const Icon(Icons.broken_image_rounded, color: Color(0xFF94A3B8)),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Positioned(
+                              top: 4,
+                              right: 4,
+                              child: GestureDetector(
+                                onTap: () => _confirmDeletePhoto(context, auth, url, isHotelPhoto: true),
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFDC2626).withValues(alpha: 0.9),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(Icons.delete_rounded, color: Colors.white, size: 14),
+                                ),
+                              ),
+                            ),
+                            Positioned(
+                              bottom: 4,
+                              left: 4,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withValues(alpha: 0.7),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  idx == 0 ? 'Hero' : '#${idx + 1}',
+                                  style: const TextStyle(color: Colors.white, fontSize: 9.5, fontWeight: FontWeight.w700),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+
+                    if (hotelPhotos.length < 3)
+                      GestureDetector(
+                        onTap: _isUploadingMedia ? null : () => _pickAndUploadHotelPhoto(auth),
+                        child: Container(
+                          width: 110,
+                          height: 100,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF8FAFC),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0xFFCBD5E1), style: BorderStyle.solid),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFFE2E8F0),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.add_a_photo_rounded, size: 18, color: Color(0xFF0F172A)),
+                              ),
+                              const SizedBox(height: 6),
+                              const Text(
+                                'Add Photo',
+                                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
+                              ),
+                              Text(
+                                '${3 - hotelPhotos.length} left',
+                                style: const TextStyle(fontSize: 9.5, color: Color(0xFF64748B)),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 16),
+
+        // Card 2: Menu Cards (Unlimited Pages)
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x060F172A),
+                blurRadius: 10,
+                offset: Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Row(
+                    children: [
+                      Icon(Icons.menu_book_rounded, color: Color(0xFF0F172A), size: 18),
+                      SizedBox(width: 8),
+                      Text(
+                        'Menu Card Pages',
+                        style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
+                      ),
+                    ],
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEFF6FF),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFFBFDBFE)),
+                    ),
+                    child: Text(
+                      '${menuImages.length} page(s) · Unlimited',
+                      style: const TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF2563EB),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                'Upload your food menu, beverages, chef specials, and desserts (unlimited pages).',
+                style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+              ),
+              const SizedBox(height: 14),
+
+              SizedBox(
+                height: 130,
+                child: ListView(
+                  scrollDirection: Axis.horizontal,
+                  children: [
+                    ...menuImages.asMap().entries.map((entry) {
+                      final idx = entry.key;
+                      final url = entry.value;
+                      return Container(
+                        width: 95,
+                        margin: const EdgeInsets.only(right: 12),
+                        child: Stack(
+                          children: [
+                            GestureDetector(
+                              onTap: () => _viewFullImage(context, url, 'Menu Page ${idx + 1}'),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Container(
+                                  width: 95,
+                                  height: 130,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFF1F5F9),
+                                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                                  ),
+                                  child: CachedNetworkImage(
+                                    imageUrl: url,
+                                    fit: BoxFit.cover,
+                                    placeholder: (_, __) => const Center(
+                                      child: SizedBox(
+                                        width: 18,
+                                        height: 18,
+                                        child: CircularProgressIndicator(strokeWidth: 2),
+                                      ),
+                                    ),
+                                    errorWidget: (_, __, ___) => const Icon(Icons.broken_image_rounded, color: Color(0xFF94A3B8)),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Positioned(
+                              top: 4,
+                              right: 4,
+                              child: GestureDetector(
+                                onTap: () => _confirmDeletePhoto(context, auth, url, isHotelPhoto: false),
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFDC2626).withValues(alpha: 0.9),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(Icons.delete_rounded, color: Colors.white, size: 14),
+                                ),
+                              ),
+                            ),
+                            Positioned(
+                              bottom: 4,
+                              left: 4,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withValues(alpha: 0.7),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  'Page ${idx + 1}',
+                                  style: const TextStyle(color: Colors.white, fontSize: 9.5, fontWeight: FontWeight.w700),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+
+                    GestureDetector(
+                      onTap: _isUploadingMedia ? null : () => _pickAndUploadMenuImages(auth),
+                      child: Container(
+                        width: 95,
+                        height: 130,
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFCBD5E1)),
+                        ),
+                        child: const Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.add_photo_alternate_rounded, size: 24, color: Color(0xFF0F172A)),
+                            SizedBox(height: 6),
+                            Text(
+                              'Add Pages',
+                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
+                            ),
+                            SizedBox(height: 2),
+                            Text(
+                              'Multi-pick',
+                              style: TextStyle(fontSize: 9.5, color: Color(0xFF64748B)),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _pickAndUploadHotelPhoto(AuthProvider auth) async {
+    if (auth.profile.hotelPhotos.length >= 3) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Maximum 3 hotel photos reached. Delete an existing photo first.'),
+          backgroundColor: Color(0xFFDC2626),
+        ),
+      );
+      return;
+    }
+
+    try {
+      final XFile? file = await _picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
+        maxWidth: 1920,
+      );
+      if (file == null) return;
+
+      setState(() {
+        _isUploadingMedia = true;
+        _uploadStatusMessage = 'Uploading hotel photo to storage...';
+      });
+
+      final bytes = await file.readAsBytes();
+      final success = await auth.uploadHotelPhoto(bytes, file.name);
+
+      if (!mounted) return;
+      setState(() {
+        _isUploadingMedia = false;
+        _uploadStatusMessage = '';
+      });
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Hotel photo uploaded successfully!'),
+            backgroundColor: Color(0xFF059669),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(auth.errorMessage ?? 'Upload failed.'),
+            backgroundColor: const Color(0xFFDC2626),
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isUploadingMedia = false;
+        _uploadStatusMessage = '';
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Upload error: $e'), backgroundColor: const Color(0xFFDC2626)),
+      );
+    }
+  }
+
+  Future<void> _pickAndUploadMenuImages(AuthProvider auth) async {
+    try {
+      final List<XFile> files = await _picker.pickMultiImage(
+        imageQuality: 85,
+        maxWidth: 1920,
+      );
+      if (files.isEmpty) return;
+
+      setState(() {
+        _isUploadingMedia = true;
+        _uploadStatusMessage = 'Uploading ${files.length} menu page(s)...';
+      });
+
+      int uploadedCount = 0;
+      for (final f in files) {
+        final bytes = await f.readAsBytes();
+        final ok = await auth.uploadMenuImage(bytes, f.name);
+        if (ok) uploadedCount++;
+      }
+
+      if (!mounted) return;
+      setState(() {
+        _isUploadingMedia = false;
+        _uploadStatusMessage = '';
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('$uploadedCount menu page(s) uploaded successfully!'),
+          backgroundColor: const Color(0xFF059669),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isUploadingMedia = false;
+        _uploadStatusMessage = '';
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Upload error: $e'), backgroundColor: const Color(0xFFDC2626)),
+      );
+    }
+  }
+
+  Future<void> _confirmDeletePhoto(BuildContext context, AuthProvider auth, String url, {required bool isHotelPhoto}) async {
+    final title = isHotelPhoto ? 'Delete Hotel Photo?' : 'Delete Menu Page?';
+    final desc = isHotelPhoto
+        ? 'Are you sure you want to remove this hotel photo from Supabase storage?'
+        : 'Are you sure you want to remove this menu page?';
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: Color(0xFF0F172A))),
+        content: Text(desc, style: const TextStyle(fontSize: 13, color: Color(0xFF475569))),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFDC2626),
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Delete', style: TextStyle(fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      if (isHotelPhoto) {
+        await auth.deleteHotelPhoto(url);
+      } else {
+        await auth.deleteMenuImage(url);
+      }
+    }
+  }
+
+  void _viewFullImage(BuildContext context, String imageUrl, String title) {
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.all(12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: const BoxDecoration(
+                color: Color(0xFF0F172A),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 14),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close_rounded, color: Colors.white, size: 20),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    onPressed: () => Navigator.pop(ctx),
+                  ),
+                ],
+              ),
+            ),
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
+              child: Container(
+                color: Colors.black,
+                constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.75),
+                child: InteractiveViewer(
+                  child: CachedNetworkImage(
+                    imageUrl: imageUrl,
+                    fit: BoxFit.contain,
+                    placeholder: (_, __) => const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(40),
+                        child: CircularProgressIndicator(color: Color(0xFF00E599)),
+                      ),
+                    ),
+                    errorWidget: (_, __, ___) => const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(40),
+                        child: Icon(Icons.broken_image_rounded, color: Colors.white54, size: 40),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

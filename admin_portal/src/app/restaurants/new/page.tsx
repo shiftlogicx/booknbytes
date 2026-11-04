@@ -67,6 +67,10 @@ export default function NewRestaurantPage() {
   const [promoTitle, setPromoTitle] = useState('15% Off All Table Bookings');
   const [promoDiscount, setPromoDiscount] = useState('15');
 
+  // Media (Hotel Photos Max 3, Menu Cards Unlimited)
+  const [hotelPhotos, setHotelPhotos] = useState('https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=80, https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=800&q=80');
+  const [menuImages, setMenuImages] = useState('');
+
   // Validation checks
   const isEmailValid = email.includes('@') && email.includes('.');
   const hasMinLength = password.length >= 6;
@@ -123,7 +127,9 @@ export default function NewRestaurantPage() {
         has_parking: hasParking,
         active_offers: [
           { offer_id: 'promo_default', title: promoTitle, type: 'percentage', value: parseInt(promoDiscount, 10) || 15 }
-        ]
+        ],
+        ambience: hotelPhotos.split(',').map(s => s.trim()).filter(Boolean).slice(0, 3),
+        menu_images: menuImages.split(',').map(s => s.trim()).filter(Boolean),
       });
 
       setCreatedData({
@@ -562,6 +568,54 @@ export default function NewRestaurantPage() {
                 placeholder="15"
                 className="w-full px-3 py-2 bg-slate-50 text-slate-900 text-xs rounded-lg border border-slate-200"
               />
+            </div>
+          </div>
+        </div>
+
+        {/* Section 5: Hotel Photos & Menu Cards */}
+        <div className="bg-white rounded-xl border border-slate-200/80 shadow-sm p-6 space-y-4">
+          <div className="flex items-center gap-2 border-b border-slate-100 pb-3">
+            <Utensils className="w-4 h-4 text-emerald-600" />
+            <h2 className="text-xs font-bold text-slate-900 uppercase tracking-wider">Hotel Photos & Menu Cards (Supabase Blob Storage)</h2>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600">
+                  Hotel Ambience Photos (Comma-separated URLs, Max 3)
+                </label>
+                <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">
+                  Max 3 Photos
+                </span>
+              </div>
+              <textarea
+                rows={2}
+                value={hotelPhotos}
+                onChange={(e) => setHotelPhotos(e.target.value)}
+                placeholder="https://...photo1.jpg, https://...photo2.jpg, https://...photo3.jpg"
+                className="w-full px-3 py-2 bg-slate-50 text-slate-900 text-xs rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition"
+              />
+              <p className="text-[10px] text-slate-400 mt-1">First photo will be used as the Hero Banner image. Up to 3 photos saved.</p>
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-600">
+                  Menu Card Pages (Comma-separated URLs, Unlimited Pages)
+                </label>
+                <span className="text-[10px] font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
+                  Unlimited Pages
+                </span>
+              </div>
+              <textarea
+                rows={2}
+                value={menuImages}
+                onChange={(e) => setMenuImages(e.target.value)}
+                placeholder="https://...page1.jpg, https://...page2.jpg"
+                className="w-full px-3 py-2 bg-slate-50 text-slate-900 text-xs rounded-lg border border-slate-200 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition"
+              />
+              <p className="text-[10px] text-slate-400 mt-1">Upload unlimited pages of food menus, wine cards, and chef specials.</p>
             </div>
           </div>
         </div>

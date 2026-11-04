@@ -357,7 +357,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     String? localError;
     String? localSuccess;
     String? recoveredUserId;
-    String? generatedOtp;
+    String? expectedOtp;
 
     showModalBottomSheet(
       context: context,
@@ -533,9 +533,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                       if (recoveryRes != null && recoveryRes['userId'] != null) {
                                         isOtpSent = true;
                                         recoveredUserId = recoveryRes['userId'];
-                                        generatedOtp = recoveryRes['otp'];
-                                        otpController.text = generatedOtp ?? '';
-                                        localSuccess = 'Verified recovery code dispatched for $email.';
+                                        expectedOtp = recoveryRes['otp'];
+                                        otpController.text = ''; // Keep empty so user inputs from their email
+                                        localSuccess = 'A 6-digit recovery code has been sent to your email.';
                                       } else {
                                         localError = authProvider.errorMessage ?? 'No registered account found for this email.';
                                       }
@@ -559,59 +559,39 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                         ),
                       ),
                     ] else ...[
-                      // Verification Code Notification Box with Copy
-                      if (generatedOtp != null)
-                        Container(
-                          margin: const EdgeInsets.only(bottom: 16),
-                          padding: const EdgeInsets.all(14),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF0FDF4),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: const Color(0xFFBBF7D0)),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      // Professional Email Dispatched Notification Banner (Code NEVER displayed)
+                      Container(
+                        margin: const EdgeInsets.only(bottom: 16),
+                        padding: const EdgeInsets.all(14),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF0FDF4),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFBBF7D0)),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Icon(Icons.mark_email_read_rounded, color: Color(0xFF059669), size: 22),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Row(
-                                    children: [
-                                      Icon(Icons.mark_email_read_rounded, color: Color(0xFF059669), size: 18),
-                                      SizedBox(width: 8),
-                                      Text(
-                                        'Recovery Code Dispatched',
-                                        style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: Color(0xFF065F46)),
-                                      ),
-                                    ],
+                                  const Text(
+                                    'Recovery Code Dispatched to Inbox',
+                                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: Color(0xFF065F46)),
                                   ),
-                                  IconButton(
-                                    icon: const Icon(Icons.copy_rounded, size: 16, color: Color(0xFF059669)),
-                                    tooltip: 'Copy Code',
-                                    padding: EdgeInsets.zero,
-                                    constraints: const BoxConstraints(),
-                                    onPressed: () {
-                                      Clipboard.setData(ClipboardData(text: generatedOtp!));
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(content: Text('Recovery code copied!'), duration: Duration(seconds: 1)),
-                                      );
-                                    },
+                                  const SizedBox(height: 3),
+                                  Text(
+                                    'We sent a 6-digit recovery code to ${resetEmailController.text.trim()}. Please check your email inbox (and spam folder) and enter it below along with your new password.',
+                                    style: const TextStyle(fontSize: 11.5, color: Color(0xFF047857), height: 1.35),
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 6),
-                              Text(
-                                'Code: $generatedOtp',
-                                style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 15, color: Color(0xFF0F172A), letterSpacing: 2),
-                              ),
-                              const SizedBox(height: 4),
-                              const Text(
-                                'Enter your new password below and tap "Update Password & Sign In" to complete recovery.',
-                                style: TextStyle(fontSize: 11, color: Color(0xFF047857), height: 1.3),
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
+                      ),
 
                       _buildFieldLabel('VERIFICATION CODE *'),
                       TextField(
@@ -682,7 +662,12 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                   final newPass = newPasswordController.text;
 
                                   if (otp.isEmpty) {
-                                    setModalState(() => localError = 'Please enter the verification code.');
+                                    setModalState(() => localError = 'Please enter the 6-digit verification code sent to your email.');
+                                    return;
+                                  }
+
+                                  if (expectedOtp != null && otp != expectedOtp) {
+                                    setModalState(() => localError = 'Invalid verification code. Please check the code received in your email.');
                                     return;
                                   }
 
@@ -1355,6 +1340,40 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                     },
                   );
                 }).toList(),
+              ),
+
+              // Hotel Photos & Menu Cards Storage Highlight
+              Container(
+                margin: const EdgeInsets.only(top: 16),
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF0FDF4),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: const Color(0xFFBBF7D0)),
+                ),
+                child: const Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.photo_library_rounded, color: Color(0xFF059669), size: 20),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Supabase Media Storage Ready',
+                            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12.5, color: Color(0xFF065F46)),
+                          ),
+                          SizedBox(height: 3),
+                          Text(
+                            'Upload up to 3 hotel ambience photos & unlimited menu card pages directly from the Hotel Profile anytime.',
+                            style: TextStyle(fontSize: 11, color: Color(0xFF047857), height: 1.35),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
 
               const SizedBox(height: 24),

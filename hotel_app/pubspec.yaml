@@ -29,6 +29,7 @@ dependencies:
   onesignal_flutter: ^5.7.2
   package_info_plus: ^9.0.1
   url_launcher: ^6.3.2
+  image_picker: ^1.1.2
 
 dev_dependencies:
   flutter_test:

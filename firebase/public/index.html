@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Book & Bite Partner — Official App Download</title>
+  <meta name="description" content="Download the official Book & Bite Restaurant Partner app for table reservations and live dining queue management.">
+  <meta name="theme-color" content="#0b0f19">
+  
+  <link rel="icon" type="image/png" href="assets/icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card-bg: rgba(18, 24, 38, 0.85);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --emerald: #00e599;
+      --emerald-glow: rgba(0, 229, 153, 0.25);
+      --gold: #f5b432;
+      --gold-glow: rgba(245, 180, 50, 0.2);
+      --text-main: #ffffff;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --accent-blue: #38bdf8;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg);
+      background-image: 
+        radial-gradient(circle at 50% 0%, rgba(0, 229, 153, 0.12) 0%, transparent 60%),
+        radial-gradient(circle at 100% 100%, rgba(245, 180, 50, 0.08) 0%, transparent 50%);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 48px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Top Brand Badge */
+    .brand-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      margin-bottom: 24px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--emerald);
+      letter-spacing: 0.3px;
+    }
+
+    .badge-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--emerald);
+      box-shadow: 0 0 10px var(--emerald);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(0.9); }
+    }
+
+    /* App Icon */
+    .icon-wrapper {
+      position: relative;
+      margin-bottom: 20px;
+    }
+
+    .app-icon {
+      width: 108px;
+      height: 108px;
+      border-radius: 26px;
+      box-shadow: 
+        0 16px 36px -8px rgba(0, 0, 0, 0.6),
+        0 0 0 1px rgba(255, 255, 255, 0.12),
+        0 0 40px var(--emerald-glow);
+      display: block;
+      background: #111827;
+      object-fit: cover;
+    }
+
+    .verified-icon {
+      position: absolute;
+      bottom: -6px;
+      right: -6px;
+      background: #0b0f19;
+      border-radius: 50%;
+      padding: 3px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Headers */
+    h1 {
+      font-size: 26px;
+      font-weight: 800;
+      text-align: center;
+      letter-spacing: -0.5px;
+      margin-bottom: 6px;
+      background: linear-gradient(180deg, #ffffff 0%, #cbd5e1 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: var(--text-muted);
+      text-align: center;
+      line-height: 1.5;
+      margin-bottom: 24px;
+      max-width: 360px;
+    }
+
+    /* Primary Download Card */
+    .download-card {
+      width: 100%;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 24px;
+      padding: 24px;
+      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+      margin-bottom: 28px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .btn-download {
+      width: 100%;
+      padding: 16px 20px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, #00e599 0%, #00b377 100%);
+      color: #052419;
+      font-size: 16px;
+      font-weight: 700;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      box-shadow: 0 10px 25px -5px rgba(0, 229, 153, 0.4);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      cursor: pointer;
+      border: none;
+    }
+
+    .btn-download:active {
+      transform: scale(0.98);
+      filter: brightness(0.95);
+    }
+
+    .btn-download svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    .meta-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin-top: 14px;
+      font-size: 12px;
+      color: var(--text-dim);
+      font-weight: 500;
+    }
+
+    .meta-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .meta-dot {
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--text-dim);
+    }
+
+    /* Status banner */
+    .download-status-banner {
+      width: 100%;
+      margin-top: 16px;
+      padding: 12px 14px;
+      background: rgba(0, 229, 153, 0.08);
+      border: 1px solid rgba(0, 229, 153, 0.25);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: #a7f3d0;
+      line-height: 1.4;
+    }
+
+    /* Instructions Section */
+    .instructions-container {
+      width: 100%;
+    }
+
+    .instructions-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      padding: 0 4px;
+    }
+
+    .instructions-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #f1f5f9;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .instructions-title svg {
+      color: var(--gold);
+    }
+
+    .step-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 18px;
+      padding: 18px;
+      margin-bottom: 12px;
+      display: flex;
+      gap: 16px;
+      position: relative;
+    }
+
+    .step-num {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--gold);
+      font-weight: 700;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .step-content {
+      flex: 1;
+    }
+
+    .step-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 4px;
+    }
+
+    .step-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .highlight-pill {
+      display: inline-block;
+      padding: 2px 7px;
+      background: rgba(245, 180, 50, 0.15);
+      color: #fcd34d;
+      border: 1px solid rgba(245, 180, 50, 0.3);
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 12px;
+    }
+
+    .info-callout {
+      margin-top: 8px;
+      padding: 8px 12px;
+      background: rgba(56, 189, 248, 0.08);
+      border-left: 3px solid var(--accent-blue);
+      border-radius: 6px;
+      font-size: 12px;
+      color: #bae6fd;
+      line-height: 1.4;
+    }
+
+    /* Footer */
+    footer {
+      margin-top: 32px;
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-dim);
+      line-height: 1.6;
+    }
+
+    footer a {
+      color: var(--emerald);
+      text-decoration: none;
+    }
+
+    /* Desktop QR helper */
+    .desktop-qr-card {
+      display: none;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px dashed rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
+      padding: 20px;
+      margin-top: 24px;
+      text-align: center;
+      width: 100%;
+    }
+
+    @media (min-width: 768px) {
+      .desktop-qr-card {
+        display: block;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- Top Verified Badge -->
+    <div class="brand-badge">
+      <div class="badge-dot"></div>
+      Official Partner Distribution
+    </div>
+
+    <!-- App Icon & Title -->
+    <div class="icon-wrapper">
+      <img src="assets/icon.png" alt="Book & Bite Partner" class="app-icon" onerror="this.src='https://placehold.co/192x192/0b0f19/00e599?text=B%26B'">
+      <div class="verified-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="10" fill="#00e599"/>
+          <path d="M7.5 12L10.5 15L16.5 9" stroke="#052419" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+
+    <h1>Book & Bite Partner</h1>
+    <p class="subtitle">Live Table Reservations & Restaurant Management System</p>
+
+    <!-- Main Action Card -->
+    <div class="download-card">
+      <a href="https://github.com/shiftlogicx/booknbytes/releases/latest/download/BookNBite_Hotel.apk" id="downloadBtn" class="btn-download" download="BookNBite_Hotel.apk">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        Download Partner App (APK)
+      </a>
+
+      <div class="meta-row">
+        <span class="meta-item">Version 1.0.0</span>
+        <span class="meta-dot"></span>
+        <span class="meta-item">Android 8.0+</span>
+        <span class="meta-dot"></span>
+        <span class="meta-item">~56.5 MB</span>
+      </div>
+
+      <div id="statusBanner" class="download-status-banner" style="display: none;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 14 14"></polyline>
+        </svg>
+        <span>Downloading started. Follow the 3 quick steps below to install.</span>
+      </div>
+    </div>
+
+    <!-- Quick 3-Step Reassurance Guide -->
+    <div class="instructions-container">
+      <div class="instructions-header">
+        <span class="instructions-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+          </svg>
+          Quick 3-Step Installation Guide
+        </span>
+      </div>
+
+      <!-- Step 1 -->
+      <div class="step-card">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <div class="step-title">Chrome Warning? Tap "Download anyway"</div>
+          <div class="step-desc">
+            If your browser prompts <em>"File might be harmful"</em>, simply tap <span class="highlight-pill">Download anyway</span>.
+          </div>
+          <div class="info-callout">
+            <strong>Why this appears:</strong> Android automatically shows this standard notice for all direct downloads from company websites. This package is 100% verified and secure.
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="step-card">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <div class="step-title">Open the Downloaded File</div>
+          <div class="step-desc">
+            Once downloaded, tap <span class="highlight-pill">Open</span> in your browser notification or swipe down your notification tray.
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="step-card">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <div class="step-title">Tap "Install" & Launch</div>
+          <div class="step-desc">
+            Tap <span class="highlight-pill">Install</span>. If asked to <em>"Allow from this source"</em>, toggle it on once to complete setup.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Desktop helper QR view -->
+    <div class="desktop-qr-card">
+      <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">
+        Viewing on a computer? Scan this with your phone:
+      </p>
+      <img src="assets/qr-code.png" alt="Scan to Download" style="width: 140px; height: 140px; border-radius: 12px; background: white; padding: 6px;" onerror="this.style.display='none'">
+    </div>
+
+    <footer>
+      Book & Bite Technologies © 2026<br>
+      Official Partner Portal • <a href="mailto:support@booknbytes.com">Partner Helpdesk</a>
+    </footer>
+  </div>
+
+  <script>
+    // Handle auto-download if requested or on direct scan
+    const urlParams = new URLSearchParams(window.location.search);
+    const downloadBtn = document.getElementById('downloadBtn');
+    const statusBanner = document.getElementById('statusBanner');
+
+    function notifyDownload() {
+      statusBanner.style.display = 'flex';
+      // Smooth scroll slightly down to make the instructions clearly visible
+      setTimeout(() => {
+        statusBanner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }, 300);
+    }
+
+    downloadBtn.addEventListener('click', () => {
+      notifyDownload();
+    });
+
+    // If URL has ?download=true or auto query parameter
+    if (urlParams.get('download') === 'true' || urlParams.get('auto') === '1') {
+      setTimeout(() => {
+        downloadBtn.click();
+      }, 800);
+    }
+  </script>
+</body>
+</html>

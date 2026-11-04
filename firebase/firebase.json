@@ -22,5 +22,25 @@
   ],
   "storage": {
     "rules": "storage.rules"
+  },
+  "hosting": {
+    "public": "public",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "redirects": [
+      {
+        "source": "/downloads/BookNBite_Hotel.apk",
+        "destination": "https://github.com/shiftlogicx/booknbytes/releases/latest/download/BookNBite_Hotel.apk",
+        "type": 302
+      },
+      {
+        "source": "/download",
+        "destination": "https://github.com/shiftlogicx/booknbytes/releases/latest/download/BookNBite_Hotel.apk",
+        "type": 302
+      }
+    ]
   }
 }
