@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../config/supabase_config.dart';
 import '../services/supabase_service.dart';
 import '../services/onesignal_service.dart';
+import '../services/app_logger.dart';
 
 enum UserRole { owner, manager }
 
@@ -378,6 +379,8 @@ class AuthProvider extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
 
+    AppLogger.info('AUTH', 'Login attempt', details: {'email': email.trim(), 'role': intendedRole.name});
+
     try {
       final res = await _supabaseService.signInWithEmail(
         email: email.trim(),
@@ -403,10 +406,18 @@ class AuthProvider extends ChangeNotifier {
       await refreshRestaurantData();
       await checkTutorialStatus();
 
+      AppLogger.setActiveContext(restaurantId: currentRestaurantId, userId: _currentUser?.id);
+      AppLogger.info('AUTH', 'Login successful', details: {
+        'email': email.trim(),
+        'role': _role.name,
+        'restaurant_id': currentRestaurantId,
+      });
+
       _isLoading = false;
       notifyListeners();
       return true;
-    } catch (e) {
+    } catch (e, st) {
+      AppLogger.error('AUTH', 'Login failed', error: e, stackTrace: st, details: {'email': email.trim()});
       _isLoading = false;
       _errorMessage = e.toString().replaceFirst('Exception: ', '');
       notifyListeners();
@@ -421,12 +432,15 @@ class AuthProvider extends ChangeNotifier {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
+    AppLogger.info('AUTH', 'Password recovery requested', details: {'email': email.trim()});
     try {
       final res = await _supabaseService.generatePasswordRecoveryCode(email);
+      AppLogger.info('AUTH', 'Recovery code generated & dispatched', details: {'email': email.trim()});
       _isLoading = false;
       notifyListeners();
       return res;
-    } catch (e) {
+    } catch (e, st) {
+      AppLogger.error('AUTH', 'Password recovery failed', error: e, stackTrace: st, details: {'email': email.trim()});
       _isLoading = false;
       _errorMessage = e.toString().replaceFirst('Exception: ', '');
       notifyListeners();
@@ -442,16 +456,19 @@ class AuthProvider extends ChangeNotifier {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
+    AppLogger.info('AUTH', 'Password reset execution started', details: {'email': email, 'userId': userId});
     try {
       await _supabaseService.adminUpdatePassword(
         userId: userId,
         newPassword: newPassword,
         email: email,
       );
+      AppLogger.info('AUTH', 'Password reset completed successfully', details: {'email': email, 'userId': userId});
       _isLoading = false;
       notifyListeners();
       return true;
-    } catch (e) {
+    } catch (e, st) {
+      AppLogger.error('AUTH', 'Password reset failed', error: e, stackTrace: st, details: {'email': email});
       _isLoading = false;
       _errorMessage = e.toString().replaceFirst('Exception: ', '');
       notifyListeners();
@@ -710,12 +727,14 @@ class AuthProvider extends ChangeNotifier {
   Future<bool> uploadHotelPhoto(Uint8List bytes, String filename) async {
     if (_profile.hotelPhotos.length >= 3) {
       _errorMessage = 'Maximum 3 hotel photos allowed. Delete an existing photo first.';
+      AppLogger.warn('STORAGE', 'Hotel photo limit reached (max 3)', details: {'restaurant_id': currentRestaurantId});
       notifyListeners();
       return false;
     }
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
+    AppLogger.info('STORAGE', 'Uploading hotel photo', details: {'filename': filename, 'restaurant_id': currentRestaurantId});
     try {
       final url = await _supabaseService.uploadMediaFile(
         restaurantId: currentRestaurantId,
@@ -730,10 +749,12 @@ class AuthProvider extends ChangeNotifier {
         hotelPhotos: _profile.hotelPhotos,
         menuImages: _profile.menuImages,
       );
+      AppLogger.info('STORAGE', 'Hotel photo upload success', details: {'url': url, 'count': _profile.hotelPhotos.length});
       _isLoading = false;
       notifyListeners();
       return true;
-    } catch (e) {
+    } catch (e, st) {
+      AppLogger.error('STORAGE', 'Hotel photo upload failed', error: e, stackTrace: st, details: {'filename': filename});
       _isLoading = false;
       _errorMessage = e.toString().replaceFirst('Exception: ', '');
       notifyListeners();
@@ -745,6 +766,7 @@ class AuthProvider extends ChangeNotifier {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
+    AppLogger.info('STORAGE', 'Deleting hotel photo', details: {'url': photoUrl});
     try {
       final updatedPhotos = List<String>.from(_profile.hotelPhotos)..remove(photoUrl);
       _profile = _profile.copyWith(hotelPhotos: updatedPhotos);
@@ -754,10 +776,12 @@ class AuthProvider extends ChangeNotifier {
         menuImages: _profile.menuImages,
       );
       await _supabaseService.deleteMediaFile(photoUrl);
+      AppLogger.info('STORAGE', 'Hotel photo deleted successfully', details: {'url': photoUrl});
       _isLoading = false;
       notifyListeners();
       return true;
-    } catch (e) {
+    } catch (e, st) {
+      AppLogger.error('STORAGE', 'Hotel photo delete error', error: e, stackTrace: st, details: {'url': photoUrl});
       _isLoading = false;
       _errorMessage = e.toString().replaceFirst('Exception: ', '');
       notifyListeners();
@@ -769,6 +793,7 @@ class AuthProvider extends ChangeNotifier {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
+    AppLogger.info('STORAGE', 'Uploading menu image page', details: {'filename': filename, 'restaurant_id': currentRestaurantId});
     try {
       final url = await _supabaseService.uploadMediaFile(
         restaurantId: currentRestaurantId,
@@ -783,10 +808,12 @@ class AuthProvider extends ChangeNotifier {
         hotelPhotos: _profile.hotelPhotos,
         menuImages: _profile.menuImages,
       );
+      AppLogger.info('STORAGE', 'Menu image page upload success', details: {'url': url, 'totalPages': _profile.menuImages.length});
       _isLoading = false;
       notifyListeners();
       return true;
-    } catch (e) {
+    } catch (e, st) {
+      AppLogger.error('STORAGE', 'Menu image upload failed', error: e, stackTrace: st, details: {'filename': filename});
       _isLoading = false;
       _errorMessage = e.toString().replaceFirst('Exception: ', '');
       notifyListeners();
@@ -798,6 +825,7 @@ class AuthProvider extends ChangeNotifier {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
+    AppLogger.info('STORAGE', 'Deleting menu image page', details: {'url': menuUrl});
     try {
       final updatedMenu = List<String>.from(_profile.menuImages)..remove(menuUrl);
       _profile = _profile.copyWith(menuImages: updatedMenu);
@@ -807,10 +835,12 @@ class AuthProvider extends ChangeNotifier {
         menuImages: _profile.menuImages,
       );
       await _supabaseService.deleteMediaFile(menuUrl);
+      AppLogger.info('STORAGE', 'Menu image deleted successfully', details: {'url': menuUrl});
       _isLoading = false;
       notifyListeners();
       return true;
-    } catch (e) {
+    } catch (e, st) {
+      AppLogger.error('STORAGE', 'Menu image delete error', error: e, stackTrace: st, details: {'url': menuUrl});
       _isLoading = false;
       _errorMessage = e.toString().replaceFirst('Exception: ', '');
       notifyListeners();
@@ -827,10 +857,12 @@ class AuthProvider extends ChangeNotifier {
 
     try {
       await _supabaseService.updateManagerPassword(newPassword: newPassword);
+      AppLogger.info('AUTH', 'Manager password updated successfully');
       _isLoading = false;
       notifyListeners();
       return true;
-    } catch (e) {
+    } catch (e, st) {
+      AppLogger.error('AUTH', 'Manager password update failed', error: e, stackTrace: st);
       _isLoading = false;
       _errorMessage = e.toString().replaceFirst('Exception: ', '');
       notifyListeners();
@@ -842,6 +874,7 @@ class AuthProvider extends ChangeNotifier {
   // 6. LOGOUT
   // ==========================================
   Future<void> logout() async {
+    AppLogger.info('AUTH', 'Sign out initiated', details: {'restaurant_id': currentRestaurantId});
     await OneSignalService().logout();
     await _supabaseService.signOut();
     _currentUser = null;
@@ -850,6 +883,7 @@ class AuthProvider extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('user_role');
     } catch (_) {}
+    AppLogger.info('AUTH', 'Sign out completed');
     notifyListeners();
   }
 }

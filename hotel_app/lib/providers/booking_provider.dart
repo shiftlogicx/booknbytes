@@ -6,6 +6,7 @@ import '../services/supabase_service.dart';
 import '../services/fcm_service.dart';
 import '../services/notification_service.dart';
 import '../services/onesignal_service.dart';
+import '../services/app_logger.dart';
 
 class BookingProvider extends ChangeNotifier {
   final SupabaseService _supabaseService = SupabaseService();
@@ -101,6 +102,7 @@ class BookingProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      AppLogger.info('BOOKINGS', 'Fetching bookings for restaurant', details: {'restaurant_id': restaurantId});
       final fetched = await _supabaseService.fetchBookings(restaurantId);
       _bookings = fetched;
       // Accumulate known IDs so historical bookings are never re-alerted
@@ -108,9 +110,16 @@ class BookingProvider extends ChangeNotifier {
       _knownBookingIds.addAll(fetched.map((b) => b.bookingId.trim().toLowerCase()));
       _initialLoadCompleted = true;
       _isLoading = false;
+      AppLogger.analytics('BOOKINGS_LOADED', details: {
+        'restaurant_id': restaurantId,
+        'count': fetched.length,
+        'pending': pendingCount,
+        'confirmed': confirmedCount,
+      });
       notifyListeners();
-    } catch (e) {
+    } catch (e, stack) {
       debugPrint('Error loading bookings from Supabase: $e');
+      AppLogger.error('BOOKINGS', 'Failed to load bookings', error: e, stackTrace: stack, details: {'restaurant_id': restaurantId});
       _isLoading = false;
       _errorMessage = e.toString();
       notifyListeners();
@@ -214,6 +223,14 @@ class BookingProvider extends ChangeNotifier {
     _recentlyDispatchedAlerts[key] = now;
 
     debugPrint('[BookingProvider] Dispatching alert via $source for booking #${booking.bookingId} (${booking.customerName})');
+    AppLogger.info('ALERTS', 'Dispatching booking alert', details: {
+      'booking_id': booking.bookingId,
+      'source': source,
+      'customer': booking.customerName,
+      'party_size': booking.partySize,
+      'slot': '${booking.date} ${booking.timeSlot}',
+      'status': booking.status.value,
+    });
     onNewBookingAlert?.call(booking);
     NotificationService().showBookingNotification(booking);
   }
@@ -225,6 +242,12 @@ class BookingProvider extends ChangeNotifier {
         final booking = BookingModel.fromMap(record);
 
         debugPrint('[BookingProvider] Realtime INSERT event: ID=${booking.bookingId}, Rest=${booking.restaurantId}, Status=${booking.status.value}, currentRest=$_currentRestaurantId');
+        AppLogger.info('REALTIME', 'Realtime booking INSERT event', details: {
+          'booking_id': booking.bookingId,
+          'restaurant_id': booking.restaurantId,
+          'status': booking.status.value,
+          'customer': booking.customerName,
+        });
 
         final matchesCurrent = _currentRestaurantId.isEmpty ||
             booking.restaurantId == _currentRestaurantId ||
@@ -341,9 +364,17 @@ class BookingProvider extends ChangeNotifier {
       notifyListeners();
     }
     try {
+      AppLogger.info('BOOKINGS', 'Updating booking status', details: {
+        'booking_id': bookingId,
+        'new_status': status.value,
+      });
       await _supabaseService.updateBookingStatus(bookingId, status.value);
-    } catch (e) {
+    } catch (e, stack) {
       debugPrint('Error updating booking status: $e');
+      AppLogger.error('BOOKINGS', 'Failed to update booking status', error: e, stackTrace: stack, details: {
+        'booking_id': bookingId,
+        'status': status.value,
+      });
     }
   }
 
@@ -358,9 +389,11 @@ class BookingProvider extends ChangeNotifier {
     }
 
     try {
+      AppLogger.info('BOOKINGS', 'Marked booking seated/completed', details: {'booking_id': bookingId});
       await _supabaseService.updateBookingStatus(bookingId, 'COMPLETED');
-    } catch (e) {
+    } catch (e, stack) {
       debugPrint('Error updating booking seated status in Supabase: $e');
+      AppLogger.error('BOOKINGS', 'Failed to mark seated', error: e, stackTrace: stack, details: {'booking_id': bookingId});
     }
   }
 
@@ -372,9 +405,11 @@ class BookingProvider extends ChangeNotifier {
     }
 
     try {
+      AppLogger.info('BOOKINGS', 'Marked booking as NO_SHOW', details: {'booking_id': bookingId});
       await _supabaseService.updateBookingStatus(bookingId, 'NO_SHOW');
-    } catch (e) {
+    } catch (e, stack) {
       debugPrint('Error updating booking no-show status in Supabase: $e');
+      AppLogger.error('BOOKINGS', 'Failed to mark NO_SHOW', error: e, stackTrace: stack, details: {'booking_id': bookingId});
     }
   }
 
@@ -386,9 +421,11 @@ class BookingProvider extends ChangeNotifier {
     }
 
     try {
+      AppLogger.info('BOOKINGS', 'Accepted/confirmed incoming booking', details: {'booking_id': bookingId});
       await _supabaseService.updateBookingStatus(bookingId, 'CONFIRMED');
-    } catch (e) {
+    } catch (e, stack) {
       debugPrint('Error confirming booking in Supabase: $e');
+      AppLogger.error('BOOKINGS', 'Failed to confirm booking', error: e, stackTrace: stack, details: {'booking_id': bookingId});
     }
   }
 
