@@ -7,11 +7,13 @@ import '../providers/booking_provider.dart';
 class BookingCard extends StatelessWidget {
   final BookingModel booking;
   final VoidCallback? onAccept;
+  final VoidCallback? onDecline;
 
   const BookingCard({
     super.key,
     required this.booking,
     this.onAccept,
+    this.onDecline,
   });
 
   void _markSeated(BuildContext context) {
@@ -466,29 +468,58 @@ class BookingCard extends StatelessWidget {
                     ),
                   ],
 
-                  // Action Buttons for Pending Reservations: Accept Only (No Decline)
+                  // Action Buttons for Pending Reservations: Decline & Accept
                   if (isPending) ...[
                     const SizedBox(height: 14),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: () {
-                          HapticFeedback.heavyImpact();
-                          onAccept?.call();
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF059669),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 13),
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 2,
+                          child: OutlinedButton(
+                            onPressed: () {
+                              HapticFeedback.lightImpact();
+                              if (onDecline != null) {
+                                onDecline!();
+                              } else {
+                                Provider.of<BookingProvider>(context, listen: false)
+                                    .updateStatus(booking.bookingId, BookingStatus.rejected);
+                              }
+                            },
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: const Color(0xFFDC2626),
+                              side: const BorderSide(color: Color(0xFFFCA5A5)),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                            child: const Text(
+                              'Decline',
+                              style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+                            ),
+                          ),
                         ),
-                        icon: const Icon(Icons.check_circle_rounded, size: 18),
-                        label: const Text(
-                          'Accept Reservation',
-                          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 0.3),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          flex: 3,
+                          child: ElevatedButton.icon(
+                            onPressed: () {
+                              HapticFeedback.heavyImpact();
+                              onAccept?.call();
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF059669),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                            icon: const Icon(Icons.check_circle_rounded, size: 16),
+                            label: const Text(
+                              'Accept Table',
+                              style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 0.3),
+                            ),
+                          ),
                         ),
-                      ),
+                      ],
                     ),
                   ],
                 ],

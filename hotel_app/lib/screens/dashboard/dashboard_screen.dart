@@ -13,6 +13,7 @@ import '../bookings/booking_list_screen.dart';
 import '../profile/restaurant_profile_screen.dart';
 import '../settings/settings_screen.dart';
 import '../slots/slots_inventory_screen.dart';
+import '../alerts/incoming_booking_alert.dart';
 import '../../widgets/restaurant_walkthrough_modal.dart';
 import '../../services/app_update_service.dart';
 
@@ -25,7 +26,6 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   int _currentNavIndex = 0;
-  bool _isAcceptingReservations = true;
   String _activeFilter = 'ALL';
 
   @override
@@ -64,31 +64,24 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   void _handleIncomingBookingAlert(BookingModel booking) {
     if (!mounted) return;
-    HapticFeedback.lightImpact();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.table_restaurant_rounded, color: Color(0xFF00E599), size: 18),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                'New booking: ${booking.customerName ?? "Guest"} (${booking.partySize} Guests · ${booking.timeSlot})',
-                style: const TextStyle(fontWeight: FontWeight.w700, color: Colors.white, fontSize: 12.5),
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: const Color(0xFF0F172A),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        duration: const Duration(seconds: 4),
-        action: SnackBarAction(
-          label: 'View',
-          textColor: const Color(0xFF00E599),
-          onPressed: () => setState(() => _currentNavIndex = 1),
-        ),
+    final bookingProvider = Provider.of<BookingProvider>(context, listen: false);
+    // 1. Only alert if floor is operational
+    if (!bookingProvider.isFloorOperational) {
+      debugPrint('[DashboardScreen] Floor is paused; suppressing incoming booking alert');
+      return;
+    }
+    // 2. Only alert if booking is current or upcoming for today (no past bookings)
+    if (!booking.isCurrentOrUpcomingForToday) {
+      debugPrint('[DashboardScreen] Booking is in the past or not for today; suppressing alert');
+      return;
+    }
+
+    HapticFeedback.heavyImpact();
+    // Launch priority full-screen ringing alert
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (_) => IncomingBookingAlertScreen(booking: booking),
       ),
     );
   }
@@ -240,7 +233,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 1. Sleek Command Header Bar
-          _buildCommandHeader(locationProvider),
+          _buildCommandHeader(locationProvider, booking),
 
           const SizedBox(height: 20),
 
@@ -315,7 +308,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   // 1. Sleek Command Header Bar
-  Widget _buildCommandHeader(LocationProvider locationProvider) {
+  Widget _buildCommandHeader(LocationProvider locationProvider, BookingProvider bookingProvider) {
+    final isLive = bookingProvider.isFloorOperational;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
@@ -340,11 +335,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 width: 10,
                 height: 10,
                 decoration: BoxDecoration(
-                  color: _isAcceptingReservations
+                  color: isLive
                       ? const Color(0xFF059669)
                       : const Color(0xFF94A3B8),
                   shape: BoxShape.circle,
-                  boxShadow: _isAcceptingReservations
+                  boxShadow: isLive
                       ? [
                           BoxShadow(
                             color: const Color(0xFF059669).withValues(alpha: 0.4),
@@ -361,12 +356,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      _isAcceptingReservations ? 'FLOOR IS LIVE' : 'FLOOR PAUSED',
+                      isLive ? 'FLOOR IS LIVE' : 'FLOOR PAUSED',
                       style: TextStyle(
                         fontWeight: FontWeight.w900,
                         fontSize: 13,
                         letterSpacing: 0.6,
-                        color: _isAcceptingReservations
+                        color: isLive
                             ? const Color(0xFF047857)
                             : const Color(0xFFDC2626),
                       ),
@@ -393,8 +388,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
               InkWell(
                 onTap: () {
                   HapticFeedback.selectionClick();
-                  final val = !_isAcceptingReservations;
-                  setState(() => _isAcceptingReservations = val);
+                  final val = !isLive;
+                  bookingProvider.setFloorOperational(val);
                   ScaffoldMessenger.of(context).clearSnackBars();
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
@@ -408,7 +403,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           const SizedBox(width: 10),
                           Expanded(
                             child: Text(
-                              val ? 'Floor is Live — accepting table reservations' : 'Floor paused — table bookings temporarily paused',
+                              val ? 'Floor is Live — accepting table reservations' : 'Floor paused — reservations temporarily paused',
                               style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Colors.white),
                             ),
                           ),
@@ -428,15 +423,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   duration: const Duration(milliseconds: 200),
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                   decoration: BoxDecoration(
-                    color: _isAcceptingReservations ? const Color(0xFFECFDF5) : const Color(0xFFFEF2F2),
+                    color: isLive ? const Color(0xFFECFDF5) : const Color(0xFFFEF2F2),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: _isAcceptingReservations ? const Color(0xFF059669) : const Color(0xFFDC2626),
+                      color: isLive ? const Color(0xFF059669) : const Color(0xFFDC2626),
                       width: 1.5,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: (_isAcceptingReservations ? const Color(0xFF059669) : const Color(0xFFDC2626)).withValues(alpha: 0.15),
+                        color: (isLive ? const Color(0xFF059669) : const Color(0xFFDC2626)).withValues(alpha: 0.15),
                         blurRadius: 8,
                         offset: const Offset(0, 2),
                       ),
@@ -449,25 +444,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         width: 8,
                         height: 8,
                         decoration: BoxDecoration(
-                          color: _isAcceptingReservations ? const Color(0xFF059669) : const Color(0xFFDC2626),
+                          color: isLive ? const Color(0xFF059669) : const Color(0xFFDC2626),
                           shape: BoxShape.circle,
                         ),
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        _isAcceptingReservations ? 'LIVE' : 'PAUSED',
+                        isLive ? 'LIVE' : 'PAUSED',
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w900,
                           letterSpacing: 0.5,
-                          color: _isAcceptingReservations ? const Color(0xFF047857) : const Color(0xFFB91C1C),
+                          color: isLive ? const Color(0xFF047857) : const Color(0xFFB91C1C),
                         ),
                       ),
                       const SizedBox(width: 4),
                       Icon(
-                        _isAcceptingReservations ? Icons.check_circle_rounded : Icons.pause_circle_filled_rounded,
+                        isLive ? Icons.check_circle_rounded : Icons.pause_circle_filled_rounded,
                         size: 14,
-                        color: _isAcceptingReservations ? const Color(0xFF059669) : const Color(0xFFDC2626),
+                        color: isLive ? const Color(0xFF059669) : const Color(0xFFDC2626),
                       ),
                     ],
                   ),

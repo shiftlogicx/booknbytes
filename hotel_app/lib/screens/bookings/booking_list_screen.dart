@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import '../../models/booking_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/booking_provider.dart';
 import '../../widgets/booking_card.dart';
@@ -268,9 +267,29 @@ class _BookingListScreenState extends State<BookingListScreen> {
                           return BookingCard(
                             key: ValueKey('booking_${b.bookingId}'),
                             booking: b,
-                            onAccept: () {
-                              booking.updateStatus(b.bookingId, BookingStatus.confirmed);
-                              ReservationSuccessDialog.show(context, b);
+                            onAccept: () async {
+                              if (!booking.isFloorOperational) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Cannot accept booking: Floor is currently paused.'),
+                                    backgroundColor: Color(0xFFDC2626),
+                                  ),
+                                );
+                                return;
+                              }
+                              if (!b.isCurrentOrUpcomingForToday) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Cannot accept past bookings. Only current/upcoming reservations for today can be confirmed.'),
+                                    backgroundColor: Color(0xFFDC2626),
+                                  ),
+                                );
+                                return;
+                              }
+                              final success = await booking.acceptBooking(b.bookingId);
+                              if (success && context.mounted) {
+                                ReservationSuccessDialog.show(context, b);
+                              }
                             },
                           );
                         },

@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../models/booking_model.dart';
 import '../../providers/booking_provider.dart';
 import '../../providers/notification_provider.dart';
+import '../../services/app_logger.dart';
 import '../../widgets/cred_swipe_slider.dart';
 import '../../widgets/emoji_burst_animation.dart';
 
@@ -63,7 +64,8 @@ class _IncomingBookingAlertScreenState extends State<IncomingBookingAlertScreen>
       curve: Curves.elasticOut,
     );
 
-    // Auto-countdown for 60 seconds: if unanswered, automatically confirms the reservation
+    // Ringer countdown for up to 60 seconds.
+    // If unanswered, the alarm simply silences itself without accepting the reservation!
     _secondsRemaining = 60;
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (!mounted) {
@@ -76,7 +78,7 @@ class _IncomingBookingAlertScreenState extends State<IncomingBookingAlertScreen>
         });
       } else {
         timer.cancel();
-        _onAccept();
+        _onRingerTimeout();
       }
     });
   }
@@ -89,11 +91,64 @@ class _IncomingBookingAlertScreenState extends State<IncomingBookingAlertScreen>
     super.dispose();
   }
 
+  void _onRingerTimeout() {
+    _countdownTimer?.cancel();
+    final notifProvider = Provider.of<NotificationProvider>(context, listen: false);
+    // Silence alarm — explicitly DO NOT confirm booking automatically
+    notifProvider.stopRinging();
+    AppLogger.info('ALERTS', 'Incoming alert ringer timed out without acceptance. Booking remains pending.', details: {
+      'booking_id': widget.booking.bookingId,
+    });
+    if (mounted) {
+      Navigator.of(context).maybePop();
+    }
+  }
+
+  void _onDecline() {
+    _countdownTimer?.cancel();
+    HapticFeedback.mediumImpact();
+    final notifProvider = Provider.of<NotificationProvider>(context, listen: false);
+    final bookingProvider = Provider.of<BookingProvider>(context, listen: false);
+
+    notifProvider.stopRinging();
+    bookingProvider.updateStatus(widget.booking.bookingId, BookingStatus.rejected);
+    AppLogger.info('ALERTS', 'Manager manually rejected incoming booking', details: {
+      'booking_id': widget.booking.bookingId,
+    });
+    if (mounted) {
+      Navigator.of(context).maybePop();
+    }
+  }
+
+  void _onSnooze() {
+    _countdownTimer?.cancel();
+    HapticFeedback.lightImpact();
+    final notifProvider = Provider.of<NotificationProvider>(context, listen: false);
+    notifProvider.snoozeAlert();
+    AppLogger.info('ALERTS', 'Manager snoozed incoming booking alert', details: {
+      'booking_id': widget.booking.bookingId,
+    });
+    if (mounted) {
+      Navigator.of(context).maybePop();
+    }
+  }
+
   void _onAccept() {
     _countdownTimer?.cancel();
     HapticFeedback.heavyImpact();
     final notifProvider = Provider.of<NotificationProvider>(context, listen: false);
     final bookingProvider = Provider.of<BookingProvider>(context, listen: false);
+
+    // Floor operational check: only accept if floor is live
+    if (!bookingProvider.isFloorOperational) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Cannot accept booking: Floor is currently paused.'),
+          backgroundColor: Color(0xFFDC2626),
+        ),
+      );
+      return;
+    }
 
     // 1. Immediately stop ringer audio & vibrations
     notifProvider.acceptBooking();
@@ -343,7 +398,7 @@ class _IncomingBookingAlertScreenState extends State<IncomingBookingAlertScreen>
                 ],
               ),
 
-              // Bottom Action: Single Slide Confirmation (Auto-accepts after countdown)
+              // Bottom Action: Explicit User Confirmation / Decline / Snooze
               Column(
                 children: [
                   // CRED-Style Swipe Slider: Single direct confirmation
@@ -352,26 +407,80 @@ class _IncomingBookingAlertScreenState extends State<IncomingBookingAlertScreen>
                     activeColor: const Color(0xFF00E599),
                     onConfirmed: _onAccept,
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 12),
 
-                  // Live Auto-Accept Countdown Notice (No Reject/Decline)
+                  // Dual Actions: Decline Table & Snooze Ringer
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: _onDecline,
+                          icon: const Icon(Icons.close_rounded, size: 16, color: Color(0xFFF87171)),
+                          label: const Text(
+                            'DECLINE',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.8,
+                              color: Color(0xFFF87171),
+                            ),
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            backgroundColor: const Color(0xFF1E293B).withValues(alpha: 0.5),
+                            side: const BorderSide(color: Color(0xFF7F1D1D), width: 1.2),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: _onSnooze,
+                          icon: const Icon(Icons.snooze_rounded, size: 16, color: Color(0xFFFBBF24)),
+                          label: const Text(
+                            'SNOOZE 2M',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.8,
+                              color: Color(0xFFFBBF24),
+                            ),
+                          ),
+                          style: OutlinedButton.styleFrom(
+                            backgroundColor: const Color(0xFF1E293B).withValues(alpha: 0.5),
+                            side: const BorderSide(color: Color(0xFF78350F), width: 1.2),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+
+                  // Live Ringer Notice: explicitly informs that app requires manual action
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 14),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1E293B).withValues(alpha: 0.6),
-                      borderRadius: BorderRadius.circular(14),
+                      color: const Color(0xFF0F172A).withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(10),
                       border: Border.all(color: const Color(0xFF334155)),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.timer_outlined, color: Color(0xFF00E599), size: 16),
-                        const SizedBox(width: 8),
+                        const Icon(Icons.security_rounded, color: Color(0xFF64748B), size: 14),
+                        const SizedBox(width: 6),
                         Text(
-                          'Auto-accepts in ${_secondsRemaining}s if untouched',
+                          'Ringing closes in ${_secondsRemaining}s · Manual Action Required',
                           style: const TextStyle(
-                            fontSize: 12,
+                            fontSize: 11,
                             fontWeight: FontWeight.w600,
                             color: Color(0xFF94A3B8),
                           ),

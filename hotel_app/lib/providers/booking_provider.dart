@@ -24,6 +24,19 @@ class BookingProvider extends ChangeNotifier {
 
   final Set<String> _knownBookingIds = {};
   bool _initialLoadCompleted = false;
+  bool _isFloorOperational = true;
+
+  bool get isFloorOperational => _isFloorOperational;
+
+  void setFloorOperational(bool isLive) {
+    if (_isFloorOperational != isLive) {
+      _isFloorOperational = isLive;
+      AppLogger.info('FLOOR', isLive ? 'Floor set to LIVE (operational)' : 'Floor set to PAUSED (non-operational)', details: {
+        'is_floor_operational': isLive,
+      });
+      notifyListeners();
+    }
+  }
 
   List<BookingModel> get bookings => _filterStatus == 'ALL'
       ? _bookings
@@ -199,22 +212,45 @@ class BookingProvider extends ChangeNotifier {
   final Map<String, DateTime> _recentlyDispatchedAlerts = {};
 
   void _dispatchBookingAlert(BookingModel booking, String source) {
+    // 0. Floor Operational Check: Only accept / ring alert if floor is operational (LIVE)
+    if (!_isFloorOperational) {
+      debugPrint('[BookingProvider] Floor is PAUSED/NOT OPERATIONAL. Ignoring alert for booking #${booking.bookingId}');
+      AppLogger.warn('BOOKINGS', 'Incoming booking alert suppressed: Floor is paused (non-operational)', details: {
+        'booking_id': booking.bookingId,
+        'customer': booking.customerName,
+        'floor_operational': false,
+      });
+      return;
+    }
+
+    // 1. Current / Upcoming for today check: Must be for today, and not a past time slot
+    if (!booking.isCurrentOrUpcomingForToday) {
+      debugPrint('[BookingProvider] Suppressing alert for past/non-today booking #${booking.bookingId} (${booking.date} ${booking.timeSlot})');
+      AppLogger.warn('BOOKINGS', 'Incoming booking alert suppressed: past or non-today booking', details: {
+        'booking_id': booking.bookingId,
+        'date': booking.date,
+        'slot': booking.timeSlot,
+        'is_for_today': booking.isForToday,
+      });
+      return;
+    }
+
     final key = booking.bookingId.trim().toLowerCase();
     final now = DateTime.now();
 
-    // 1. Recency filter: Only bookings created in the last 5 minutes can trigger an alert
+    // 2. Recency filter: Only bookings created in the last 5 minutes can trigger an alert
     final ageInMinutes = now.difference(booking.createdAt).inMinutes.abs();
     if (ageInMinutes > 5) {
       debugPrint('[BookingProvider] Suppressing alert for historical booking #$key created $ageInMinutes mins ago');
       return;
     }
 
-    // 2. Clean up older than 10 minutes
+    // 3. Clean up older than 10 minutes
     _recentlyDispatchedAlerts.removeWhere(
       (_, time) => now.difference(time).inMinutes > 10,
     );
 
-    // 3. Deduplicate recent alerts within 2 minutes
+    // 4. Deduplicate recent alerts within 2 minutes
     final last = _recentlyDispatchedAlerts[key];
     if (last != null && now.difference(last).inSeconds < 120) {
       debugPrint('[BookingProvider] Deduplicating alert from $source for $key (already dispatched ${now.difference(last).inSeconds}s ago)');
@@ -413,19 +449,40 @@ class BookingProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> acceptBooking(String bookingId) async {
+  Future<bool> acceptBooking(String bookingId) async {
+    if (!_isFloorOperational) {
+      debugPrint('[BookingProvider] Cannot accept booking #$bookingId: floor is paused/non-operational');
+      AppLogger.warn('BOOKINGS', 'Cannot accept booking: Floor is currently paused', details: {
+        'booking_id': bookingId,
+        'floor_operational': false,
+      });
+      return false;
+    }
+
     final index = _bookings.indexWhere((b) => b.bookingId == bookingId);
     if (index != -1) {
-      _bookings[index] = _bookings[index].copyWith(status: BookingStatus.confirmed);
+      final b = _bookings[index];
+      if (!b.isCurrentOrUpcomingForToday) {
+        debugPrint('[BookingProvider] Cannot accept past booking #$bookingId (${b.date} ${b.timeSlot})');
+        AppLogger.warn('BOOKINGS', 'Cannot accept past booking', details: {
+          'booking_id': bookingId,
+          'date': b.date,
+          'time_slot': b.timeSlot,
+        });
+        return false;
+      }
+      _bookings[index] = b.copyWith(status: BookingStatus.confirmed);
       notifyListeners();
     }
 
     try {
       AppLogger.info('BOOKINGS', 'Accepted/confirmed incoming booking', details: {'booking_id': bookingId});
       await _supabaseService.updateBookingStatus(bookingId, 'CONFIRMED');
+      return true;
     } catch (e, stack) {
       debugPrint('Error confirming booking in Supabase: $e');
       AppLogger.error('BOOKINGS', 'Failed to confirm booking', error: e, stackTrace: stack, details: {'booking_id': bookingId});
+      return false;
     }
   }
 
