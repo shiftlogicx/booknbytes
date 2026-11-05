@@ -36,8 +36,14 @@ class RestaurantProfileData {
   int maxDiscount;
   List<Map<String, dynamic>> activeOffers;
   Map<String, dynamic>? managerCredentials;
-  List<String> hotelPhotos;
+  String mainPhoto;
+  List<String> subordinatePhotos;
   List<String> menuImages;
+
+  List<String> get hotelPhotos => [if (mainPhoto.isNotEmpty) mainPhoto, ...subordinatePhotos];
+  int get totalPhotosCount => (mainPhoto.isNotEmpty ? 1 : 0) + subordinatePhotos.length;
+  bool get canAddSubordinatePhoto => subordinatePhotos.length < 2 && totalPhotosCount < 3;
+  bool get hasMainPhoto => mainPhoto.trim().isNotEmpty;
 
   RestaurantProfileData({
     required this.restaurantId,
@@ -65,9 +71,16 @@ class RestaurantProfileData {
     this.maxDiscount = 30,
     this.activeOffers = const [],
     this.managerCredentials,
-    this.hotelPhotos = const [],
+    this.mainPhoto = '',
+    this.subordinatePhotos = const [],
+    List<String>? hotelPhotos,
     this.menuImages = const [],
-  });
+  }) {
+    if (hotelPhotos != null && hotelPhotos.isNotEmpty && mainPhoto.isEmpty && subordinatePhotos.isEmpty) {
+      mainPhoto = hotelPhotos.first;
+      subordinatePhotos = hotelPhotos.skip(1).take(2).toList();
+    }
+  }
 
   factory RestaurantProfileData.defaults() {
     return RestaurantProfileData(
@@ -95,7 +108,8 @@ class RestaurantProfileData {
       minDiscount: 10,
       maxDiscount: 30,
       activeOffers: const [], // Clean slate on new restaurant
-      hotelPhotos: const [],
+      mainPhoto: '',
+      subordinatePhotos: const [],
       menuImages: const [],
     );
   }
@@ -106,9 +120,19 @@ class RestaurantProfileData {
     final attrs = json['attributes'] is Map ? json['attributes'] as Map : {};
     final visuals = json['visuals'] is Map ? json['visuals'] as Map : {};
 
-    final hotelPhotosList = visuals['ambience'] is List
+    String heroImg = visuals['hero_image']?.toString() ?? '';
+    final rawAmbience = visuals['ambience'] is List
         ? List<String>.from((visuals['ambience'] as List).map((e) => e.toString()))
         : <String>[];
+
+    if (heroImg.isEmpty && rawAmbience.isNotEmpty) {
+      heroImg = rawAmbience.first;
+      rawAmbience.removeAt(0);
+    } else {
+      rawAmbience.removeWhere((url) => url == heroImg);
+    }
+    final subPhotosList = rawAmbience.take(2).toList();
+
     final menuImagesList = visuals['menu_images'] is List
         ? List<String>.from((visuals['menu_images'] as List).map((e) => e.toString()))
         : <String>[];
@@ -175,7 +199,8 @@ class RestaurantProfileData {
       managerCredentials: owners['manager_credentials'] is Map
           ? Map<String, dynamic>.from(owners['manager_credentials'])
           : null,
-      hotelPhotos: hotelPhotosList,
+      mainPhoto: heroImg,
+      subordinatePhotos: subPhotosList,
       menuImages: menuImagesList,
     );
   }
@@ -212,8 +237,8 @@ class RestaurantProfileData {
       },
       'active_offers': activeOffers,
       'visuals': {
-        'hero_image': hotelPhotos.isNotEmpty ? hotelPhotos.first : '',
-        'ambience': hotelPhotos.take(3).toList(),
+        'hero_image': mainPhoto,
+        'ambience': subordinatePhotos.take(2).toList(),
         'menu_images': menuImages,
       },
     };
@@ -245,9 +270,24 @@ class RestaurantProfileData {
     int? maxDiscount,
     List<Map<String, dynamic>>? activeOffers,
     Map<String, dynamic>? managerCredentials,
+    String? mainPhoto,
+    List<String>? subordinatePhotos,
     List<String>? hotelPhotos,
     List<String>? menuImages,
   }) {
+    String resolvedMain = mainPhoto ?? this.mainPhoto;
+    List<String> resolvedSubs = subordinatePhotos != null ? List<String>.from(subordinatePhotos) : List<String>.from(this.subordinatePhotos);
+
+    if (hotelPhotos != null) {
+      if (hotelPhotos.isNotEmpty) {
+        resolvedMain = hotelPhotos.first;
+        resolvedSubs = hotelPhotos.skip(1).take(2).toList();
+      } else {
+        resolvedMain = '';
+        resolvedSubs = [];
+      }
+    }
+
     return RestaurantProfileData(
       restaurantId: restaurantId ?? this.restaurantId,
       name: name ?? this.name,
@@ -274,7 +314,8 @@ class RestaurantProfileData {
       maxDiscount: maxDiscount ?? this.maxDiscount,
       activeOffers: activeOffers ?? List.from(this.activeOffers),
       managerCredentials: managerCredentials ?? this.managerCredentials,
-      hotelPhotos: hotelPhotos ?? List.from(this.hotelPhotos),
+      mainPhoto: resolvedMain,
+      subordinatePhotos: resolvedSubs,
       menuImages: menuImages ?? List.from(this.menuImages),
     );
   }
@@ -536,6 +577,10 @@ class AuthProvider extends ChangeNotifier {
     required String upiId,
     required int costForTwo,
     required List<String> cuisines,
+    Uint8List? onboardingMainPhotoBytes,
+    String? onboardingMainPhotoFilename,
+    List<Map<String, dynamic>>? onboardingSubordinatePhotos,
+    List<Map<String, dynamic>>? onboardingMenuImages,
   }) async {
     _isLoading = true;
     _errorMessage = null;
@@ -642,6 +687,69 @@ class AuthProvider extends ChangeNotifier {
         debugPrint('Activation edge function notice: $e');
       }
 
+      // Step 4.5: Upload optional onboarding photos (Main photo, subordinate photos, and menu pages)
+      String uploadedMainUrl = '';
+      final uploadedSubUrls = <String>[];
+      final uploadedMenuUrls = <String>[];
+
+      if (onboardingMainPhotoBytes != null) {
+        try {
+          uploadedMainUrl = await _supabaseService.uploadMediaFile(
+            restaurantId: restId,
+            category: 'hero',
+            bytes: onboardingMainPhotoBytes,
+            filename: onboardingMainPhotoFilename ?? 'main_hero.jpg',
+          );
+        } catch (e) {
+          debugPrint('Onboarding main photo upload error: $e');
+        }
+      }
+
+      if (onboardingSubordinatePhotos != null && onboardingSubordinatePhotos.isNotEmpty) {
+        for (final item in onboardingSubordinatePhotos.take(2)) {
+          try {
+            final u = await _supabaseService.uploadMediaFile(
+              restaurantId: restId,
+              category: 'ambience',
+              bytes: item['bytes'] as Uint8List,
+              filename: item['filename'] as String? ?? 'subordinate.jpg',
+            );
+            uploadedSubUrls.add(u);
+          } catch (e) {
+            debugPrint('Onboarding subordinate photo upload error: $e');
+          }
+        }
+      }
+
+      if (onboardingMenuImages != null && onboardingMenuImages.isNotEmpty) {
+        for (final item in onboardingMenuImages) {
+          try {
+            final u = await _supabaseService.uploadMediaFile(
+              restaurantId: restId,
+              category: 'menu',
+              bytes: item['bytes'] as Uint8List,
+              filename: item['filename'] as String? ?? 'menu_page.jpg',
+            );
+            uploadedMenuUrls.add(u);
+          } catch (e) {
+            debugPrint('Onboarding menu upload error: $e');
+          }
+        }
+      }
+
+      if (uploadedMainUrl.isNotEmpty || uploadedSubUrls.isNotEmpty || uploadedMenuUrls.isNotEmpty) {
+        try {
+          await _supabaseService.updateRestaurantVisuals(
+            restaurantId: restId,
+            heroImage: uploadedMainUrl,
+            subordinatePhotos: uploadedSubUrls,
+            menuImages: uploadedMenuUrls,
+          );
+        } catch (e) {
+          debugPrint('Error updating onboarding visuals: $e');
+        }
+      }
+
       // Step 5: Refresh restaurant profile state
       await refreshRestaurantData();
 
@@ -722,39 +830,37 @@ class AuthProvider extends ChangeNotifier {
   }
 
   // ==========================================
-  // MEDIA MANAGEMENT (HOTEL PHOTOS & MENUS)
+  // MEDIA MANAGEMENT (MAIN PHOTO, SUBORDINATE & MENUS)
   // ==========================================
-  Future<bool> uploadHotelPhoto(Uint8List bytes, String filename) async {
-    if (_profile.hotelPhotos.length >= 3) {
-      _errorMessage = 'Maximum 3 hotel photos allowed. Delete an existing photo first.';
-      AppLogger.warn('STORAGE', 'Hotel photo limit reached (max 3)', details: {'restaurant_id': currentRestaurantId});
-      notifyListeners();
-      return false;
-    }
+  Future<bool> uploadMainPhoto(Uint8List bytes, String filename) async {
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
-    AppLogger.info('STORAGE', 'Uploading hotel photo', details: {'filename': filename, 'restaurant_id': currentRestaurantId});
+    AppLogger.info('STORAGE', 'Uploading main hotel photo (profile picture)', details: {'filename': filename, 'restaurant_id': currentRestaurantId});
     try {
       final url = await _supabaseService.uploadMediaFile(
         restaurantId: currentRestaurantId,
-        category: 'ambience',
+        category: 'hero',
         bytes: bytes,
         filename: filename,
       );
-      final updatedPhotos = List<String>.from(_profile.hotelPhotos)..add(url);
-      _profile = _profile.copyWith(hotelPhotos: updatedPhotos.take(3).toList());
+      final oldMain = _profile.mainPhoto;
+      _profile = _profile.copyWith(mainPhoto: url);
       await _supabaseService.updateRestaurantVisuals(
         restaurantId: currentRestaurantId,
-        hotelPhotos: _profile.hotelPhotos,
+        heroImage: _profile.mainPhoto,
+        subordinatePhotos: _profile.subordinatePhotos,
         menuImages: _profile.menuImages,
       );
-      AppLogger.info('STORAGE', 'Hotel photo upload success', details: {'url': url, 'count': _profile.hotelPhotos.length});
+      if (oldMain.isNotEmpty && oldMain != url) {
+        _supabaseService.deleteMediaFile(oldMain).catchError((_) {});
+      }
+      AppLogger.info('STORAGE', 'Main photo updated successfully', details: {'url': url});
       _isLoading = false;
       notifyListeners();
       return true;
     } catch (e, st) {
-      AppLogger.error('STORAGE', 'Hotel photo upload failed', error: e, stackTrace: st, details: {'filename': filename});
+      AppLogger.error('STORAGE', 'Main photo upload failed', error: e, stackTrace: st, details: {'filename': filename});
       _isLoading = false;
       _errorMessage = e.toString().replaceFirst('Exception: ', '');
       notifyListeners();
@@ -762,30 +868,153 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> deleteHotelPhoto(String photoUrl) async {
+  Future<bool> uploadSubordinatePhoto(Uint8List bytes, String filename) async {
+    if (_profile.subordinatePhotos.length >= 2 || _profile.totalPhotosCount >= 3) {
+      _errorMessage = 'Maximum 2 subordinate photos allowed (3 photos total with Main Photo).';
+      AppLogger.warn('STORAGE', 'Subordinate photo limit reached', details: {'restaurant_id': currentRestaurantId});
+      notifyListeners();
+      return false;
+    }
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
-    AppLogger.info('STORAGE', 'Deleting hotel photo', details: {'url': photoUrl});
+    AppLogger.info('STORAGE', 'Uploading subordinate photo', details: {'filename': filename, 'restaurant_id': currentRestaurantId});
     try {
-      final updatedPhotos = List<String>.from(_profile.hotelPhotos)..remove(photoUrl);
-      _profile = _profile.copyWith(hotelPhotos: updatedPhotos);
+      final url = await _supabaseService.uploadMediaFile(
+        restaurantId: currentRestaurantId,
+        category: 'ambience',
+        bytes: bytes,
+        filename: filename,
+      );
+      final updatedSubs = List<String>.from(_profile.subordinatePhotos)..add(url);
+      _profile = _profile.copyWith(subordinatePhotos: updatedSubs.take(2).toList());
       await _supabaseService.updateRestaurantVisuals(
         restaurantId: currentRestaurantId,
-        hotelPhotos: _profile.hotelPhotos,
+        heroImage: _profile.mainPhoto,
+        subordinatePhotos: _profile.subordinatePhotos,
         menuImages: _profile.menuImages,
       );
-      await _supabaseService.deleteMediaFile(photoUrl);
-      AppLogger.info('STORAGE', 'Hotel photo deleted successfully', details: {'url': photoUrl});
+      AppLogger.info('STORAGE', 'Subordinate photo upload success', details: {'url': url, 'count': _profile.subordinatePhotos.length});
       _isLoading = false;
       notifyListeners();
       return true;
     } catch (e, st) {
-      AppLogger.error('STORAGE', 'Hotel photo delete error', error: e, stackTrace: st, details: {'url': photoUrl});
+      AppLogger.error('STORAGE', 'Subordinate photo upload failed', error: e, stackTrace: st, details: {'filename': filename});
       _isLoading = false;
       _errorMessage = e.toString().replaceFirst('Exception: ', '');
       notifyListeners();
       return false;
+    }
+  }
+
+  Future<bool> setAsMainPhoto(String photoUrl) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    AppLogger.info('STORAGE', 'Promoting photo to main profile photo', details: {'url': photoUrl});
+    try {
+      final oldMain = _profile.mainPhoto;
+      final updatedSubs = List<String>.from(_profile.subordinatePhotos)..remove(photoUrl);
+      if (oldMain.isNotEmpty && oldMain != photoUrl && updatedSubs.length < 2) {
+        updatedSubs.insert(0, oldMain);
+      }
+      _profile = _profile.copyWith(
+        mainPhoto: photoUrl,
+        subordinatePhotos: updatedSubs.take(2).toList(),
+      );
+      await _supabaseService.updateRestaurantVisuals(
+        restaurantId: currentRestaurantId,
+        heroImage: _profile.mainPhoto,
+        subordinatePhotos: _profile.subordinatePhotos,
+        menuImages: _profile.menuImages,
+      );
+      AppLogger.info('STORAGE', 'Photo set as main successfully', details: {'main': photoUrl});
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e, st) {
+      AppLogger.error('STORAGE', 'Failed to promote to main photo', error: e, stackTrace: st);
+      _isLoading = false;
+      _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> deleteMainPhoto() async {
+    if (_profile.mainPhoto.isEmpty) return true;
+    final urlToDelete = _profile.mainPhoto;
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      String newMain = '';
+      List<String> newSubs = List<String>.from(_profile.subordinatePhotos);
+      if (newSubs.isNotEmpty) {
+        newMain = newSubs.removeAt(0);
+      }
+      _profile = _profile.copyWith(
+        mainPhoto: newMain,
+        subordinatePhotos: newSubs,
+      );
+      await _supabaseService.updateRestaurantVisuals(
+        restaurantId: currentRestaurantId,
+        heroImage: _profile.mainPhoto,
+        subordinatePhotos: _profile.subordinatePhotos,
+        menuImages: _profile.menuImages,
+      );
+      await _supabaseService.deleteMediaFile(urlToDelete);
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e, st) {
+      AppLogger.error('STORAGE', 'Failed to delete main photo', error: e, stackTrace: st);
+      _isLoading = false;
+      _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> deleteSubordinatePhoto(String photoUrl) async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      final updatedSubs = List<String>.from(_profile.subordinatePhotos)..remove(photoUrl);
+      _profile = _profile.copyWith(subordinatePhotos: updatedSubs);
+      await _supabaseService.updateRestaurantVisuals(
+        restaurantId: currentRestaurantId,
+        heroImage: _profile.mainPhoto,
+        subordinatePhotos: _profile.subordinatePhotos,
+        menuImages: _profile.menuImages,
+      );
+      await _supabaseService.deleteMediaFile(photoUrl);
+      _isLoading = false;
+      notifyListeners();
+      return true;
+    } catch (e, st) {
+      AppLogger.error('STORAGE', 'Failed to delete subordinate photo', error: e, stackTrace: st);
+      _isLoading = false;
+      _errorMessage = e.toString().replaceFirst('Exception: ', '');
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> uploadHotelPhoto(Uint8List bytes, String filename) async {
+    if (_profile.mainPhoto.isEmpty) {
+      return await uploadMainPhoto(bytes, filename);
+    } else {
+      return await uploadSubordinatePhoto(bytes, filename);
+    }
+  }
+
+  Future<bool> deleteHotelPhoto(String photoUrl) async {
+    if (photoUrl == _profile.mainPhoto) {
+      return await deleteMainPhoto();
+    } else {
+      return await deleteSubordinatePhoto(photoUrl);
     }
   }
 

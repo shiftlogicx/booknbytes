@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/booking_provider.dart';
@@ -48,6 +49,13 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     'Italian',
   ];
   final Set<String> _selectedCuisines = {'North Indian', 'Biryani'};
+
+  // Optional Onboarding Media State
+  final ImagePicker _picker = ImagePicker();
+  Uint8List? _onboardingMainPhotoBytes;
+  String? _onboardingMainPhotoName;
+  final List<Map<String, dynamic>> _onboardingSubordinatePhotos = [];
+  final List<Map<String, dynamic>> _onboardingMenuImages = [];
 
   @override
   void initState() {
@@ -172,6 +180,10 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       upiId: upi.isNotEmpty ? upi : '${restName.toLowerCase().replaceAll(' ', '')}@upi',
       costForTwo: cost,
       cuisines: _selectedCuisines.toList(),
+      onboardingMainPhotoBytes: _onboardingMainPhotoBytes,
+      onboardingMainPhotoFilename: _onboardingMainPhotoName,
+      onboardingSubordinatePhotos: _onboardingSubordinatePhotos,
+      onboardingMenuImages: _onboardingMenuImages,
     );
 
     if (!mounted) return;
@@ -1342,39 +1354,8 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                 }).toList(),
               ),
 
-              // Hotel Photos & Menu Cards Storage Highlight
-              Container(
-                margin: const EdgeInsets.only(top: 16),
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF0FDF4),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(0xFFBBF7D0)),
-                ),
-                child: const Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Icon(Icons.photo_library_rounded, color: Color(0xFF059669), size: 20),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Supabase Media Storage Ready',
-                            style: TextStyle(fontWeight: FontWeight.w800, fontSize: 12.5, color: Color(0xFF065F46)),
-                          ),
-                          SizedBox(height: 3),
-                          Text(
-                            'Upload up to 3 hotel ambience photos & unlimited menu card pages directly from the Hotel Profile anytime.',
-                            style: TextStyle(fontSize: 11, color: Color(0xFF047857), height: 1.35),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              // Hotel Photos & Menu Cards Storage Optional Onboarding Picker
+              _buildOnboardingMediaSection(),
 
               const SizedBox(height: 24),
 
@@ -1449,6 +1430,347 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
         style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFF64748B), letterSpacing: 0.6),
       ),
     );
+  }
+
+  Widget _buildOnboardingMediaSection() {
+    return Container(
+      margin: const EdgeInsets.only(top: 18),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFCBD5E1)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Row(
+                children: [
+                  Icon(Icons.add_a_photo_rounded, color: Color(0xFF0F172A), size: 18),
+                  SizedBox(width: 8),
+                  Text(
+                    'PHOTOS & MENU (OPTIONAL)',
+                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: Color(0xFF0F172A), letterSpacing: 0.5),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF1F5F9),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: const Text('Optional', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFF64748B))),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Upload your main profile photo, subordinate photos (limit 3 total), and menu pages now or manage later.',
+            style: TextStyle(fontSize: 11, color: Color(0xFF64748B), height: 1.3),
+          ),
+          const SizedBox(height: 14),
+
+          // 1. MAIN PHOTO (PROFILE PICTURE)
+          const Text(
+            '1. MAIN PHOTO (PROFILE PICTURE)',
+            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFF059669), letterSpacing: 0.5),
+          ),
+          const SizedBox(height: 6),
+          if (_onboardingMainPhotoBytes != null)
+            Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.memory(
+                    _onboardingMainPhotoBytes!,
+                    width: double.infinity,
+                    height: 120,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                Positioned(
+                  top: 6,
+                  right: 6,
+                  child: GestureDetector(
+                    onTap: () => setState(() {
+                      _onboardingMainPhotoBytes = null;
+                      _onboardingMainPhotoName = null;
+                    }),
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(color: Color(0xFFDC2626), shape: BoxShape.circle),
+                      child: const Icon(Icons.close_rounded, size: 14, color: Colors.white),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: 6,
+                  left: 6,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.7), borderRadius: BorderRadius.circular(4)),
+                    child: const Text('Main Profile Photo', style: TextStyle(color: Colors.white, fontSize: 9.5, fontWeight: FontWeight.w700)),
+                  ),
+                ),
+              ],
+            )
+          else
+            OutlinedButton.icon(
+              onPressed: _pickOnboardingMainPhoto,
+              icon: const Icon(Icons.camera_alt_outlined, size: 16, color: Color(0xFF0F172A)),
+              label: const Text('Select Main Photo (Profile Picture)', style: TextStyle(fontSize: 11.5, fontWeight: FontWeight.w700, color: Color(0xFF0F172A))),
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Color(0xFFCBD5E1)),
+                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+            ),
+
+          const SizedBox(height: 14),
+
+          // 2. SUBORDINATE PHOTOS (MAX 2)
+          Text(
+            '2. SUBORDINATE PHOTOS (${_onboardingSubordinatePhotos.length}/2 MAX)',
+            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFF0F172A), letterSpacing: 0.5),
+          ),
+          const SizedBox(height: 6),
+          SizedBox(
+            height: 75,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              children: [
+                ..._onboardingSubordinatePhotos.asMap().entries.map((entry) {
+                  final idx = entry.key;
+                  final item = entry.value;
+                  return Container(
+                    width: 75,
+                    margin: const EdgeInsets.only(right: 8),
+                    child: Stack(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: Image.memory(
+                            item['bytes'] as Uint8List,
+                            width: 75,
+                            height: 75,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        Positioned(
+                          top: 2,
+                          right: 2,
+                          child: GestureDetector(
+                            onTap: () => setState(() => _onboardingSubordinatePhotos.removeAt(idx)),
+                            child: Container(
+                              padding: const EdgeInsets.all(2),
+                              decoration: const BoxDecoration(color: Color(0xFFDC2626), shape: BoxShape.circle),
+                              child: const Icon(Icons.close_rounded, size: 12, color: Colors.white),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+                if (_onboardingSubordinatePhotos.length < 2)
+                  GestureDetector(
+                    onTap: _pickOnboardingSubordinatePhoto,
+                    child: Container(
+                      width: 75,
+                      height: 75,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF8FAFC),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: const Color(0xFFCBD5E1), style: BorderStyle.solid),
+                      ),
+                      child: const Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.add_photo_alternate_outlined, size: 18, color: Color(0xFF64748B)),
+                          SizedBox(height: 2),
+                          Text('+ Sub Photo', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: Color(0xFF64748B))),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 14),
+
+          // 3. MENU CARD PAGES (UNLIMITED)
+          Text(
+            '3. MENU CARD PAGES (${_onboardingMenuImages.length} ADDED)',
+            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: Color(0xFF0F172A), letterSpacing: 0.5),
+          ),
+          const SizedBox(height: 6),
+          SizedBox(
+            height: 75,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              children: [
+                ..._onboardingMenuImages.asMap().entries.map((entry) {
+                  final idx = entry.key;
+                  final item = entry.value;
+                  return Container(
+                    width: 75,
+                    margin: const EdgeInsets.only(right: 8),
+                    child: Stack(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: Image.memory(
+                            item['bytes'] as Uint8List,
+                            width: 75,
+                            height: 75,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        Positioned(
+                          top: 2,
+                          right: 2,
+                          child: GestureDetector(
+                            onTap: () => setState(() => _onboardingMenuImages.removeAt(idx)),
+                            child: Container(
+                              padding: const EdgeInsets.all(2),
+                              decoration: const BoxDecoration(color: Color(0xFFDC2626), shape: BoxShape.circle),
+                              child: const Icon(Icons.close_rounded, size: 12, color: Colors.white),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+                GestureDetector(
+                  onTap: _pickOnboardingMenuImage,
+                  child: Container(
+                    width: 75,
+                    height: 75,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: const Color(0xFFCBD5E1), style: BorderStyle.solid),
+                    ),
+                    child: const Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.restaurant_menu_rounded, size: 18, color: Color(0xFF64748B)),
+                        SizedBox(height: 2),
+                        Text('+ Menu Page', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: Color(0xFF64748B))),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<ImageSource?> _showSourceSelectorSheet(String title) async {
+    return await showModalBottomSheet<ImageSource>(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: Color(0xFF0F172A))),
+              const SizedBox(height: 14),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(color: const Color(0xFFEFF6FF), borderRadius: BorderRadius.circular(12)),
+                  child: const Icon(Icons.camera_alt_rounded, color: Color(0xFF2563EB), size: 22),
+                ),
+                title: const Text('Take Picture with Camera', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5)),
+                onTap: () => Navigator.pop(ctx, ImageSource.camera),
+              ),
+              const SizedBox(height: 8),
+              ListTile(
+                leading: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(color: const Color(0xFFECFDF5), borderRadius: BorderRadius.circular(12)),
+                  child: const Icon(Icons.photo_library_rounded, color: Color(0xFF059669), size: 22),
+                ),
+                title: const Text('Choose from Gallery', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13.5)),
+                onTap: () => Navigator.pop(ctx, ImageSource.gallery),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickOnboardingMainPhoto() async {
+    final source = await _showSourceSelectorSheet('Select Main Photo (Profile Picture)');
+    if (source == null) return;
+    try {
+      final file = await _picker.pickImage(source: source, imageQuality: 85, maxWidth: 1920);
+      if (file == null) return;
+      final bytes = await file.readAsBytes();
+      setState(() {
+        _onboardingMainPhotoBytes = bytes;
+        _onboardingMainPhotoName = file.name;
+      });
+    } catch (e) {
+      _showErrorSnackBar('Error selecting main photo: $e');
+    }
+  }
+
+  Future<void> _pickOnboardingSubordinatePhoto() async {
+    if (_onboardingSubordinatePhotos.length >= 2) return;
+    final source = await _showSourceSelectorSheet('Select Subordinate Ambience Photo');
+    if (source == null) return;
+    try {
+      final file = await _picker.pickImage(source: source, imageQuality: 85, maxWidth: 1920);
+      if (file == null) return;
+      final bytes = await file.readAsBytes();
+      setState(() {
+        _onboardingSubordinatePhotos.add({'bytes': bytes, 'filename': file.name});
+      });
+    } catch (e) {
+      _showErrorSnackBar('Error selecting subordinate photo: $e');
+    }
+  }
+
+  Future<void> _pickOnboardingMenuImage() async {
+    final source = await _showSourceSelectorSheet('Select Menu Card Page');
+    if (source == null) return;
+    try {
+      if (source == ImageSource.camera) {
+        final file = await _picker.pickImage(source: ImageSource.camera, imageQuality: 85, maxWidth: 1920);
+        if (file != null) {
+          final bytes = await file.readAsBytes();
+          setState(() {
+            _onboardingMenuImages.add({'bytes': bytes, 'filename': file.name});
+          });
+        }
+      } else {
+        final files = await _picker.pickMultiImage(imageQuality: 85, maxWidth: 1920);
+        for (final f in files) {
+          final bytes = await f.readAsBytes();
+          setState(() {
+            _onboardingMenuImages.add({'bytes': bytes, 'filename': f.name});
+          });
+        }
+      }
+    } catch (e) {
+      _showErrorSnackBar('Error selecting menu pages: $e');
+    }
   }
 
   InputDecoration _inputDecoration(String hint, IconData icon) {

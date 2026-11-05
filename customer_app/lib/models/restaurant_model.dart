@@ -93,9 +93,12 @@ class RestaurantVisuals {
   });
 
   factory RestaurantVisuals.fromMap(Map<String, dynamic> data) {
+    final hero = data['hero_image']?.toString() ?? '';
+    final amb = List<String>.from(data['ambience'] ?? []);
+    final resolvedHero = hero.isNotEmpty ? hero : (amb.isNotEmpty ? amb.first : '');
     return RestaurantVisuals(
-      heroImage: data['hero_image'] ?? '',
-      ambience: List<String>.from(data['ambience'] ?? []),
+      heroImage: resolvedHero,
+      ambience: amb,
       menuImages: List<String>.from(data['menu_images'] ?? []),
     );
   }

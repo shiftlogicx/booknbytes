@@ -10,7 +10,6 @@ import '../../widgets/restaurant_walkthrough_modal.dart';
 import '../profile/restaurant_profile_screen.dart';
 import '../support/support_screen.dart';
 import '../auth/login_screen.dart';
-import '../diagnostics/log_viewer_screen.dart';
 import '../../services/app_update_service.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -641,33 +640,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
               subtitle: 'Share comments directly with the engineering team',
               onTap: _openFeedback,
               accentColor: const Color(0xFFD97706),
-            ),
-
-            const SizedBox(height: 24),
-
-            // System Diagnostics & Logging
-            const Text(
-              'DIAGNOSTICS & TELEMETRY',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w800,
-                letterSpacing: 0.8,
-                color: Color(0xFF64748B),
-              ),
-            ),
-            const SizedBox(height: 10),
-
-            _buildActionTile(
-              icon: Icons.terminal_rounded,
-              title: 'Interactive Diagnostics & Logs',
-              subtitle: 'Real-time telemetry, error tracking & Supabase cloud sync',
-              onTap: () {
-                HapticFeedback.lightImpact();
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const LogViewerScreen()),
-                );
-              },
-              accentColor: const Color(0xFF0F172A),
             ),
 
             const SizedBox(height: 24),

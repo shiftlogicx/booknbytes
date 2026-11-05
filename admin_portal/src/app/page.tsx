@@ -244,7 +244,7 @@ export default function DashboardPage() {
                 <div key={restaurant.restaurant_id} className="p-3 rounded-lg border border-slate-100 bg-slate-50/60 flex items-center gap-3">
                   <div className="w-10 h-10 rounded-lg bg-slate-200 overflow-hidden flex-shrink-0">
                     <img
-                      src={restaurant.visuals?.hero_image || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=400&q=80'}
+                      src={restaurant.visuals?.hero_image || (restaurant.visuals?.ambience && restaurant.visuals.ambience[0]) || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=400&q=80'}
                       alt={restaurant.name}
                       className="w-full h-full object-cover"
                     />

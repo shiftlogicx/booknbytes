@@ -328,7 +328,20 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
                 ),
                 child: Row(
                   children: [
-                    const PremiumBrandLogo(size: 56),
+                    if (auth.profile.hasMainPhoto)
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: CachedNetworkImage(
+                          imageUrl: auth.profile.mainPhoto,
+                          width: 56,
+                          height: 56,
+                          fit: BoxFit.cover,
+                          placeholder: (_, __) => const PremiumBrandLogo(size: 56),
+                          errorWidget: (_, __, ___) => const PremiumBrandLogo(size: 56),
+                        ),
+                      )
+                    else
+                      const PremiumBrandLogo(size: 56),
                     const SizedBox(width: 16),
                     Expanded(
                       child: Column(
@@ -945,11 +958,13 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
   }
 
   // ==========================================
-  // MEDIA MANAGEMENT: AMBIENCE (MAX 3) & MENU (UNLIMITED)
+  // MEDIA MANAGEMENT: MAIN PHOTO, SUBORDINATE (MAX 2) & MENU (UNLIMITED)
   // ==========================================
   Widget _buildMediaSection(BuildContext context, AuthProvider auth) {
-    final hotelPhotos = auth.profile.hotelPhotos;
+    final mainPhoto = auth.profile.mainPhoto;
+    final subordinatePhotos = auth.profile.subordinatePhotos;
     final menuImages = auth.profile.menuImages;
+    final totalHotelPhotos = auth.profile.totalPhotosCount;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -957,7 +972,7 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
         _buildSectionHeader('HOTEL PHOTOS & MENU CARDS (SUPABASE BLOB STORAGE)'),
         const SizedBox(height: 4),
         const Text(
-          'Upload high-definition hotel photos and menu cards stored on Supabase bucket for diners',
+          'Manage primary profile picture, subordinate dining photos (limit 3 total), and menu card pages',
           style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
         ),
         const SizedBox(height: 12),
@@ -989,7 +1004,190 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
             ),
           ),
 
-        // Card 1: Hotel Photos (Ambience - Max 3)
+        // CARD 1: MAIN PHOTO (PROFILE PICTURE - 1 PHOTO)
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: mainPhoto.isNotEmpty ? const Color(0xFFA7F3D0) : const Color(0xFFE2E8F0),
+              width: mainPhoto.isNotEmpty ? 1.5 : 1.0,
+            ),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x060F172A),
+                blurRadius: 10,
+                offset: Offset(0, 3),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Row(
+                    children: [
+                      Icon(Icons.star_rounded, color: Color(0xFFD97706), size: 20),
+                      SizedBox(width: 8),
+                      Text(
+                        'Main Photo (Profile Picture)',
+                        style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
+                      ),
+                    ],
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: mainPhoto.isNotEmpty ? const Color(0xFFECFDF5) : const Color(0xFFFEF2F2),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: mainPhoto.isNotEmpty ? const Color(0xFFA7F3D0) : const Color(0xFFFECACA),
+                      ),
+                    ),
+                    child: Text(
+                      mainPhoto.isNotEmpty ? 'Active Profile Pic' : 'Required',
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w800,
+                        color: mainPhoto.isNotEmpty ? const Color(0xFF059669) : const Color(0xFFDC2626),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              const Text(
+                'This photo represents your restaurant as the profile avatar and primary banner across customer search & the admin portal.',
+                style: TextStyle(fontSize: 11, color: Color(0xFF64748B), height: 1.3),
+              ),
+              const SizedBox(height: 14),
+
+              if (mainPhoto.isNotEmpty)
+                Column(
+                  children: [
+                    Stack(
+                      children: [
+                        GestureDetector(
+                          onTap: () => _viewFullImage(context, mainPhoto, 'Main Photo (Profile Picture)'),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(14),
+                            child: AspectRatio(
+                              aspectRatio: 16 / 9,
+                              child: CachedNetworkImage(
+                                imageUrl: mainPhoto,
+                                fit: BoxFit.cover,
+                                placeholder: (_, __) => Container(
+                                  color: const Color(0xFFF1F5F9),
+                                  child: const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+                                ),
+                                errorWidget: (_, __, ___) => Container(
+                                  color: const Color(0xFFF1F5F9),
+                                  child: const Icon(Icons.broken_image_rounded, color: Color(0xFF94A3B8)),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          top: 10,
+                          left: 10,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF0F172A).withValues(alpha: 0.8),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.verified_rounded, color: Color(0xFF00E599), size: 13),
+                                SizedBox(width: 4),
+                                Text(
+                                  'PRIMARY PROFILE PHOTO',
+                                  style: TextStyle(color: Colors.white, fontSize: 9.5, fontWeight: FontWeight.w800, letterSpacing: 0.5),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: _isUploadingMedia ? null : () => _pickAndUploadMainPhoto(auth),
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(color: Color(0xFFCBD5E1)),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                            ),
+                            icon: const Icon(Icons.camera_alt_outlined, size: 16, color: Color(0xFF0F172A)),
+                            label: const Text('Change Main Photo', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF0F172A))),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        OutlinedButton(
+                          onPressed: _isUploadingMedia ? null : () => _confirmDeletePhoto(context, auth, mainPhoto, isMain: true),
+                          style: OutlinedButton.styleFrom(
+                            side: const BorderSide(color: Color(0xFFFCA5A5)),
+                            backgroundColor: const Color(0xFFFEF2F2),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+                          ),
+                          child: const Icon(Icons.delete_outline_rounded, size: 18, color: Color(0xFFDC2626)),
+                        ),
+                      ],
+                    ),
+                  ],
+                )
+              else
+                GestureDetector(
+                  onTap: _isUploadingMedia ? null : () => _pickAndUploadMainPhoto(auth),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: const Color(0xFFCBD5E1), style: BorderStyle.solid),
+                    ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFECFDF5),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.add_a_photo_rounded, size: 24, color: Color(0xFF059669)),
+                        ),
+                        const SizedBox(height: 10),
+                        const Text(
+                          'Upload Main Photo (Profile Picture)',
+                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
+                        ),
+                        const SizedBox(height: 3),
+                        const Text(
+                          'Tap to capture via camera or pick from gallery',
+                          style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 16),
+
+        // CARD 2: SUBORDINATE HOTEL PHOTOS (MAX 2 PHOTOS)
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -1012,10 +1210,10 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
                 children: [
                   const Row(
                     children: [
-                      Icon(Icons.photo_library_rounded, color: Color(0xFF0F172A), size: 18),
+                      Icon(Icons.collections_rounded, color: Color(0xFF0F172A), size: 18),
                       SizedBox(width: 8),
                       Text(
-                        'Hotel & Dining Photos',
+                        'Subordinate Photos (Ambience)',
                         style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
                       ),
                     ],
@@ -1023,18 +1221,18 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: hotelPhotos.length >= 3 ? const Color(0xFFFEF2F2) : const Color(0xFFECFDF5),
+                      color: subordinatePhotos.length >= 2 ? const Color(0xFFFEF2F2) : const Color(0xFFECFDF5),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: hotelPhotos.length >= 3 ? const Color(0xFFFECACA) : const Color(0xFFA7F3D0),
+                        color: subordinatePhotos.length >= 2 ? const Color(0xFFFECACA) : const Color(0xFFA7F3D0),
                       ),
                     ),
                     child: Text(
-                      '${hotelPhotos.length}/3 photos',
+                      '${subordinatePhotos.length}/2 subordinate ($totalHotelPhotos/3 total)',
                       style: TextStyle(
                         fontSize: 10.5,
                         fontWeight: FontWeight.w800,
-                        color: hotelPhotos.length >= 3 ? const Color(0xFFDC2626) : const Color(0xFF059669),
+                        color: subordinatePhotos.length >= 2 ? const Color(0xFFDC2626) : const Color(0xFF059669),
                       ),
                     ),
                   ),
@@ -1042,31 +1240,31 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
               ),
               const SizedBox(height: 4),
               const Text(
-                'Showcase your dining interior, ambiance, and exterior (strict limit: 3 photos).',
+                'Showcase dining ambience and tables (max 2 subordinate photos). Tap the star icon on any photo to set it as Main.',
                 style: TextStyle(fontSize: 11, color: Color(0xFF64748B)),
               ),
               const SizedBox(height: 14),
 
               SizedBox(
-                height: 100,
+                height: 110,
                 child: ListView(
                   scrollDirection: Axis.horizontal,
                   children: [
-                    ...hotelPhotos.asMap().entries.map((entry) {
+                    ...subordinatePhotos.asMap().entries.map((entry) {
                       final idx = entry.key;
                       final url = entry.value;
                       return Container(
-                        width: 120,
+                        width: 130,
                         margin: const EdgeInsets.only(right: 12),
                         child: Stack(
                           children: [
                             GestureDetector(
-                              onTap: () => _viewFullImage(context, url, 'Hotel Photo #${idx + 1}'),
+                              onTap: () => _viewFullImage(context, url, 'Subordinate Photo #${idx + 1}'),
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(12),
                                 child: Container(
-                                  width: 120,
-                                  height: 100,
+                                  width: 130,
+                                  height: 110,
                                   decoration: BoxDecoration(
                                     color: const Color(0xFFF1F5F9),
                                     border: Border.all(color: const Color(0xFFE2E8F0)),
@@ -1086,33 +1284,45 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
                                 ),
                               ),
                             ),
+                            // Make Main Photo Button
+                            Positioned(
+                              top: 4,
+                              left: 4,
+                              child: GestureDetector(
+                                onTap: () => _confirmSetAsMainPhoto(context, auth, url),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF0F172A).withValues(alpha: 0.85),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: const Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.star_rounded, color: Color(0xFFFBBF24), size: 12),
+                                      SizedBox(width: 3),
+                                      Text(
+                                        'Set Main',
+                                        style: TextStyle(color: Colors.white, fontSize: 8.5, fontWeight: FontWeight.w800),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            // Delete Button
                             Positioned(
                               top: 4,
                               right: 4,
                               child: GestureDetector(
-                                onTap: () => _confirmDeletePhoto(context, auth, url, isHotelPhoto: true),
+                                onTap: () => _confirmDeletePhoto(context, auth, url, isSubordinate: true),
                                 child: Container(
                                   padding: const EdgeInsets.all(4),
                                   decoration: BoxDecoration(
                                     color: const Color(0xFFDC2626).withValues(alpha: 0.9),
                                     shape: BoxShape.circle,
                                   ),
-                                  child: const Icon(Icons.delete_rounded, color: Colors.white, size: 14),
-                                ),
-                              ),
-                            ),
-                            Positioned(
-                              bottom: 4,
-                              left: 4,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: Colors.black.withValues(alpha: 0.7),
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Text(
-                                  idx == 0 ? 'Hero' : '#${idx + 1}',
-                                  style: const TextStyle(color: Colors.white, fontSize: 9.5, fontWeight: FontWeight.w700),
+                                  child: const Icon(Icons.delete_rounded, color: Colors.white, size: 13),
                                 ),
                               ),
                             ),
@@ -1121,12 +1331,12 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
                       );
                     }),
 
-                    if (hotelPhotos.length < 3)
+                    if (subordinatePhotos.length < 2 && totalHotelPhotos < 3)
                       GestureDetector(
-                        onTap: _isUploadingMedia ? null : () => _pickAndUploadHotelPhoto(auth),
+                        onTap: _isUploadingMedia ? null : () => _pickAndUploadSubordinatePhoto(auth),
                         child: Container(
-                          width: 110,
-                          height: 100,
+                          width: 120,
+                          height: 110,
                           decoration: BoxDecoration(
                             color: const Color(0xFFF8FAFC),
                             borderRadius: BorderRadius.circular(12),
@@ -1141,7 +1351,7 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
                                   color: Color(0xFFE2E8F0),
                                   shape: BoxShape.circle,
                                 ),
-                                child: const Icon(Icons.add_a_photo_rounded, size: 18, color: Color(0xFF0F172A)),
+                                child: const Icon(Icons.add_photo_alternate_rounded, size: 18, color: Color(0xFF0F172A)),
                               ),
                               const SizedBox(height: 6),
                               const Text(
@@ -1149,7 +1359,7 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
                                 style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
                               ),
                               Text(
-                                '${3 - hotelPhotos.length} left',
+                                '${2 - subordinatePhotos.length} left',
                                 style: const TextStyle(fontSize: 9.5, color: Color(0xFF64748B)),
                               ),
                             ],
@@ -1165,7 +1375,7 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
 
         const SizedBox(height: 16),
 
-        // Card 2: Menu Cards (Unlimited Pages)
+        // CARD 3: MENU CARDS (UNLIMITED PAGES)
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -1264,7 +1474,7 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
                               top: 4,
                               right: 4,
                               child: GestureDetector(
-                                onTap: () => _confirmDeletePhoto(context, auth, url, isHotelPhoto: false),
+                                onTap: () => _confirmDeletePhoto(context, auth, url, isMenu: true),
                                 child: Container(
                                   padding: const EdgeInsets.all(4),
                                   decoration: BoxDecoration(
@@ -1402,22 +1612,11 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
     );
   }
 
-  Future<void> _pickAndUploadHotelPhoto(AuthProvider auth) async {
-    if (auth.profile.hotelPhotos.length >= 3) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Maximum 3 hotel photos reached. Delete an existing photo first.'),
-          backgroundColor: Color(0xFFDC2626),
-        ),
-      );
-      return;
-    }
-
+  Future<void> _pickAndUploadMainPhoto(AuthProvider auth) async {
     final source = await _showSourceSelector(
       context,
-      title: 'Upload Hotel Ambience Photo',
-      subtitle: 'Strict maximum: 3 photos (${auth.profile.hotelPhotos.length}/3 uploaded)',
+      title: 'Upload Main Photo (Profile Picture)',
+      subtitle: 'This will be the primary profile picture shown to customers and admin portal',
     );
     if (source == null) return;
 
@@ -1431,11 +1630,11 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
 
       setState(() {
         _isUploadingMedia = true;
-        _uploadStatusMessage = 'Uploading hotel photo to storage...';
+        _uploadStatusMessage = 'Uploading main profile photo...';
       });
 
       final bytes = await file.readAsBytes();
-      final success = await auth.uploadHotelPhoto(bytes, file.name);
+      final success = await auth.uploadMainPhoto(bytes, file.name);
 
       if (!mounted) return;
       setState(() {
@@ -1445,7 +1644,7 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Hotel photo uploaded successfully!'),
+            content: Text('Main profile photo updated successfully!'),
             backgroundColor: Color(0xFF059669),
           ),
         );
@@ -1469,54 +1668,61 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
     }
   }
 
-  Future<void> _pickAndUploadMenuImages(AuthProvider auth) async {
+  Future<void> _pickAndUploadSubordinatePhoto(AuthProvider auth) async {
+    if (auth.profile.subordinatePhotos.length >= 2 || auth.profile.totalPhotosCount >= 3) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Maximum 2 subordinate photos allowed (3 photos total with Main Photo).'),
+          backgroundColor: Color(0xFFDC2626),
+        ),
+      );
+      return;
+    }
+
     final source = await _showSourceSelector(
       context,
-      title: 'Upload Menu Card Pages',
-      subtitle: 'Upload unlimited pages of food and beverage menu',
+      title: 'Upload Subordinate Ambience Photo',
+      subtitle: 'Strict maximum: 2 subordinate photos (${auth.profile.subordinatePhotos.length}/2 uploaded)',
     );
     if (source == null) return;
 
     try {
-      List<XFile> files = [];
-      if (source == ImageSource.camera) {
-        final XFile? file = await _picker.pickImage(
-          source: ImageSource.camera,
-          imageQuality: 85,
-          maxWidth: 1920,
-        );
-        if (file != null) files.add(file);
-      } else {
-        files = await _picker.pickMultiImage(
-          imageQuality: 85,
-          maxWidth: 1920,
-        );
-      }
-      if (files.isEmpty) return;
+      final XFile? file = await _picker.pickImage(
+        source: source,
+        imageQuality: 85,
+        maxWidth: 1920,
+      );
+      if (file == null) return;
 
       setState(() {
         _isUploadingMedia = true;
-        _uploadStatusMessage = 'Uploading ${files.length} menu page(s)...';
+        _uploadStatusMessage = 'Uploading subordinate photo...';
       });
 
-      int uploadedCount = 0;
-      for (final f in files) {
-        final bytes = await f.readAsBytes();
-        final ok = await auth.uploadMenuImage(bytes, f.name);
-        if (ok) uploadedCount++;
-      }
+      final bytes = await file.readAsBytes();
+      final success = await auth.uploadSubordinatePhoto(bytes, file.name);
 
       if (!mounted) return;
       setState(() {
         _isUploadingMedia = false;
         _uploadStatusMessage = '';
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('$uploadedCount menu page(s) uploaded successfully!'),
-          backgroundColor: const Color(0xFF059669),
-        ),
-      );
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Subordinate photo uploaded successfully!'),
+            backgroundColor: Color(0xFF059669),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(auth.errorMessage ?? 'Upload failed.'),
+            backgroundColor: const Color(0xFFDC2626),
+          ),
+        );
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -1529,11 +1735,148 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
     }
   }
 
-  Future<void> _confirmDeletePhoto(BuildContext context, AuthProvider auth, String url, {required bool isHotelPhoto}) async {
-    final title = isHotelPhoto ? 'Delete Hotel Photo?' : 'Delete Menu Page?';
-    final desc = isHotelPhoto
-        ? 'Are you sure you want to remove this hotel photo from Supabase storage?'
-        : 'Are you sure you want to remove this menu page?';
+  Future<void> _confirmSetAsMainPhoto(BuildContext context, AuthProvider auth, String url) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.star_rounded, color: Color(0xFFFBBF24), size: 22),
+            SizedBox(width: 8),
+            Text('Set as Main Photo?', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: Color(0xFF0F172A))),
+          ],
+        ),
+        content: const Text(
+          'Make this photo your primary profile picture? It will immediately appear on the customer app and admin portal.',
+          style: TextStyle(fontSize: 13, color: Color(0xFF475569), height: 1.4),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF059669),
+              foregroundColor: Colors.white,
+              elevation: 0,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Set as Main', style: TextStyle(fontWeight: FontWeight.w700)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      final success = await auth.setAsMainPhoto(url);
+      if (!mounted) return;
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Photo promoted to Main Photo (Profile Picture)!'),
+            backgroundColor: Color(0xFF059669),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _pickAndUploadMenuImages(AuthProvider auth) async {
+    final source = await _showSourceSelector(
+      context,
+      title: 'Upload Menu Pages',
+      subtitle: 'Add pages to your digital menu card (unlimited)',
+    );
+    if (source == null) return;
+
+    try {
+      final List<XFile> files = [];
+      if (source == ImageSource.camera) {
+        final XFile? photo = await _picker.pickImage(
+          source: ImageSource.camera,
+          imageQuality: 85,
+          maxWidth: 1920,
+        );
+        if (photo != null) files.add(photo);
+      } else {
+        final List<XFile> picked = await _picker.pickMultiImage(
+          imageQuality: 85,
+          maxWidth: 1920,
+        );
+        files.addAll(picked);
+      }
+
+      if (files.isEmpty) return;
+
+      setState(() {
+        _isUploadingMedia = true;
+        _uploadStatusMessage = 'Uploading ${files.length} menu page(s)...';
+      });
+
+      int successCount = 0;
+      for (final f in files) {
+        final bytes = await f.readAsBytes();
+        final ok = await auth.uploadMenuImage(bytes, f.name);
+        if (ok) successCount++;
+      }
+
+      if (!mounted) return;
+      setState(() {
+        _isUploadingMedia = false;
+        _uploadStatusMessage = '';
+      });
+
+      if (successCount > 0) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Uploaded $successCount menu page(s) successfully!'),
+            backgroundColor: const Color(0xFF059669),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(auth.errorMessage ?? 'Upload failed.'),
+            backgroundColor: const Color(0xFFDC2626),
+          ),
+        );
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isUploadingMedia = false;
+        _uploadStatusMessage = '';
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Upload error: $e'), backgroundColor: const Color(0xFFDC2626)),
+      );
+    }
+  }
+
+  Future<void> _confirmDeletePhoto(
+    BuildContext context,
+    AuthProvider auth,
+    String url, {
+    bool isMain = false,
+    bool isSubordinate = false,
+    bool isMenu = false,
+  }) async {
+    final String title;
+    final String desc;
+    if (isMain) {
+      title = 'Delete Main Profile Photo?';
+      desc = 'Are you sure you want to remove your main profile photo? The next available photo will become your profile picture.';
+    } else if (isSubordinate) {
+      title = 'Delete Subordinate Photo?';
+      desc = 'Are you sure you want to remove this subordinate photo from Supabase storage?';
+    } else {
+      title = 'Delete Menu Page?';
+      desc = 'Are you sure you want to remove this menu page?';
+    }
 
     final confirm = await showDialog<bool>(
       context: context,
@@ -1541,7 +1884,7 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(title, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: Color(0xFF0F172A))),
-        content: Text(desc, style: const TextStyle(fontSize: 13, color: Color(0xFF475569))),
+        content: Text(desc, style: const TextStyle(fontSize: 13, color: Color(0xFF475569), height: 1.4)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -1562,8 +1905,10 @@ class _RestaurantProfileScreenState extends State<RestaurantProfileScreen> {
     );
 
     if (confirm == true) {
-      if (isHotelPhoto) {
-        await auth.deleteHotelPhoto(url);
+      if (isMain) {
+        await auth.deleteMainPhoto();
+      } else if (isSubordinate) {
+        await auth.deleteSubordinatePhoto(url);
       } else {
         await auth.deleteMenuImage(url);
       }

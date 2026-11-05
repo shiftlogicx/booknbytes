@@ -170,7 +170,7 @@ export default function RestaurantsPage() {
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-lg bg-slate-100 overflow-hidden flex-shrink-0">
                           <img
-                            src={r.visuals?.hero_image || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=400&q=80'}
+                            src={r.visuals?.hero_image || (r.visuals?.ambience && r.visuals.ambience[0]) || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=400&q=80'}
                             alt={r.name}
                             className="w-full h-full object-cover"
                           />

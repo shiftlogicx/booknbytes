@@ -578,13 +578,26 @@ class SupabaseService {
 
   Future<void> updateRestaurantVisuals({
     required String restaurantId,
-    required List<String> hotelPhotos,
+    String? heroImage,
+    List<String>? subordinatePhotos,
+    List<String>? hotelPhotos,
     required List<String> menuImages,
   }) async {
-    final cappedPhotos = hotelPhotos.take(3).toList();
+    String resolvedHero = heroImage ?? '';
+    List<String> resolvedAmbience = subordinatePhotos != null ? List<String>.from(subordinatePhotos) : [];
+
+    if (hotelPhotos != null && hotelPhotos.isNotEmpty) {
+      if (resolvedHero.isEmpty) {
+        resolvedHero = hotelPhotos.first;
+        if (resolvedAmbience.isEmpty && hotelPhotos.length > 1) {
+          resolvedAmbience = hotelPhotos.skip(1).take(2).toList();
+        }
+      }
+    }
+
     final visuals = {
-      'hero_image': cappedPhotos.isNotEmpty ? cappedPhotos.first : '',
-      'ambience': cappedPhotos,
+      'hero_image': resolvedHero,
+      'ambience': resolvedAmbience.take(2).toList(),
       'menu_images': menuImages,
     };
 
