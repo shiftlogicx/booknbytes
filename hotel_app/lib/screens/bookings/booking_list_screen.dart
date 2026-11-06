@@ -18,7 +18,10 @@ class _BookingListScreenState extends State<BookingListScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _refreshData();
+      final booking = Provider.of<BookingProvider>(context, listen: false);
+      if (booking.allBookings.isEmpty && !booking.isLoading) {
+        _refreshData();
+      }
     });
   }
 
@@ -261,12 +264,14 @@ class _BookingListScreenState extends State<BookingListScreen> {
                     : ListView.builder(
                         physics: const AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
                         padding: const EdgeInsets.fromLTRB(16, 12, 16, 100),
+                        cacheExtent: 600,
                         itemCount: booking.bookings.length,
                         itemBuilder: (context, idx) {
                           final b = booking.bookings[idx];
-                          return BookingCard(
-                            key: ValueKey('booking_${b.bookingId}'),
-                            booking: b,
+                          return RepaintBoundary(
+                            child: BookingCard(
+                              key: ValueKey('booking_${b.bookingId}'),
+                              booking: b,
                             onAccept: () async {
                               if (!booking.isFloorOperational) {
                                 ScaffoldMessenger.of(context).showSnackBar(
@@ -291,9 +296,10 @@ class _BookingListScreenState extends State<BookingListScreen> {
                                 ReservationSuccessDialog.show(context, b);
                               }
                             },
-                          );
-                        },
-                      ),
+                          ),
+                        );
+                      },
+                    ),
               ),
             ),
           ],

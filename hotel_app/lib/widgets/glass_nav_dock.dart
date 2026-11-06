@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -16,8 +15,8 @@ class GlassNavDock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bookingProvider = Provider.of<BookingProvider>(context);
-    final pendingCount = bookingProvider.pendingCount;
+    // Only rebuild the dock badge when pendingCount actually changes
+    final pendingCount = context.select<BookingProvider, int>((p) => p.pendingCount);
 
     final tabs = [
       _DockTab(icon: Icons.insights_rounded, activeIcon: Icons.insights_rounded, label: 'Pulse'),
@@ -31,35 +30,32 @@ class GlassNavDock extends StatelessWidget {
       _DockTab(icon: Icons.tune_rounded, activeIcon: Icons.tune_rounded, label: 'Settings'),
     ];
 
-    return SafeArea(
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        height: 66,
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.94),
-          borderRadius: BorderRadius.circular(34),
-          border: Border.all(
-            color: const Color(0xFFE2E8F0),
-            width: 1.0,
+    return RepaintBoundary(
+      child: SafeArea(
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          height: 66,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(34),
+            border: Border.all(
+              color: const Color(0xFFE2E8F0),
+              width: 1.0,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF0F172A).withValues(alpha: 0.08),
+                blurRadius: 20,
+                offset: const Offset(0, 6),
+              ),
+              BoxShadow(
+                color: const Color(0xFF059669).withValues(alpha: 0.04),
+                blurRadius: 10,
+                spreadRadius: 1,
+              ),
+            ],
           ),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF0F172A).withValues(alpha: 0.08),
-              blurRadius: 24,
-              offset: const Offset(0, 8),
-            ),
-            BoxShadow(
-              color: const Color(0xFF059669).withValues(alpha: 0.04),
-              blurRadius: 12,
-              spreadRadius: 1,
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(34),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-            child: Row(
+          child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: List.generate(tabs.length, (idx) {
                 final tab = tabs[idx];
@@ -148,7 +144,6 @@ class GlassNavDock extends StatelessWidget {
                   ),
                 );
               }),
-            ),
           ),
         ),
       ),

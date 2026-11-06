@@ -26,7 +26,7 @@ class _TableSlotsScreenState extends State<TableSlotsScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final auth = Provider.of<AuthProvider>(context, listen: false);
       final slots = Provider.of<SlotsProvider>(context, listen: false);
-      if (auth.currentRestaurantId.isNotEmpty) {
+      if (auth.currentRestaurantId.isNotEmpty && slots.slots.isEmpty && !slots.isLoading) {
         slots.loadSlots(auth.currentRestaurantId);
       }
       final profile = auth.profile;

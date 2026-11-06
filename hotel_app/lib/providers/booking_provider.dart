@@ -48,6 +48,105 @@ class BookingProvider extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
   String get filterStatus => _filterStatus;
 
+  int _totalCount = 0;
+  int _confirmedCount = 0;
+  int _pendingCount = 0;
+  int _completedCount = 0;
+  int _noShowCount = 0;
+  int _cancelledCount = 0;
+  int _discountedCount = 0;
+  int _todayCount = 0;
+  int _todayConfirmedCount = 0;
+  int _todayPendingCount = 0;
+  int _todayCompletedCount = 0;
+  int _todayNoShowCount = 0;
+  int _todayCancelledCount = 0;
+  int _todayExpectedCovers = 0;
+  int _totalExpectedCovers = 0;
+  double _attendanceRate = 0.0;
+  int _totalDiscountGiven = 0;
+  List<BookingModel> _todayBookingsCache = [];
+
+  void _recomputeMetrics() {
+    final total = _bookings.length;
+    int confirmed = 0;
+    int pending = 0;
+    int completed = 0;
+    int noShow = 0;
+    int cancelled = 0;
+    int discounted = 0;
+    int todayCnt = 0;
+    int todayConf = 0;
+    int todayPend = 0;
+    int todayCompl = 0;
+    int todayNS = 0;
+    int todayCanc = 0;
+    int todayExpCov = 0;
+    int totalExpCov = 0;
+    int discountSum = 0;
+    final List<BookingModel> todayList = [];
+
+    for (int i = 0; i < total; i++) {
+      final b = _bookings[i];
+      final isConf = b.isConfirmed;
+      final isPend = b.isPending;
+      final isCompl = b.isCompleted;
+      final isNS = b.isNoShow;
+      final isCanc = b.isCancelled;
+      final isRej = b.isRejected;
+
+      if (isConf) confirmed++;
+      if (isPend) pending++;
+      if (isCompl) completed++;
+      if (isNS) noShow++;
+      if (isCanc) cancelled++;
+      if (b.appliedOffer != null && b.appliedOffer!.isNotEmpty) {
+        discounted++;
+        if (isCompl) {
+          discountSum += (b.partySize * 300);
+        }
+      }
+
+      if (!isCanc && !isRej) {
+        totalExpCov += b.partySize;
+      }
+
+      if (b.isForToday) {
+        todayList.add(b);
+        todayCnt++;
+        if (isConf) todayConf++;
+        if (isPend) todayPend++;
+        if (isCompl) todayCompl++;
+        if (isNS) todayNS++;
+        if (isCanc) todayCanc++;
+        if (!isCanc && !isRej) {
+          todayExpCov += b.partySize;
+        }
+      }
+    }
+
+    _totalCount = total;
+    _confirmedCount = confirmed;
+    _pendingCount = pending;
+    _completedCount = completed;
+    _noShowCount = noShow;
+    _cancelledCount = cancelled;
+    _discountedCount = discounted;
+    _todayCount = todayCnt;
+    _todayConfirmedCount = todayConf;
+    _todayPendingCount = todayPend;
+    _todayCompletedCount = todayCompl;
+    _todayNoShowCount = todayNS;
+    _todayCancelledCount = todayCanc;
+    _todayExpectedCovers = todayExpCov;
+    _totalExpectedCovers = totalExpCov;
+    _totalDiscountGiven = discountSum;
+    _todayBookingsCache = todayList;
+
+    final finished = completed + noShow;
+    _attendanceRate = finished == 0 ? 0.0 : (completed / finished) * 100;
+  }
+
   BookingProvider({bool autoSubscribe = true}) {
     if (autoSubscribe) {
       // Immediately start listening for live bookings from the very first frame
@@ -55,55 +154,34 @@ class BookingProvider extends ChangeNotifier {
     }
   }
 
-  int get totalCount => _bookings.length;
-  int get confirmedCount => _bookings.where((b) => b.isConfirmed).length;
-  int get pendingCount => _bookings.where((b) => b.isPending).length;
-  int get completedCount => _bookings.where((b) => b.isCompleted).length;
-  int get noShowCount => _bookings.where((b) => b.isNoShow).length;
-  int get cancelledCount => _bookings.where((b) => b.isCancelled).length;
-  int get discountedCount =>
-      _bookings.where((b) => b.appliedOffer != null && b.appliedOffer!.isNotEmpty).length;
+  int get totalCount => _totalCount;
+  int get confirmedCount => _confirmedCount;
+  int get pendingCount => _pendingCount;
+  int get completedCount => _completedCount;
+  int get noShowCount => _noShowCount;
+  int get cancelledCount => _cancelledCount;
+  int get discountedCount => _discountedCount;
 
   /// Shift-specific bookings for today
-  List<BookingModel> get todayBookings => _bookings.where((b) => b.isForToday).toList();
-  int get todayCount => todayBookings.length;
-  int get todayConfirmedCount => todayBookings.where((b) => b.isConfirmed).length;
-  int get todayPendingCount => todayBookings.where((b) => b.isPending).length;
-  int get todayCompletedCount => todayBookings.where((b) => b.isCompleted).length;
-  int get todayNoShowCount => todayBookings.where((b) => b.isNoShow).length;
-  int get todayCancelledCount => todayBookings.where((b) => b.isCancelled).length;
+  List<BookingModel> get todayBookings => _todayBookingsCache;
+  int get todayCount => _todayCount;
+  int get todayConfirmedCount => _todayConfirmedCount;
+  int get todayPendingCount => _todayPendingCount;
+  int get todayCompletedCount => _todayCompletedCount;
+  int get todayNoShowCount => _todayNoShowCount;
+  int get todayCancelledCount => _todayCancelledCount;
 
   /// Accurate expected covers for today's shift (sum of guest party sizes)
-  int get todayExpectedCovers {
-    return todayBookings
-        .where((b) => !b.isCancelled && !b.isRejected)
-        .fold<int>(0, (sum, b) => sum + b.partySize);
-  }
+  int get todayExpectedCovers => _todayExpectedCovers;
 
   /// Total expected covers across all active/completed bookings
-  int get totalExpectedCovers {
-    return _bookings
-        .where((b) => !b.isCancelled && !b.isRejected)
-        .fold<int>(0, (sum, b) => sum + b.partySize);
-  }
+  int get totalExpectedCovers => _totalExpectedCovers;
 
   /// Real attendance rate strictly derived from completed vs no-show bookings
-  double get attendanceRate {
-    final finished = completedCount + noShowCount;
-    if (finished == 0) return 0.0;
-    return (completedCount / finished) * 100;
-  }
+  double get attendanceRate => _attendanceRate;
 
   /// Real total discount provided to diners
-  int get totalDiscountGiven {
-    int sum = 0;
-    for (final b in _bookings) {
-      if (b.appliedOffer != null && b.appliedOffer!.isNotEmpty && b.isCompleted) {
-        sum += (b.partySize * 300);
-      }
-    }
-    return sum;
-  }
+  int get totalDiscountGiven => _totalDiscountGiven;
 
   void setFilterStatus(String status) {
     _filterStatus = status;
@@ -138,6 +216,7 @@ class BookingProvider extends ChangeNotifier {
       AppLogger.info('BOOKINGS', 'Fetching bookings for restaurant', details: {'restaurant_id': restaurantId});
       final fetched = await _supabaseService.fetchBookings(restaurantId);
       _bookings = fetched;
+      _recomputeMetrics();
       // Accumulate known IDs so historical bookings are never re-alerted
       _knownBookingIds.addAll(fetched.map((b) => b.bookingId));
       _knownBookingIds.addAll(fetched.map((b) => b.bookingId.trim().toLowerCase()));
@@ -187,6 +266,7 @@ class BookingProvider extends ChangeNotifier {
           _knownBookingIds.addAll(list.map((b) => b.bookingId));
           _knownBookingIds.addAll(list.map((b) => b.bookingId.trim().toLowerCase()));
           _bookings = list;
+          _recomputeMetrics();
           notifyListeners();
         }
       }, onError: (e) {
@@ -204,6 +284,7 @@ class BookingProvider extends ChangeNotifier {
           _knownBookingIds.add(booking.bookingId);
           _knownBookingIds.add(key);
           _bookings.insert(0, booking);
+          _recomputeMetrics();
           notifyListeners();
           if (booking.status == BookingStatus.pending || booking.status == BookingStatus.confirmed) {
             _dispatchBookingAlert(booking, 'FCM');
@@ -220,6 +301,7 @@ class BookingProvider extends ChangeNotifier {
           _knownBookingIds.add(booking.bookingId);
           _knownBookingIds.add(key);
           _bookings.insert(0, booking);
+          _recomputeMetrics();
           notifyListeners();
           if (booking.status == BookingStatus.pending || booking.status == BookingStatus.confirmed) {
             _dispatchBookingAlert(booking, 'OneSignal');
@@ -315,6 +397,7 @@ class BookingProvider extends ChangeNotifier {
             _knownBookingIds.add(booking.bookingId);
             _knownBookingIds.add(key);
             _bookings.insert(0, booking);
+            _recomputeMetrics();
             notifyListeners();
 
             // If customer name was not joined in raw change, enrich asynchronously
@@ -334,6 +417,7 @@ class BookingProvider extends ChangeNotifier {
                       final idx = _bookings.indexWhere((b) => b.bookingId == booking.bookingId);
                       if (idx != -1) {
                         _bookings[idx] = enriched;
+                        _recomputeMetrics();
                         notifyListeners();
                       }
                       finalBooking = enriched;
@@ -363,6 +447,7 @@ class BookingProvider extends ChangeNotifier {
         final idx = _bookings.indexWhere((b) => b.bookingId == updated.bookingId);
         if (idx != -1) {
           _bookings[idx] = updated;
+          _recomputeMetrics();
           notifyListeners();
         }
       } catch (e) {
@@ -374,6 +459,7 @@ class BookingProvider extends ChangeNotifier {
         if (deletedId != null) {
           _bookings.removeWhere((b) => b.bookingId == deletedId);
           _knownBookingIds.remove(deletedId);
+          _recomputeMetrics();
           notifyListeners();
         }
       } catch (e) {
@@ -389,6 +475,7 @@ class BookingProvider extends ChangeNotifier {
     _recentlyDispatchedAlerts[key] = DateTime.now();
 
     _bookings.insert(0, booking);
+    _recomputeMetrics();
     notifyListeners();
     try {
       final inserted = await _supabaseService.insertBooking(booking);
@@ -403,6 +490,7 @@ class BookingProvider extends ChangeNotifier {
           customerName: booking.customerName,
           customerPhone: booking.customerPhone,
         );
+        _recomputeMetrics();
         notifyListeners();
       }
     } catch (e) {
@@ -417,6 +505,7 @@ class BookingProvider extends ChangeNotifier {
     final index = _bookings.indexWhere((b) => b.bookingId == bookingId);
     if (index != -1) {
       _bookings[index] = _bookings[index].copyWith(status: status);
+      _recomputeMetrics();
       notifyListeners();
     }
     try {
@@ -441,6 +530,7 @@ class BookingProvider extends ChangeNotifier {
     final index = _bookings.indexWhere((b) => b.bookingId == bookingId);
     if (index != -1) {
       _bookings[index] = _bookings[index].copyWith(status: BookingStatus.completed);
+      _recomputeMetrics();
       notifyListeners();
     }
 
@@ -457,6 +547,7 @@ class BookingProvider extends ChangeNotifier {
     final index = _bookings.indexWhere((b) => b.bookingId == bookingId);
     if (index != -1) {
       _bookings[index] = _bookings[index].copyWith(status: BookingStatus.noShow);
+      _recomputeMetrics();
       notifyListeners();
     }
 
@@ -492,6 +583,7 @@ class BookingProvider extends ChangeNotifier {
         return false;
       }
       _bookings[index] = b.copyWith(status: BookingStatus.confirmed);
+      _recomputeMetrics();
       notifyListeners();
     }
 

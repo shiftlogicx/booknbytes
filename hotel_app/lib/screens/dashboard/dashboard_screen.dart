@@ -88,13 +88,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final auth = Provider.of<AuthProvider>(context);
-    final locationProvider = Provider.of<LocationProvider>(context);
-
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
-      appBar: _currentNavIndex == 0 ? _buildHomeAppBar(auth, locationProvider) : null,
-      body: _buildCurrentTab(),
+      body: IndexedStack(
+        index: _currentNavIndex,
+        children: [
+          _buildFloorTab(),
+          const BookingListScreen(),
+          const TableSlotsScreen(),
+          const SettingsScreen(),
+        ],
+      ),
       extendBody: true, // Allows content to float under the glass dock
       bottomNavigationBar: GlassNavDock(
         currentIndex: _currentNavIndex,
@@ -105,7 +109,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  PreferredSizeWidget _buildHomeAppBar(AuthProvider auth, LocationProvider locationProvider) {
+  Widget _buildFloorTab() {
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8F9FA),
+      appBar: _buildHomeAppBar(),
+      body: _buildFloorView(),
+    );
+  }
+
+  PreferredSizeWidget _buildHomeAppBar() {
     return AppBar(
       elevation: 0,
       backgroundColor: Colors.white,
@@ -113,60 +125,64 @@ class _DashboardScreenState extends State<DashboardScreen> {
         bottom: BorderSide(color: Color(0xFFE2E8F0), width: 1.0),
       ),
       titleSpacing: 16,
-      title: InkWell(
-        onTap: () {
-          HapticFeedback.lightImpact();
-          LocationPickerBottomSheet.show(context);
+      title: Consumer2<AuthProvider, LocationProvider>(
+        builder: (context, auth, locationProvider, _) {
+          return InkWell(
+            onTap: () {
+              HapticFeedback.lightImpact();
+              LocationPickerBottomSheet.show(context);
+            },
+            borderRadius: BorderRadius.circular(10),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.location_on_rounded, size: 14, color: Color(0xFFD97706)),
+                      const SizedBox(width: 4),
+                      Text(
+                        locationProvider.currentLocation.shortLabel,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF0F172A),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      const Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: Color(0xFFD97706)),
+                    ],
+                  ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFF059669),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        auth.currentRestaurantName,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: Color(0xFF64748B),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
         },
-        borderRadius: BorderRadius.circular(10),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.location_on_rounded, size: 14, color: Color(0xFFD97706)),
-                  const SizedBox(width: 4),
-                  Text(
-                    locationProvider.currentLocation.shortLabel,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF0F172A),
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  const Icon(Icons.keyboard_arrow_down_rounded, size: 16, color: Color(0xFFD97706)),
-                ],
-              ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 6,
-                    height: 6,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF059669),
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    auth.currentRestaurantName,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: Color(0xFF64748B),
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
       ),
       actions: [
         // Restaurant Profile Avatar / Icon
@@ -208,104 +224,93 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildCurrentTab() {
-    switch (_currentNavIndex) {
-      case 1:
-        return const BookingListScreen();
-      case 2:
-        return const TableSlotsScreen();
-      case 3:
-        return const SettingsScreen();
-      default:
-        return _buildFloorView(); // Initial Home Page: ONLY Shift Reservation Pulse
-    }
-  }
-
   // Home Page: Dedicated ONLY to the Shift Reservation Pulse
   Widget _buildFloorView() {
-    final booking = Provider.of<BookingProvider>(context);
-    final locationProvider = Provider.of<LocationProvider>(context);
+    return Consumer2<BookingProvider, LocationProvider>(
+      builder: (context, booking, locationProvider, _) {
+        return SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(18, 14, 18, 100),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // 1. Sleek Command Header Bar
+              _buildCommandHeader(locationProvider, booking),
 
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.fromLTRB(18, 14, 18, 100),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 1. Sleek Command Header Bar
-          _buildCommandHeader(locationProvider, booking),
+              const SizedBox(height: 20),
 
-          const SizedBox(height: 20),
+              // 2. SHIFT RESERVATION PULSE (Interactive 4-Quadrant Metric Bento)
+              ShiftPulseBento(
+                todayCount: booking.todayCount,
+                confirmedCount: booking.todayCount > 0 ? booking.todayConfirmedCount : booking.confirmedCount,
+                pendingCount: booking.pendingCount,
+                expectedCovers: booking.todayCount > 0 ? booking.todayExpectedCovers : booking.totalExpectedCovers,
+                selectedFilter: _activeFilter,
+                onFilterChanged: (filter) {
+                  setState(() {
+                    _activeFilter = filter;
+                    _currentNavIndex = 1; // Switches straight to Bookings tab!
+                  });
+                  Provider.of<BookingProvider>(context, listen: false).setFilter(filter);
+                },
+              ),
 
-          // 2. SHIFT RESERVATION PULSE (Interactive 4-Quadrant Metric Bento)
-          ShiftPulseBento(
-            todayCount: booking.todayCount,
-            confirmedCount: booking.todayCount > 0 ? booking.todayConfirmedCount : booking.confirmedCount,
-            pendingCount: booking.pendingCount,
-            expectedCovers: booking.todayCount > 0 ? booking.todayExpectedCovers : booking.totalExpectedCovers,
-            selectedFilter: _activeFilter,
-            onFilterChanged: (filter) {
-              setState(() {
-                _activeFilter = filter;
-                _currentNavIndex = 1; // Switches straight to Bookings tab!
-              });
-              Provider.of<BookingProvider>(context, listen: false).setFilter(filter);
-            },
+              const SizedBox(height: 20),
+
+              // 3. Executive Shift Conversion Bar (CRED/Swiggy luxury style)
+              _buildAttendanceBar(booking),
+
+              const SizedBox(height: 24),
+
+              // 4. Clean Quick-Access Destination Cards (CRED style)
+              const Text(
+                'QUICK OPERATIONS & MANAGEMENT',
+                style: TextStyle(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.9,
+                  color: Color(0xFF64748B),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              _buildQuickActionCard(
+                title: 'Live Table Reservations',
+                subtitle: '${booking.todayCount} reservations scheduled today · ${booking.pendingCount} needs action',
+                icon: Icons.calendar_month_rounded,
+                accentColor: const Color(0xFF00E599),
+                badge: '${booking.todayCount} ACTIVE',
+                onTap: () => setState(() => _currentNavIndex = 1),
+              ),
+
+              const SizedBox(height: 10),
+
+              _buildQuickActionCard(
+                title: 'Hourly Table Slots & Capacity',
+                subtitle: 'Configure floor tables, limit covers & pause busy slots',
+                icon: Icons.table_restaurant_rounded,
+                accentColor: const Color(0xFF38BDF8),
+                badge: 'SLOTS',
+                onTap: () => setState(() => _currentNavIndex = 2),
+              ),
+
+              const SizedBox(height: 10),
+
+              _buildQuickActionCard(
+                title: 'Settings & Restaurant Rules',
+                subtitle: 'Manage auto-confirm, instant ring alerts & opening hours',
+                icon: Icons.tune_rounded,
+                accentColor: const Color(0xFF8B5CF6),
+                badge: 'SETTINGS',
+                onTap: () => setState(() => _currentNavIndex = 3),
+              ),
+            ],
           ),
-
-          const SizedBox(height: 20),
-
-          // 3. Executive Shift Conversion Bar (CRED/Swiggy luxury style)
-          _buildAttendanceBar(booking),
-
-          const SizedBox(height: 24),
-
-          // 4. Clean Quick-Access Destination Cards (CRED style)
-          const Text(
-            'QUICK OPERATIONS & MANAGEMENT',
-            style: TextStyle(
-              fontSize: 10.5,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 0.9,
-              color: Color(0xFF64748B),
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          _buildQuickActionCard(
-            title: 'Live Table Reservations',
-            subtitle: '${booking.todayCount} reservations scheduled today · ${booking.pendingCount} needs action',
-            icon: Icons.calendar_month_rounded,
-            accentColor: const Color(0xFF00E599),
-            badge: '${booking.todayCount} ACTIVE',
-            onTap: () => setState(() => _currentNavIndex = 1),
-          ),
-
-          const SizedBox(height: 10),
-
-          _buildQuickActionCard(
-            title: 'Hourly Table Slots & Capacity',
-            subtitle: 'Configure floor tables, limit covers & pause busy slots',
-            icon: Icons.table_restaurant_rounded,
-            accentColor: const Color(0xFF38BDF8),
-            badge: 'SLOTS',
-            onTap: () => setState(() => _currentNavIndex = 2),
-          ),
-
-          const SizedBox(height: 10),
-
-          _buildQuickActionCard(
-            title: 'Settings & Restaurant Rules',
-            subtitle: 'Manage auto-confirm, instant ring alerts & opening hours',
-            icon: Icons.tune_rounded,
-            accentColor: const Color(0xFF8B5CF6),
-            badge: 'SETTINGS',
-            onTap: () => setState(() => _currentNavIndex = 3),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
+
 
   // 1. Sleek Command Header Bar
   Widget _buildCommandHeader(LocationProvider locationProvider, BookingProvider bookingProvider) {
