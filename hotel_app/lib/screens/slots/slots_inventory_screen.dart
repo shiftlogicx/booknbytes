@@ -488,7 +488,7 @@ class _TableSlotsScreenState extends State<TableSlotsScreen> {
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      const Text('MIN FLOOR', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: Color(0xFF64748B))),
+                                      const Text('MINIMUM DISCOUNT', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: Color(0xFF64748B))),
                                       const SizedBox(height: 6),
                                       Row(
                                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -557,7 +557,7 @@ class _TableSlotsScreenState extends State<TableSlotsScreen> {
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      const Text('MAX CEILING', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: Color(0xFF64748B))),
+                                      const Text('MAXIMUM DISCOUNT', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: Color(0xFF64748B))),
                                       const SizedBox(height: 6),
                                       Row(
                                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -868,7 +868,7 @@ class _TableSlotsScreenState extends State<TableSlotsScreen> {
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      const Text('MIN FLOOR', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: Color(0xFF64748B))),
+                                      const Text('MINIMUM DISCOUNT', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: Color(0xFF64748B))),
                                       const SizedBox(height: 6),
                                       Row(
                                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -937,7 +937,7 @@ class _TableSlotsScreenState extends State<TableSlotsScreen> {
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      const Text('MAX CEILING', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: Color(0xFF64748B))),
+                                      const Text('MAXIMUM DISCOUNT', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: Color(0xFF64748B))),
                                       const SizedBox(height: 6),
                                       Row(
                                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1675,7 +1675,7 @@ class _TableSlotsScreenState extends State<TableSlotsScreen> {
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
-                                    'MIN (FLOOR)',
+                                    'MINIMUM DISCOUNT',
                                     style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: Color(0xFF64748B), letterSpacing: 0.5),
                                   ),
                                   Icon(Icons.arrow_downward_rounded, size: 14, color: Color(0xFF64748B)),
@@ -1755,7 +1755,7 @@ class _TableSlotsScreenState extends State<TableSlotsScreen> {
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
-                                    'MAX (CEILING)',
+                                    'MAXIMUM DISCOUNT',
                                     style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: Color(0xFF059669), letterSpacing: 0.5),
                                   ),
                                   Icon(Icons.arrow_upward_rounded, size: 14, color: Color(0xFF059669)),

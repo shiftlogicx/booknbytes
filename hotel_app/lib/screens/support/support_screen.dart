@@ -36,7 +36,7 @@ class _SupportScreenState extends State<SupportScreen> with SingleTickerProvider
     _FaqItem(
       question: 'How do I configure Dynamic Min-Max discounts?',
       answer:
-          'Open the Slots tab in the bottom navigation. Toggle "Enable Dynamic Min-Max Discount" and choose a strategy preset or fine-tune your Floor (Min) and Ceiling (Max) limits. Diners roll a dynamic surprise discount within your limits when reserving a table.',
+          'Open the Slots tab in the bottom navigation. Toggle "Enable Dynamic Min-Max Discount" and choose a strategy preset or fine-tune your Minimum and Maximum discount limits. Diners roll a dynamic surprise discount within your limits when reserving a table.',
       category: 'DISCOUNTS & SLOTS',
     ),
     _FaqItem(
