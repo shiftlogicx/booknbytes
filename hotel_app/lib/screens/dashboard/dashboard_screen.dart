@@ -240,9 +240,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
           // 2. SHIFT RESERVATION PULSE (Interactive 4-Quadrant Metric Bento)
           ShiftPulseBento(
             todayCount: booking.todayCount,
-            confirmedCount: booking.confirmedCount,
+            confirmedCount: booking.todayCount > 0 ? booking.todayConfirmedCount : booking.confirmedCount,
             pendingCount: booking.pendingCount,
-            expectedCovers: booking.totalCount * 3,
+            expectedCovers: booking.todayCount > 0 ? booking.todayExpectedCovers : booking.totalExpectedCovers,
             selectedFilter: _activeFilter,
             onFilterChanged: (filter) {
               setState(() {
@@ -561,7 +561,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   border: Border.all(color: const Color(0xFFA7F3D0)),
                 ),
                 child: Text(
-                  '${booking.attendanceRate.toStringAsFixed(0)}% Seated Rate',
+                  booking.completedCount + booking.noShowCount == 0
+                      ? 'No Finished Shifts'
+                      : '${booking.attendanceRate.toStringAsFixed(0)}% Seated Rate',
                   style: const TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w900,
@@ -576,22 +578,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
             borderRadius: BorderRadius.circular(6),
             child: SizedBox(
               height: 8,
-              child: Row(
-                children: [
-                  Expanded(
-                    flex: booking.completedCount > 0 ? booking.completedCount : 8,
-                    child: Container(color: const Color(0xFF059669)),
-                  ),
-                  Expanded(
-                    flex: booking.confirmedCount > 0 ? booking.confirmedCount : 3,
-                    child: Container(color: const Color(0xFFD97706)),
-                  ),
-                  Expanded(
-                    flex: booking.noShowCount > 0 ? booking.noShowCount : 1,
-                    child: Container(color: const Color(0xFFDC2626)),
-                  ),
-                ],
-              ),
+              child: (booking.completedCount == 0 && booking.confirmedCount == 0 && booking.noShowCount == 0)
+                  ? Container(
+                      color: const Color(0xFFE2E8F0),
+                    )
+                  : Row(
+                      children: [
+                        if (booking.completedCount > 0)
+                          Expanded(
+                            flex: booking.completedCount,
+                            child: Container(color: const Color(0xFF059669)),
+                          ),
+                        if (booking.confirmedCount > 0)
+                          Expanded(
+                            flex: booking.confirmedCount,
+                            child: Container(color: const Color(0xFFD97706)),
+                          ),
+                        if (booking.noShowCount > 0)
+                          Expanded(
+                            flex: booking.noShowCount,
+                            child: Container(color: const Color(0xFFDC2626)),
+                          ),
+                      ],
+                    ),
             ),
           ),
           const SizedBox(height: 12),

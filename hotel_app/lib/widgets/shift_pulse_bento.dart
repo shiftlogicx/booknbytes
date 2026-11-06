@@ -132,7 +132,9 @@ class _ShiftPulseBentoState extends State<ShiftPulseBento>
                 child: _buildQuadrant(
                   title: 'TOTAL BOOKINGS',
                   value: widget.todayCount,
-                  subtitle: '+18% Today',
+                  subtitle: widget.todayCount > 0
+                      ? '${widget.todayCount} Scheduled Today'
+                      : 'No Bookings Today',
                   icon: Icons.calendar_month_rounded,
                   accentColor: const Color(0xFFD97706), // warm amber
                   bgColor: const Color(0xFFFFFBEB),
@@ -146,7 +148,11 @@ class _ShiftPulseBentoState extends State<ShiftPulseBento>
                 child: _buildQuadrant(
                   title: 'CONFIRMED TABLES',
                   value: widget.confirmedCount,
-                  subtitle: '85% Occupancy',
+                  subtitle: widget.todayCount > 0
+                      ? '${((widget.confirmedCount / widget.todayCount) * 100).round()}% Confirmed Rate'
+                      : (widget.confirmedCount > 0
+                          ? '${widget.confirmedCount} Confirmed'
+                          : '0% Confirmed'),
                   icon: Icons.check_circle_rounded,
                   accentColor: const Color(0xFF059669), // emerald
                   bgColor: const Color(0xFFECFDF5),
@@ -169,7 +175,7 @@ class _ShiftPulseBentoState extends State<ShiftPulseBento>
                     return _buildQuadrant(
                       title: 'ACTION REQUIRED',
                       value: widget.pendingCount,
-                      subtitle: widget.pendingCount > 0 ? 'Awaiting Host' : 'All Clear',
+                      subtitle: widget.pendingCount > 0 ? '${widget.pendingCount} Awaiting Host' : 'All Clear',
                       icon: Icons.notification_important_rounded,
                       accentColor: const Color(0xFFEA580C), // orange
                       bgColor: const Color(0xFFFFF7ED),
@@ -187,7 +193,9 @@ class _ShiftPulseBentoState extends State<ShiftPulseBento>
                 child: _buildQuadrant(
                   title: 'EXPECTED COVERS',
                   value: widget.expectedCovers,
-                  subtitle: 'Dinner Peak',
+                  subtitle: widget.expectedCovers > 0
+                      ? '${widget.expectedCovers} Guests Scheduled'
+                      : 'No Guests Scheduled',
                   icon: Icons.groups_rounded,
                   accentColor: const Color(0xFF4F46E5), // indigo
                   bgColor: const Color(0xFFEEF2FF),

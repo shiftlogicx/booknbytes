@@ -577,6 +577,8 @@ class AuthProvider extends ChangeNotifier {
     required String upiId,
     required int costForTwo,
     required List<String> cuisines,
+    double? latitude,
+    double? longitude,
     Uint8List? onboardingMainPhotoBytes,
     String? onboardingMainPhotoFilename,
     List<Map<String, dynamic>>? onboardingSubordinatePhotos,
@@ -633,6 +635,8 @@ class AuthProvider extends ChangeNotifier {
         'upi_id': upiId,
         'fssai_number': fssaiNumber,
         'address': address,
+        if (latitude != null && longitude != null)
+          'geo_location': 'POINT($longitude $latitude)',
         'cost_for_two': costForTwo,
         'cuisines': cuisines,
         'timings': {

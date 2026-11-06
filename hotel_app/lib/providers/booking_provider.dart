@@ -64,25 +64,45 @@ class BookingProvider extends ChangeNotifier {
   int get discountedCount =>
       _bookings.where((b) => b.appliedOffer != null && b.appliedOffer!.isNotEmpty).length;
 
+  /// Shift-specific bookings for today
+  List<BookingModel> get todayBookings => _bookings.where((b) => b.isForToday).toList();
+  int get todayCount => todayBookings.length;
+  int get todayConfirmedCount => todayBookings.where((b) => b.isConfirmed).length;
+  int get todayPendingCount => todayBookings.where((b) => b.isPending).length;
+  int get todayCompletedCount => todayBookings.where((b) => b.isCompleted).length;
+  int get todayNoShowCount => todayBookings.where((b) => b.isNoShow).length;
+  int get todayCancelledCount => todayBookings.where((b) => b.isCancelled).length;
+
+  /// Accurate expected covers for today's shift (sum of guest party sizes)
+  int get todayExpectedCovers {
+    return todayBookings
+        .where((b) => !b.isCancelled && !b.isRejected)
+        .fold<int>(0, (sum, b) => sum + b.partySize);
+  }
+
+  /// Total expected covers across all active/completed bookings
+  int get totalExpectedCovers {
+    return _bookings
+        .where((b) => !b.isCancelled && !b.isRejected)
+        .fold<int>(0, (sum, b) => sum + b.partySize);
+  }
+
+  /// Real attendance rate strictly derived from completed vs no-show bookings
   double get attendanceRate {
     final finished = completedCount + noShowCount;
-    if (finished == 0) return 94.0;
+    if (finished == 0) return 0.0;
     return (completedCount / finished) * 100;
   }
 
+  /// Real total discount provided to diners
   int get totalDiscountGiven {
     int sum = 0;
     for (final b in _bookings) {
-      if (b.appliedOffer != null && b.isCompleted) {
+      if (b.appliedOffer != null && b.appliedOffer!.isNotEmpty && b.isCompleted) {
         sum += (b.partySize * 300);
       }
     }
-    return sum > 0 ? sum : 2400;
-  }
-
-  int get todayCount {
-    final today = DateTime.now().toIso8601String().split('T')[0];
-    return _bookings.where((b) => b.date == today).length;
+    return sum;
   }
 
   void setFilterStatus(String status) {

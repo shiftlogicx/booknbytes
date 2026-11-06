@@ -4,7 +4,9 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/booking_provider.dart';
+import '../../providers/location_provider.dart';
 import '../../providers/slots_provider.dart';
+import '../../widgets/location_picker_sheet.dart';
 import '../../utils/validators.dart';
 import '../dashboard/dashboard_screen.dart';
 
@@ -66,6 +68,13 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     });
     _signupEmailController.addListener(() {
       if (mounted) setState(() {});
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _addressController.text.isEmpty) {
+        final loc = Provider.of<LocationProvider>(context, listen: false).currentLocation;
+        _addressController.text = loc.fullAddress;
+      }
     });
   }
 
@@ -168,6 +177,8 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final bookingProvider = Provider.of<BookingProvider>(context, listen: false);
     final slotsProvider = Provider.of<SlotsProvider>(context, listen: false);
+    final locationProvider = Provider.of<LocationProvider>(context, listen: false);
+    final currentLoc = locationProvider.currentLocation;
 
     final success = await authProvider.signupOwnerAndRegisterRestaurant(
       ownerName: ownerName,
@@ -175,7 +186,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       password: password,
       phone: phone.isNotEmpty ? phone : '+91 98765 00000',
       restaurantName: restName,
-      address: address.isNotEmpty ? address : 'Main Road, Pune',
+      address: address.isNotEmpty ? address : currentLoc.fullAddress,
+      latitude: currentLoc.latitude,
+      longitude: currentLoc.longitude,
       fssaiNumber: fssai.isNotEmpty ? fssai : '11521034000123',
       upiId: upi.isNotEmpty ? upi : '${restName.toLowerCase().replaceAll(' ', '')}@upi',
       costForTwo: cost,
@@ -1290,6 +1303,75 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                 controller: _restaurantNameController,
                 style: const TextStyle(color: Color(0xFF0F172A), fontSize: 13, fontWeight: FontWeight.w600),
                 decoration: _inputDecoration('e.g. The Coastal Curry House', Icons.storefront_rounded),
+              ),
+              const SizedBox(height: 14),
+
+              // Dining Location Settings / GPS Hub (Identical to Settings)
+              _buildFieldLabel('OUTLET LOCATION & GPS HUB'),
+              Consumer<LocationProvider>(
+                builder: (context, locationProvider, _) {
+                  return InkWell(
+                    onTap: () async {
+                      HapticFeedback.lightImpact();
+                      await LocationPickerBottomSheet.show(context);
+                      if (mounted) {
+                        setState(() {
+                          _addressController.text = locationProvider.currentLocation.fullAddress;
+                        });
+                      }
+                    },
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFF0F172A).withValues(alpha: 0.03),
+                            blurRadius: 10,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFFFFBEB),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.location_on_rounded, color: Color(0xFFD97706), size: 20),
+                          ),
+                          const SizedBox(width: 14),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Active GPS Restaurant Hub',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w700,
+                                    fontSize: 13.5,
+                                    color: Color(0xFF0F172A),
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  locationProvider.currentLocation.fullAddress,
+                                  style: const TextStyle(fontSize: 11.5, color: Color(0xFFD97706), fontWeight: FontWeight.w600),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Icon(Icons.chevron_right_rounded, color: Color(0xFF94A3B8)),
+                        ],
+                      ),
+                    ),
+                  );
+                },
               ),
               const SizedBox(height: 14),
 
