@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import '../../models/booking_model.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/booking_provider.dart';
 import '../../providers/location_provider.dart';
 import '../../providers/notification_provider.dart';
 import '../../widgets/brand_logo.dart';
@@ -20,11 +22,6 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  // Alert & Hardware Toggles
-  bool _fullScreenAlerts = true;
-  bool _loudChimeMode = true;
-  bool _hapticRinging = true;
-
   // Automation & Communication
   bool _autoAssignTables = true;
   bool _peakHourSurgePricing = true;
@@ -79,6 +76,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const RestaurantProfileScreen()),
     );
+  }
+
+  void _simulateDemoBookingAlert(NotificationProvider notifProvider) {
+    HapticFeedback.heavyImpact();
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    final bookingProvider = Provider.of<BookingProvider>(context, listen: false);
+
+    final randomId = 1000 + (DateTime.now().millisecondsSinceEpoch % 9000);
+    final demoBooking = BookingModel(
+      bookingId: 'DEMO-$randomId',
+      userId: 'usr_demo_$randomId',
+      restaurantId: auth.currentRestaurantId.isNotEmpty ? auth.currentRestaurantId : 'res_main',
+      restaurantName: auth.profile.name.isNotEmpty ? auth.profile.name : 'Restaurant Partner',
+      customerName: 'Aarav Mehta (VIP Diner)',
+      customerPhone: '+91 98201 54321',
+      date: DateTime.now().toIso8601String().split('T')[0],
+      timeSlot: '20:30',
+      partySize: 4,
+      status: BookingStatus.pending,
+      createdAt: DateTime.now(),
+      appliedOffer: 'Flat 20% Off Peak Dinner',
+    );
+
+    bookingProvider.addNewIncomingBooking(demoBooking);
+    notifProvider.triggerIncomingBookingAlert(demoBooking);
   }
 
   void _openSupport() {
@@ -233,6 +255,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final auth = Provider.of<AuthProvider>(context);
     final profile = auth.profile;
     final locationProvider = Provider.of<LocationProvider>(context);
+    final notifProvider = Provider.of<NotificationProvider>(context);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
@@ -500,12 +523,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
             _buildInteractiveToggleTile(
               icon: Icons.notifications_active_rounded,
-              title: 'Full-Screen Priority Alerts',
-              subtitle: 'Wake screen with ringing priority overlay for new bookings',
-              value: _fullScreenAlerts,
+              title: 'Full-Screen Pulse Alert',
+              subtitle: notifProvider.isFullScreenAlertEnabled
+                  ? 'Incoming bookings pop up with full-screen pulse alert & ringer'
+                  : 'Full-screen pop-up disabled · only background alert is sent',
+              value: notifProvider.isFullScreenAlertEnabled,
               onChanged: (val) {
-                setState(() => _fullScreenAlerts = val);
-                _showToggleNotice('Full-Screen Priority Alerts', val);
+                notifProvider.setFullScreenAlertEnabled(val);
+                _showToggleNotice('Full-Screen Pulse Alert', val);
               },
             ),
 
@@ -513,9 +538,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               icon: Icons.volume_up_rounded,
               title: 'Loud Notification Chime',
               subtitle: 'High-gain acoustic dining bell chime (plays over silent switch)',
-              value: _loudChimeMode,
+              value: notifProvider.isLoudChimeEnabled,
               onChanged: (val) {
-                setState(() => _loudChimeMode = val);
+                notifProvider.setLoudChimeEnabled(val);
                 _showToggleNotice('Loud Notification Chime', val);
               },
             ),
@@ -524,11 +549,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
               icon: Icons.vibration_rounded,
               title: 'Haptic Table Vibration',
               subtitle: 'Tactile synchronous phone pulsing during incoming alarm',
-              value: _hapticRinging,
+              value: notifProvider.isHapticVibrationEnabled,
               onChanged: (val) {
-                setState(() => _hapticRinging = val);
+                notifProvider.setHapticVibrationEnabled(val);
                 _showToggleNotice('Haptic Table Vibration', val);
               },
+            ),
+
+            const SizedBox(height: 6),
+
+            _buildActionTile(
+              icon: Icons.cell_tower_rounded,
+              title: 'Simulate Demo Booking Alert',
+              subtitle: notifProvider.isFullScreenAlertEnabled
+                  ? 'Test Mode: Pops up Full-Screen Pulse Alert on this phone'
+                  : 'Test Mode: Sends Background Notification only (no pop-up)',
+              onTap: () => _simulateDemoBookingAlert(notifProvider),
+              accentColor: notifProvider.isFullScreenAlertEnabled
+                  ? const Color(0xFFEF4444)
+                  : const Color(0xFF00E599),
             ),
 
             const SizedBox(height: 24),

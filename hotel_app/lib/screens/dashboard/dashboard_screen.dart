@@ -6,6 +6,7 @@ import '../../providers/auth_provider.dart';
 import '../../providers/booking_provider.dart';
 import '../../providers/slots_provider.dart';
 import '../../providers/location_provider.dart';
+import '../../providers/notification_provider.dart';
 import '../../widgets/glass_nav_dock.dart';
 import '../../widgets/location_picker_sheet.dart';
 import '../../widgets/shift_pulse_bento.dart';
@@ -13,7 +14,6 @@ import '../bookings/booking_list_screen.dart';
 import '../profile/restaurant_profile_screen.dart';
 import '../settings/settings_screen.dart';
 import '../slots/slots_inventory_screen.dart';
-import '../alerts/incoming_booking_alert.dart';
 import '../../widgets/restaurant_walkthrough_modal.dart';
 import '../../services/app_update_service.dart';
 
@@ -77,13 +77,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
 
     HapticFeedback.heavyImpact();
-    // Launch priority full-screen ringing alert
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        fullscreenDialog: true,
-        builder: (_) => IncomingBookingAlertScreen(booking: booking),
-      ),
-    );
+    // Dispatch via NotificationProvider (honors Manager's Full-Screen Pulse Alert vs Background Alert toggle)
+    final notifProvider = Provider.of<NotificationProvider>(context, listen: false);
+    notifProvider.triggerIncomingBookingAlert(booking);
   }
 
   @override

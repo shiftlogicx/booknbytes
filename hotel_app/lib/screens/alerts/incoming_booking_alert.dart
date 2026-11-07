@@ -7,6 +7,7 @@ import '../../models/booking_model.dart';
 import '../../providers/booking_provider.dart';
 import '../../providers/notification_provider.dart';
 import '../../services/app_logger.dart';
+import '../../services/notification_service.dart';
 import '../../widgets/cred_swipe_slider.dart';
 import '../../widgets/emoji_burst_animation.dart';
 
@@ -81,6 +82,9 @@ class _IncomingBookingAlertScreenState extends State<IncomingBookingAlertScreen>
         _onRingerTimeout();
       }
     });
+
+    // Ensure audio ringer & vibrations are activated on pulse screen appearance
+    NotificationService().startRinging();
   }
 
   @override
@@ -88,6 +92,7 @@ class _IncomingBookingAlertScreenState extends State<IncomingBookingAlertScreen>
     _countdownTimer?.cancel();
     _pulseController.dispose();
     _doneController.dispose();
+    NotificationService().stopRinging();
     super.dispose();
   }
 
@@ -168,7 +173,7 @@ class _IncomingBookingAlertScreenState extends State<IncomingBookingAlertScreen>
   Widget build(BuildContext context) {
     return PopScope(
       canPop: _isConfirmed,
-      onPopInvoked: (didPop) {
+      onPopInvokedWithResult: (didPop, result) {
         if (!didPop && !_isConfirmed) {
           // Alert requires user action
         }
@@ -266,7 +271,7 @@ class _IncomingBookingAlertScreenState extends State<IncomingBookingAlertScreen>
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: const Color(0xFFEF4444).withOpacity(0.3),
+                              color: const Color(0xFFEF4444).withValues(alpha: 0.3),
                               width: 2,
                             ),
                           ),
@@ -286,7 +291,7 @@ class _IncomingBookingAlertScreenState extends State<IncomingBookingAlertScreen>
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFFDC2626).withOpacity(0.6),
+                                color: const Color(0xFFDC2626).withValues(alpha: 0.6),
                                 blurRadius: 36,
                                 spreadRadius: 8,
                               ),
@@ -314,7 +319,7 @@ class _IncomingBookingAlertScreenState extends State<IncomingBookingAlertScreen>
                       border: Border.all(color: const Color(0xFF2A3752)),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.4),
+                          color: Colors.black.withValues(alpha: 0.4),
                           blurRadius: 24,
                           offset: const Offset(0, 10),
                         ),
@@ -334,9 +339,9 @@ class _IncomingBookingAlertScreenState extends State<IncomingBookingAlertScreen>
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFF59E0B).withOpacity(0.18),
+                            color: const Color(0xFFF59E0B).withValues(alpha: 0.18),
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: const Color(0xFFF59E0B).withOpacity(0.4)),
+                            border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: 0.4)),
                           ),
                           child: Text(
                             widget.booking.appliedOffer != null
@@ -566,10 +571,10 @@ class _IncomingBookingAlertScreenState extends State<IncomingBookingAlertScreen>
                 decoration: BoxDecoration(
                   color: const Color(0xFF131B2E),
                   borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: const Color(0xFF10B981).withOpacity(0.4), width: 1.5),
+                  border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.4), width: 1.5),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.4),
+                      color: Colors.black.withValues(alpha: 0.4),
                       blurRadius: 24,
                       offset: const Offset(0, 10),
                     ),
@@ -658,7 +663,7 @@ class _IncomingBookingAlertScreenState extends State<IncomingBookingAlertScreen>
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: const Color(0xFF10B981).withOpacity(0.12),
+                          color: const Color(0xFF10B981).withValues(alpha: 0.12),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Row(
@@ -705,7 +710,7 @@ class _IncomingBookingAlertScreenState extends State<IncomingBookingAlertScreen>
                     backgroundColor: const Color(0xFF10B981),
                     foregroundColor: Colors.white,
                     elevation: 8,
-                    shadowColor: const Color(0xFF10B981).withOpacity(0.5),
+                    shadowColor: const Color(0xFF10B981).withValues(alpha: 0.5),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
                   ),
                 ),
